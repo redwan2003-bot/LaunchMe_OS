@@ -6,6 +6,8 @@ using LaunchMe.Contracts.Clipboard;
 using LaunchMe.Contracts.Indexing;
 using LaunchMe.Contracts.Search;
 using LaunchMe.Contracts.Spaces;
+using LaunchMe.UI.Theming;
+using LaunchMe.UI.Wallpaper;
 
 namespace LaunchMe.UI.ViewModels;
 
@@ -17,6 +19,7 @@ public sealed class LauncherViewModel : INotifyPropertyChanged
     private readonly ICalculatorService _calculatorService;
     private readonly IEmojiService _emojiService;
     private readonly ISpaceStore _spaceStore;
+    private readonly LiquidGlassTintService _tintService = new();
 
     private string _searchQuery = string.Empty;
     private bool _isEmojiMode;
@@ -31,6 +34,8 @@ public sealed class LauncherViewModel : INotifyPropertyChanged
     public event EventHandler? LauncherShown;
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    public ThemeVisualState ThemeVisualState { get; } = new();
+    public LiveWallpaperViewModel Wallpaper { get; } = new();
     public ObservableCollection<LauncherPageViewModel> Pages { get; } = new();
     public ObservableCollection<PageIndicatorViewModel> PageIndicators { get; } = new();
     public ObservableCollection<UnifiedSearchResultViewModel> SearchResults { get; } = new();
@@ -135,18 +140,31 @@ public sealed class LauncherViewModel : INotifyPropertyChanged
         _spaceStore = spaceStore ?? throw new ArgumentNullException(nameof(spaceStore));
 
         ToggleEditModeCommand = new RelayCommand(() => IsEditMode = !IsEditMode);
+        Wallpaper.AttachToLauncher(this);
         LoadClassicView();
+    }
+
+    public void ApplyTheme(ThemeSettings settings)
+    {
+        _tintService.UpdateVisualState(ThemeVisualState, settings);
+    }
+
+    public void ApplyWallpaper(WallpaperSettings settings)
+    {
+        Wallpaper.ApplySettings(settings);
     }
 
     public void OnShown()
     {
         LauncherShown?.Invoke(this, EventArgs.Empty);
+        Wallpaper.OnLauncherShown();
     }
 
     public void OnHidden()
     {
         // Pause-on-Hide GPU Law: Immediately stop timers, render loops, and video decoding
         LauncherHidden?.Invoke(this, EventArgs.Empty);
+        Wallpaper.OnLauncherHidden();
         SearchQuery = string.Empty;
         SearchResults.Clear();
         IsEmojiMode = false;

@@ -1,0 +1,40 @@
+<UserControl
+    x:Class="LaunchMe.UI.Widgets.Catalog.WidgetCatalogView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:clock="using:LaunchMe.UI.Widgets.Clock"
+    xmlns:weather="using:LaunchMe.UI.Widgets.Weather"
+    xmlns:music="using:LaunchMe.UI.Widgets.Music"
+    xmlns:stats="using:LaunchMe.UI.Widgets.SystemStats"
+    xmlns:pomodoro="using:LaunchMe.UI.Widgets.Pomodoro"
+    xmlns:affirm="using:LaunchMe.UI.Widgets.Affirmations"
+    xmlns:cal="using:LaunchMe.UI.Widgets.Calendar"
+    mc:Ignorable="d">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="16" Padding="12">
+            <!-- Clock -->
+            <clock:ClockWidgetView ViewModel="{x:Bind ViewModel.Clock, Mode=OneWay}" />
+
+            <!-- Weather -->
+            <weather:WeatherWidgetView ViewModel="{x:Bind ViewModel.Weather, Mode=OneWay}" />
+
+            <!-- Music -->
+            <music:MusicWidgetView ViewModel="{x:Bind ViewModel.Music, Mode=OneWay}" />
+
+            <!-- System Stats -->
+            <stats:SystemStatsWidgetView ViewModel="{x:Bind ViewModel.SystemStats, Mode=OneWay}" />
+
+            <!-- Pomodoro -->
+            <pomodoro:PomodoroWidgetView ViewModel="{x:Bind ViewModel.Pomodoro, Mode=OneWay}" />
+
+            <!-- Affirmations -->
+            <affirm:AffirmationWidgetView ViewModel="{x:Bind ViewModel.Affirmations, Mode=OneWay}" />
+
+            <!-- Calendar -->
+            <cal:CalendarWidgetView ViewModel="{x:Bind ViewModel.Calendar, Mode=OneWay}" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

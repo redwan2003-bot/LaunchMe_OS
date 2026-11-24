@@ -44,6 +44,14 @@ public static class Win32Interop
     public const uint ABS_AUTOHIDE = 0x0000001;
     public const uint ABS_ALWAYSONTOP = 0x0000002;
 
+    // DWM
+    public const uint DWMWA_EXTENDED_FRAME_BOUNDS = 9;
+
+    // Monitor flags
+    public const uint MONITOR_DEFAULTTONULL = 0;
+    public const uint MONITOR_DEFAULTTOPRIMARY = 1;
+    public const uint MONITOR_DEFAULTTONEAREST = 2;
+
     // Virtual Screen Metrics
     public const int SM_XVIRTUALSCREEN = 76;
     public const int SM_YVIRTUALSCREEN = 77;
@@ -129,6 +137,90 @@ public static class Win32Interop
         public nint lParam;
         public uint time;
         public POINT pt;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct FILETIME
+    {
+        public uint dwLowDateTime;
+        public uint dwHighDateTime;
+
+        public readonly ulong ToUInt64() => ((ulong)dwHighDateTime << 32) | dwLowDateTime;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MEMORYSTATUSEX
+    {
+        public uint dwLength;
+        public uint dwMemoryLoad;
+        public ulong ullTotalPhys;
+        public ulong ullAvailPhys;
+        public ulong ullTotalPageFile;
+        public ulong ullAvailPageFile;
+        public ulong ullTotalVirtual;
+        public ulong ullAvailVirtual;
+        public ulong ullAvailExtendedVirtual;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    public struct MIB_IF_ROW2
+    {
+        public ulong InterfaceLuid;
+        public uint InterfaceIndex;
+        public Guid InterfaceGuid;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 257)]
+        public string Alias;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 257)]
+        public string Description;
+
+        public uint PhysicalAddressLength;
+
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+        public byte[] PhysicalAddress;
+
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+        public byte[] PermanentPhysicalAddress;
+
+        public uint Mtu;
+        public uint Type;
+        public int TunnelType;
+        public int MediaType;
+        public int PhysicalMediumType;
+        public int AccessType;
+        public int DirectionType;
+        public byte InterfaceAndOperStatusFlags;
+        public byte Padding1;
+        public byte Padding2;
+        public byte Padding3;
+        public int OperStatus;
+        public int AdminStatus;
+        public int MediaConnectState;
+        public Guid NetworkGuid;
+        public int ConnectionType;
+        public int Padding4;
+
+        public ulong TransmitLinkSpeed;
+        public ulong ReceiveLinkSpeed;
+        public ulong InOctets;
+        public ulong InUcastPkts;
+        public ulong InNUcastPkts;
+        public ulong InDiscards;
+        public ulong InErrors;
+        public ulong InUnknownProtos;
+        public ulong InUcastOctets;
+        public ulong InMulticastOctets;
+        public ulong InBroadcastOctets;
+        public ulong OutOctets;
+        public ulong OutUcastPkts;
+        public ulong OutNUcastPkts;
+        public ulong OutDiscards;
+        public ulong OutErrors;
+        public ulong OutUcastOctets;
+        public ulong OutMulticastOctets;
+        public ulong OutBroadcastOctets;
+        public ulong OutQLen;
     }
 
     public enum QUERY_USER_NOTIFICATION_STATE
@@ -236,4 +328,44 @@ public static class Win32Interop
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool PostMessageW(nint hWnd, uint msg, nint wParam, nint lParam);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GetSystemTimes(
+        out FILETIME lpIdleTime,
+        out FILETIME lpKernelTime,
+        out FILETIME lpUserTime);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GlobalMemoryStatusEx(ref MEMORYSTATUSEX lpBuffer);
+
+    [DllImport("iphlpapi.dll", SetLastError = true)]
+    public static extern int GetIfTable2(out nint ppIfTable);
+
+    [DllImport("iphlpapi.dll", SetLastError = true)]
+    public static extern void FreeMibTable(nint pIfTable);
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmGetWindowAttribute(nint hwnd, uint dwAttribute, out RECT pvAttribute, uint cbAttribute);
+
+    [DllImport("user32.dll")]
+    public static extern nint MonitorFromWindow(nint hwnd, uint dwFlags);
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    public static extern int GetClassNameW(nint hWnd, [Out] System.Text.StringBuilder lpClassName, int nMaxCount);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool IsWindowVisible(nint hWnd);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool IsIconic(nint hWnd);
+
+    [DllImport("user32.dll")]
+    public static extern nint GetShellWindow();
+
+    [DllImport("user32.dll")]
+    public static extern nint GetDesktopWindow();
 }

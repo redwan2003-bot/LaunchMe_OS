@@ -1,0 +1,71 @@
+<UserControl
+    x:Class="LaunchMe.UI.Widgets.SystemStats.SystemStatsWidgetView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="using:LaunchMe.UI.Widgets.SystemStats"
+    mc:Ignorable="d">
+
+    <Border Background="#20FFFFFF" 
+            BorderBrush="#33FFFFFF" 
+            BorderThickness="1" 
+            CornerRadius="16" 
+            Padding="16"
+            MinWidth="260"
+            MinHeight="130">
+        <StackPanel Spacing="12">
+            <!-- CPU Row -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="45" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="CPU" FontSize="12" FontWeight="SemiBold" Foreground="#94A3B8" VerticalAlignment="Center" />
+                <ProgressBar Grid.Column="1" 
+                             Value="{x:Bind ViewModel.CpuUsagePercent, Mode=OneWay}" 
+                             Minimum="0" 
+                             Maximum="100" 
+                             Foreground="{x:Bind ViewModel.CpuBrush, Mode=OneWay}" 
+                             Background="#33FFFFFF" 
+                             Height="6" 
+                             CornerRadius="3" 
+                             VerticalAlignment="Center" 
+                             Margin="8,0" />
+                <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.CpuUsageFormatted, Mode=OneWay}" FontSize="12" Foreground="White" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Center" />
+            </Grid>
+
+            <!-- RAM Row -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="45" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="RAM" FontSize="12" FontWeight="SemiBold" Foreground="#94A3B8" VerticalAlignment="Center" />
+                <ProgressBar Grid.Column="1" 
+                             Value="{x:Bind ViewModel.MemoryUsagePercent, Mode=OneWay}" 
+                             Minimum="0" 
+                             Maximum="100" 
+                             Foreground="{x:Bind ViewModel.MemoryBrush, Mode=OneWay}" 
+                             Background="#33FFFFFF" 
+                             Height="6" 
+                             CornerRadius="3" 
+                             VerticalAlignment="Center" 
+                             Margin="8,0" />
+                <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.MemoryUsageFormatted, Mode=OneWay}" FontSize="10" Foreground="White" HorizontalAlignment="Right" VerticalAlignment="Center" />
+            </Grid>
+
+            <!-- Network Row -->
+            <Grid Margin="0,4,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="NET" FontSize="11" Foreground="#64748B" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.NetworkFormatted, Mode=OneWay}" FontFamily="Segoe Fluent Icons" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Right" VerticalAlignment="Center" />
+            </Grid>
+        </StackPanel>
+    </Border>
+</UserControl>

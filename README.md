@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="#build--test-status"><img src="https://img.shields.io/badge/build-passing-brightgreen?style=for-the-badge&logo=dotnet" alt="Build Status"/></a>
-  <a href="#test-coverage"><img src="https://img.shields.io/badge/tests-72%2F72%20passing-success?style=for-the-badge&logo=xunit" alt="Test Coverage"/></a>
+  <a href="#test-coverage"><img src="https://img.shields.io/badge/tests-243%2F243%20passing-success?style=for-the-badge&logo=xunit" alt="Test Coverage"/></a>
   <a href="#tech-stack"><img src="https://img.shields.io/badge/target-.NET%209%20%7C%20WinUI%203-blue?style=for-the-badge&logo=windows11" alt="Target Framework"/></a>
   <a href="#architecture-guardrails"><img src="https://img.shields.io/badge/telemetry-strictly%20zero-critical?style=for-the-badge&logo=shield" alt="Zero Telemetry"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Boost%201.0-orange?style=for-the-badge" alt="License"/></a>
@@ -26,7 +26,8 @@
 ### Key Pillars
 - **Zero-Friction Launcher:** Full-screen blurred overlay summoned instantaneously on whichever monitor currently holds the mouse cursor (`MonitorFromPoint`).
 - **Unified Search:** Real-time query dispatch combining Start Menu / MSIX applications, scoped local files, an inline scientific unit-converting calculator, Windows clipboard history, and a quick `TAB`-toggle emoji selector.
-- **Hardware-Friendly ("Pause-on-Hide GPU Law"):** Render loops, video decoders, and background monitors pause immediately when the launcher is dismissed to ensure 0% background GPU consumption.
+- **Liquid Glass Visual Engine:** Custom acrylic tint compositing, specular refraction, and automatic WCAG 2.1 contrast-checked title colors.
+- **Hardware-Friendly ("Pause-on-Hide GPU Law"):** Render loops, video decoders, canvas shaders, and widget timers pause immediately when the launcher is dismissed to ensure 0% background GPU consumption.
 - **Strict Privacy:** Zero cloud telemetry or external network calls. All layout configurations, spaces, and clipboard history persist strictly in local SQLite and JSON.
 
 ---
@@ -40,6 +41,9 @@ flowchart TD
         VM["LauncherViewModel (MVVM CommunityToolkit)"]
         Grid["Classic 24-Item Grid & Free Layout Mode"]
         SearchUI["Unified Search & TAB Emoji Mode"]
+        GlassUI["LiquidGlassOverlayControl (Acrylic + Tint + Highlight)"]
+        WallUI["LiveWallpaperControl (Video / Dynamic / Gaussian Blur)"]
+        WidgetUI["7-Family Widget Catalog (Clock, Weather, Music, Stats, Pomodoro, Quotes, Cal)"]
         NotchUI["Dynamic Notch HUD (Planned Phase 4)"]
         DockUI["SHAppBarMessage Multi-Display Dock (Planned Phase 4)"]
     end
@@ -52,6 +56,7 @@ flowchart TD
         IEmoji["IEmojiService"]
         IClip["IClipboardMonitor"]
         IGesture["IGestureAndTriggerService"]
+        IMedia["IMediaSessionService"]
         IDock["IDockShellService"]
         INotch["INotchWindowService"]
     end
@@ -62,6 +67,9 @@ flowchart TD
         FileIdx["File Search Service (Approved Scopes)"]
         CalcEng["Inline Calculator (Tokens + Precedence + Units)"]
         EmojiEng["Emoji Catalog & Search Index"]
+        ThemeEng["Theme Engine (ColorParser + WCAG Luminance + LiquidGlass)"]
+        WallEng["Wallpaper Service (Sun Calculator + Weather Mapper + Video Resolver)"]
+        WidgetCore["Widget Providers (Clock, Simulated Weather, Pomodoro FSM, Quotes, Stats)"]
         Workflow["Workflows Runner & Script Automator"]
         Uninstall["Clean Uninstall (Recycle Bin Stager)"]
     end
@@ -70,8 +78,10 @@ flowchart TD
         HotCorners["WH_MOUSE_LL Low-Level Mouse Hook (150ms Dwell)"]
         Hotkeys["RegisterHotKey Message Pump"]
         ClipMon["WinRT Clipboard API Listener & FIFO Store"]
+        Metrics["Win32 System Metrics (GetSystemTimes + GlobalMemoryStatusEx + GetIfTable2)"]
+        MediaCtl["GSMTC Media Session Transport Bridge (WinRT)"]
+        GameDetect["Fullscreen DirectX Game Detection (SHQueryUserNotificationState)"]
         AppBar["Win32 SHAppBarMessage Interop"]
-        MediaCtl["GSMTC Media Session Transport Bridge"]
         CaptureGuard["WDA_EXCLUDEFROMCAPTURE Notch Guard"]
     end
 
@@ -85,6 +95,7 @@ flowchart TD
     VM --> IEmoji
     VM --> IClip
     VM --> IGesture
+    VM --> IMedia
 ```
 
 ---
@@ -100,13 +111,13 @@ LaunchMe OS/
 │   └── PRD_LAUNCHME_WINDOWS.md
 ├── src/
 │   ├── LaunchMe.Contracts/         # Frozen interfaces & DTOs (Zero drift)
-│   ├── LaunchMe.Core/              # SQLite, App/File indexing, Calculator, Workflows
-│   ├── LaunchMe.Platform.Win32/    # CsWin32, WH_MOUSE_LL, Hotkeys, WinRT Clipboard
-│   └── LaunchMe.UI/                # WinUI 3 Window, XAML Controls, Win2D Liquid Glass
+│   ├── LaunchMe.Core/              # SQLite, App/File indexers, Themes, Wallpapers, Widgets
+│   ├── LaunchMe.Platform.Win32/    # CsWin32, WH_MOUSE_LL, Hotkeys, WinRT Clipboard, GSMTC, Metrics
+│   └── LaunchMe.UI/                # WinUI 3 Window, Liquid Glass, Live Wallpaper, 7 Widget Views
 └── tests/
-    ├── LaunchMe.Core.Tests/        # 30 Unit Tests (xUnit + FluentAssertions)
-    ├── LaunchMe.Platform.Tests/    # 36 Unit Tests (Win32 parsers & dwell tracking)
-    └── LaunchMe.UI.Tests/          # 6 Unit Tests (MVVM & GPU Pause-on-Hide)
+    ├── LaunchMe.Core.Tests/        # 127 Unit Tests (xUnit + FluentAssertions)
+    ├── LaunchMe.Platform.Tests/    # 66 Unit Tests (Win32 parsers, GSMTC, metrics, dwell)
+    └── LaunchMe.UI.Tests/          # 50 Unit Tests (MVVM, GPU Pause-on-Hide, Widgets, Theming)
 ```
 
 ---
@@ -117,31 +128,43 @@ LaunchMe OS/
 | :---: | :--- | :---: | :---: | :---: |
 | **Phase 0** | **Contract Freeze & Scaffolding**<br>Solution structure, `Directory.Build.props`, `<TreatWarningsAsErrors>`, frozen interfaces |  **Completed** | Verified | Zero Warnings |
 | **Phase 1** | **Core Grid, Search, Indexers, Clipboard & Triggers**<br>WinUI 3 OverlappedPresenter, SQLite Spaces, Start Menu/MSIX indexer, Scoped Search, Inline Calc, WinRT Clipboard, `WH_MOUSE_LL` Hot Corners (150ms dwell), Hotkeys |  **Completed** | **72 / 72 Passing** | **PASS** (`qa-verifier-auditor`) |
-| **Phase 2** | **Theming, Liquid Glass & Live Wallpapers**<br>Win2D Acrylic/Tint brush, Pause-on-Hide Media Foundation / WebM wallpaper renderer, 11 Widget families |  **In Queue** | Pending | Mandatory Gate |
+| **Phase 2** | **Theming, Liquid Glass, Live Wallpapers & Core Widgets**<br>Liquid Glass acrylic & tint engine, Pause-on-Hide live video wallpapers, 7 widget families, GSMTC media bridge, native Win32 hardware metrics, DirectX fullscreen game detection |  **Completed** | **243 / 243 Passing** | **PASS** (`qa-verifier-auditor`) |
 | **Phase 3** | **Spaces & Workflows Engine**<br>Time/trigger Space switcher, `.launchmetheme` ZIP packager, Clean Uninstall with Recycle Bin recovery |  **Planned** | Pending | Mandatory Gate |
 | **Phase 4** | **Dynamic Notch, Multi-Display Dock & Gestures**<br>`SHAppBarMessage` Dock, Dynamic Notch HUD (`WDA_EXCLUDEFROMCAPTURE`), GSMTC Music Player, HID touchpad pinch gestures |  **Planned** | Pending | Mandatory Gate |
 
 ---
 
-## Verified Phase 1 Feature Capabilities
+## Verified Phase 1 & Phase 2 Feature Capabilities
 
-### 1. Unified Launcher Overlay
-- Configured with `OverlappedPresenter` (`IsResizable=false`, `IsMaximizable=false`, `IsMinimizable=false`).
-- Native Win32 window styles apply `WS_EX_TOOLWINDOW` to eliminate taskbar clutter and Alt-Tab pollution.
-- Automatically queries mouse cursor position (`GetCursorPos`) and centers over target display (`MonitorFromPoint`).
-- Strictly implements the **Pause-on-Hide GPU Law**: window dismissal signals `LauncherHidden`, immediately halting all transient UI tasks.
+### 1. Liquid Glass & Theming Engine
+- **Flexible Color Parser:** Zero-allocation hexadecimal color parser supporting `#RGB`, `#RGBA`, `#RRGGBB`, and `#AARRGGBB` notations.
+- **WCAG 2.1 Contrast & Luminance:** Computes relative luminance ($L = 0.2126 R_{lin} + 0.7152 G_{lin} + 0.0722 B_{lin}$) and contrast ratio ($CR \in [1, 21]$) to resolve Auto title colors (white vs. dark text) for optimal readability.
+- **Acrylic Backdrop & Refraction:** Layered WinUI 3 control compositing acrylic blur base, edge highlight, and tint overlays with configurable intensity.
 
-### 2. Multi-Engine Unified Search
-- **Applications:** Scans both `CommonStartMenu` and `UserStartMenu` `.lnk` binaries (extracting 128px high-DPI icon bitmaps) + installed packaged MSIX apps via `PackageManager`.
-- **Scoped Files:** Real-time fast directory traverser strictly constrained to user-approved folder scopes (preventing unsolicited drive scans).
-- **Inline Calculator:** Evaluates mathematical expressions, precedence parentheses, trigonometric operations, and unit conversions (e.g. `10 km to miles`, `100 c to f`) on the fly.
-- **Emoji Palette:** Instant toggling via `TAB` key query switcher into full Unicode emoji repository.
-- **Clipboard History:** Captures and indexes WinRT clipboard changes into a categorized 500-slot FIFO store (`Text`, `Link`, `FilePath`, `ColorCode`, `CodeSnippet`).
+### 2. Pause-on-Hide Live Wallpapers
+- **Solar Equation Calculator:** Computes solar declination, equation of time, solar noon, sunrise, sunset, elevation, and azimuth with 16-slice time-of-day dynamic wallpaper progression.
+- **Weather Condition Mapper:** Normalizes 25+ weather condition strings into canonical day/night wallpaper candidates.
+- **Hardware-Friendly ("Pause-on-Hide GPU Law"):** Integrates `MediaPlayerElement` for video wallpapers (`.mp4`, `.mov`, `.avi`, `.mkv`, `.webm`); halts video decoding and canvas rendering immediately upon `LauncherHidden` to ensure 0.0% background GPU load.
 
-### 3. Native Win32 Hooks & Gestures
-- **Low-Level Mouse Hook (`WH_MOUSE_LL`):** Detects cursor entry into any of the 4 screen corners with a mandatory 150ms dwell timer to eliminate accidental activations.
-- **Global Hotkey Daemon (`RegisterHotKey`):** Threaded hidden message pump registering custom user key combinations (e.g., `Win + Space`).
-- **Deterministic Resource Management:** All hooks implement `IDisposable` with clean unhooking (`UnhookWindowsHookEx`, `UnregisterHotKey`) on shutdown.
+### 3. Interactive 7-Family Widget Catalog
+- **Clock Widget:** 12h/24h digital formatting and analog hand angle trigonometry; tick timer pauses when hidden.
+- **Weather Widget:** Metric/Imperial temperature toggle (°C / °F), condition glyph mapping, 4-day forecast strip.
+- **Music Widget (mini GSMTC):** Real-time track title, artist, album art streaming, progress interpolation, and interactive playback controls (Play/Pause, Next, Prev, Seek).
+- **System Stats Widget:** Real-time CPU, RAM, and Network meters with Green/Amber/Red health alert thresholds.
+- **Pomodoro Widget:** State machine for 25m work / 5m break / 15m long break cycles, audio cue notifications, and wall-clock catch-up.
+- **Affirmations Widget:** Daily rotating inspiration and focus quotes with custom quote staging.
+- **Calendar Widget:** 6x7 42-day calendar matrix with month navigation and today indicator.
+
+### 4. Native Win32 Metrics & Media Bridge
+- **Hardware Performance Counters:** CPU utilization via `GetSystemTimes` differential calculation, memory status via `GlobalMemoryStatusEx`, and network interface throughput via `GetIfTable2`.
+- **GSMTC Media Bridge:** WinRT `GlobalSystemMediaTransportControlsSessionManager` integration for Universal Windows media synchronization.
+- **Fullscreen DirectX Game Detection:** Evaluates `SHQueryUserNotificationState(QUNS_RUNNING_D_3D_FULL_SCREEN)` and DWM frame bounds (`DWMWA_EXTENDED_FRAME_BOUNDS`) to prevent unintended invocations during fullscreen 3D gameplay.
+
+### 5. Multi-Engine Unified Search & Hotkeys
+- **Applications & Scoped Files:** Start Menu / MSIX applications query + scoped directory search.
+- **Inline Calculator & Emojis:** Mathematical expression evaluation and `TAB`-toggle emoji palette.
+- **Clipboard Monitor:** 500-slot FIFO store with content classification (`Text`, `Link`, `FilePath`, `ColorCode`, `CodeSnippet`).
+- **Low-Level Mouse Hook (`WH_MOUSE_LL`):** 150ms dwell corner triggers and global `RegisterHotKey` message pump with deterministic `IDisposable` unhooking.
 
 ---
 
@@ -173,10 +196,15 @@ dotnet test LaunchMeWin.sln --no-build
   - Implemented `LaunchMe.Platform.Win32` (`WH_MOUSE_LL` hot corners, hotkeys, WinRT clipboard monitor, `SHAppBarMessage` dock scaffolding, `WDA_EXCLUDEFROMCAPTURE` notch window service).
   - Implemented `LaunchMe.Core` (SQLite space storage, app indexer, scoped file search, inline calculator, emoji catalog, workflow runner, recycle bin clean uninstaller).
   - Implemented `LaunchMe.UI` (WinUI 3 overlay window, `OverlappedPresenter`, cursor monitor positioning, MVVM unified search, GPU Pause-on-Hide integration).
+- **Phase 2 Implementation Completed (Multi-Agent Swarm):**
+  - Implemented Liquid Glass acrylic backdrop & custom tint engine with WCAG 2.1 contrast calculations.
+  - Implemented Pause-on-Hide Live Wallpaper component with dynamic Sun NOAA calculations and video decoding suspension.
+  - Implemented 7-family interactive Widget Catalog (Clock, Weather, GSMTC Music, System Stats, Pomodoro, Quotes, Calendar).
+  - Implemented native Win32 performance counters (`GetSystemTimes`, `GlobalMemoryStatusEx`, `GetIfTable2`), GSMTC media transport bridge, and DirectX fullscreen game detection.
 - **QA Verification Gate Sign-Off:**
   - Independent auditor `qa-verifier-auditor` passed all 5 gates.
-  - 72 / 72 unit tests passing with 0 compiler warnings.
-- **GitHub Repository Sync:** Initialized synchronization with [redwan2003-bot/LaunchMe_OS](https://github.com/redwan2003-bot/LaunchMe_OS.git).
+  - **243 / 243 unit tests passing** with 0 compiler warnings.
+- **GitHub Repository Sync:** Synchronized with [redwan2003-bot/LaunchMe_OS](https://github.com/redwan2003-bot/LaunchMe_OS.git).
 
 ---
 

@@ -175,7 +175,28 @@ public sealed class UnifiedSearchResultViewModel
     }
 }
 
-public sealed record PageIndicatorViewModel(int PageIndex, string DotColor);
+public sealed class PageIndicatorViewModel : INotifyPropertyChanged
+{
+    private string _dotColor;
+    public int PageIndex { get; }
+
+    public string DotColor
+    {
+        get => _dotColor;
+        set { if (_dotColor != value) { _dotColor = value; OnPropertyChanged(); } }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public PageIndicatorViewModel(int pageIndex, string dotColor)
+    {
+        PageIndex = pageIndex;
+        _dotColor = dotColor;
+    }
+
+    private void OnPropertyChanged([CallerMemberName] string? name = null) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+}
 
 public sealed class RelayCommand : ICommand
 {

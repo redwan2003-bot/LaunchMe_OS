@@ -1,0 +1,31 @@
+<UserControl
+    x:Class="LaunchMe.UI.Wallpaper.LiveWallpaperControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="WallpaperRoot">
+        <!-- Static / Fallback Image Wallpaper Surface -->
+        <Image x:Name="StaticWallpaperImage"
+               Stretch="UniformToFill"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center" />
+
+        <!-- Live Video Wallpaper Player Surface -->
+        <MediaPlayerElement x:Name="VideoPlayer"
+                             AutoPlay="False"
+                             AreTransportControlsEnabled="False"
+                             HorizontalAlignment="Stretch"
+                             VerticalAlignment="Stretch"
+                             Stretch="UniformToFill"
+                             Visibility="Collapsed" />
+
+        <!-- Optional Blur / Tint Overlay Layer -->
+        <Border x:Name="BlurBackdropBorder"
+                Background="#33000000"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch" />
+    </Grid>
+</UserControl>
