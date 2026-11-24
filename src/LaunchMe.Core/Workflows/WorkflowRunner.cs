@@ -34,13 +34,28 @@ public sealed class WorkflowRunner : IWorkflowRunner
 
                 case WorkflowActionType.OpenFile:
                 case WorkflowActionType.OpenFolder:
-                case WorkflowActionType.OpenUrl:
                     if (!string.IsNullOrWhiteSpace(action.Target))
                     {
                         Process.Start(new ProcessStartInfo(action.Target)
                         {
                             UseShellExecute = true
                         });
+                    }
+                    break;
+
+                case WorkflowActionType.OpenUrl:
+                    if (!string.IsNullOrWhiteSpace(action.Target))
+                    {
+                        var target = action.Target.Trim();
+                        // Security check: Only permit valid absolute http/https URLs to prevent arbitrary command execution or dangerous URI schemes
+                        if (Uri.TryCreate(target, UriKind.Absolute, out var uri) &&
+                            (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+                        {
+                            Process.Start(new ProcessStartInfo(uri.AbsoluteUri)
+                            {
+                                UseShellExecute = true
+                            });
+                        }
                     }
                     break;
 

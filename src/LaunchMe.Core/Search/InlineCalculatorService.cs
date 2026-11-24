@@ -7,7 +7,8 @@ public sealed class InlineCalculatorService : ICalculatorService
 {
     public CalculationResult? Evaluate(string expression)
     {
-        if (string.IsNullOrWhiteSpace(expression))
+        // Rejection of empty or excessively long expressions to prevent denial of service (DoS)
+        if (string.IsNullOrWhiteSpace(expression) || expression.Length > 256)
         {
             return new CalculationResult
             {
@@ -103,8 +104,10 @@ public sealed class InlineCalculatorService : ICalculatorService
 
     private sealed class MathParser
     {
+        private const int MaxRecursionDepth = 32;
         private readonly List<string> _tokens;
         private int _pos;
+        private int _depth;
 
         public MathParser(List<string> tokens)
         {
@@ -124,14 +127,26 @@ public sealed class InlineCalculatorService : ICalculatorService
 
         private double ParseExpression()
         {
-            var left = ParseTerm();
-            while (_pos < _tokens.Count && (_tokens[_pos] == "+" || _tokens[_pos] == "-"))
+            if (++_depth > MaxRecursionDepth)
             {
-                var op = _tokens[_pos++];
-                var right = ParseTerm();
-                left = op == "+" ? left + right : left - right;
+                throw new InvalidOperationException("Expression exceeds maximum allowed recursion depth.");
             }
-            return left;
+
+            try
+            {
+                var left = ParseTerm();
+                while (_pos < _tokens.Count && (_tokens[_pos] == "+" || _tokens[_pos] == "-"))
+                {
+                    var op = _tokens[_pos++];
+                    var right = ParseTerm();
+                    left = op == "+" ? left + right : left - right;
+                }
+                return left;
+            }
+            finally
+            {
+                _depth--;
+            }
         }
 
         private double ParseTerm()

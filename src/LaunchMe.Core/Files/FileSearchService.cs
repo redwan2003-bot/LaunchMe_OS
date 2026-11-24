@@ -126,9 +126,12 @@ public sealed class FileSearchService : IFileSearchService
     public void RevealInExplorer(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        if (!File.Exists(path) && !Directory.Exists(path)) return;
+        var fullPath = Path.GetFullPath(path);
+        if (!File.Exists(fullPath) && !Directory.Exists(fullPath)) return;
 
-        Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{path}\"")
+        // Strip double quotes to prevent command-line breakout / argument injection
+        var sanitizedPath = fullPath.Replace("\"", string.Empty);
+        Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{sanitizedPath}\"")
         {
             UseShellExecute = true
         });

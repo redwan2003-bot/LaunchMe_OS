@@ -291,28 +291,46 @@ public sealed class AppIndexer : IAppIndexer
             }
         }
 
-        // Desktop App Uninstall: clean leftovers to Recycle Bin
-        if (moveLeftoversToRecycleBin)
+        // Desktop App Uninstall: clean leftovers safely to Recycle Bin
+        if (moveLeftoversToRecycleBin && !string.IsNullOrWhiteSpace(app.Name))
         {
-            var appName = app.Name;
             var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
-            StageFolderToRecycleBin(Path.Combine(localAppData, appName));
-            StageFolderToRecycleBin(Path.Combine(appData, appName));
+            StageFolderToRecycleBin(localAppData, app.Name);
+            StageFolderToRecycleBin(appData, app.Name);
         }
 
         _indexedApps.TryRemove(appId, out _);
         return true;
     }
 
-    private static void StageFolderToRecycleBin(string path)
+    private static void StageFolderToRecycleBin(string basePath, string appName)
     {
+        if (string.IsNullOrWhiteSpace(appName) || string.IsNullOrWhiteSpace(basePath)) return;
+
+        // Disallow path traversal, root navigation, and relative parent references
+        var sanitizedAppName = Path.GetFileName(appName.Trim().TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        if (string.IsNullOrWhiteSpace(sanitizedAppName) || sanitizedAppName == "." || sanitizedAppName == ".." || sanitizedAppName.Contains(".."))
+        {
+            return;
+        }
+
+        var fullBasePath = Path.GetFullPath(basePath);
+        var targetPath = Path.GetFullPath(Path.Combine(fullBasePath, sanitizedAppName));
+        var basePrefix = fullBasePath.EndsWith(Path.DirectorySeparatorChar) ? fullBasePath : fullBasePath + Path.DirectorySeparatorChar;
+
+        // Ensure target is strictly a subfolder of basePath and never the basePath itself
+        if (!targetPath.StartsWith(basePrefix, StringComparison.OrdinalIgnoreCase) || targetPath.Equals(fullBasePath, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
         try
         {
-            if (Directory.Exists(path))
+            if (Directory.Exists(targetPath))
             {
-                FileSystem.DeleteDirectory(path, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+                FileSystem.DeleteDirectory(targetPath, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
             }
         }
         catch { /* Continue on partial cleanup */ }

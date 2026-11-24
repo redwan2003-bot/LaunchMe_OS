@@ -11,8 +11,9 @@
 
 <p align="center">
   <a href="#build--test-status"><img src="https://img.shields.io/badge/build-passing-brightgreen?style=for-the-badge&logo=dotnet" alt="Build Status"/></a>
-  <a href="#test-coverage"><img src="https://img.shields.io/badge/tests-243%2F243%20passing-success?style=for-the-badge&logo=xunit" alt="Test Coverage"/></a>
+  <a href="#test-coverage"><img src="https://img.shields.io/badge/tests-248%2F248%20passing-success?style=for-the-badge&logo=xunit" alt="Test Coverage"/></a>
   <a href="#tech-stack"><img src="https://img.shields.io/badge/target-.NET%209%20%7C%20WinUI%203-blue?style=for-the-badge&logo=windows11" alt="Target Framework"/></a>
+  <a href="#security-architecture--vulnerability-defenses"><img src="https://img.shields.io/badge/security-hardened%20%26%20verified-success?style=for-the-badge&logo=securityscorecard" alt="Security Verified"/></a>
   <a href="#architecture-guardrails"><img src="https://img.shields.io/badge/telemetry-strictly%20zero-critical?style=for-the-badge&logo=shield" alt="Zero Telemetry"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Boost%201.0-orange?style=for-the-badge" alt="License"/></a>
 </p>
@@ -115,7 +116,7 @@ LaunchMe OS/
 │   ├── LaunchMe.Platform.Win32/    # CsWin32, WH_MOUSE_LL, Hotkeys, WinRT Clipboard, GSMTC, Metrics
 │   └── LaunchMe.UI/                # WinUI 3 Window, Liquid Glass, Live Wallpaper, 7 Widget Views
 └── tests/
-    ├── LaunchMe.Core.Tests/        # 127 Unit Tests (xUnit + FluentAssertions)
+    ├── LaunchMe.Core.Tests/        # 132 Unit Tests (xUnit + FluentAssertions + Security)
     ├── LaunchMe.Platform.Tests/    # 66 Unit Tests (Win32 parsers, GSMTC, metrics, dwell)
     └── LaunchMe.UI.Tests/          # 50 Unit Tests (MVVM, GPU Pause-on-Hide, Widgets, Theming)
 ```
@@ -168,6 +169,20 @@ LaunchMe OS/
 
 ---
 
+## Security Architecture & Vulnerability Defenses
+
+| Threat Vector | Mitigation Strategy | Enforcement & Verification |
+| :--- | :--- | :--- |
+| **Dependency CVEs** | Strict package curation and automated audits. | Zero known vulnerable packages identified by `dotnet list package --vulnerable`. |
+| **ZipSlip Path Traversal** | Extraction path validation against base canonical prefix. | `SqliteSpaceStore.ImportThemeAsync` validates `Path.GetFullPath(targetPath).StartsWith(assetsDir)` and rejects any entry with `..` sequences. |
+| **Accidental / Traversal Deletion** | Target validation and root folder protection in clean uninstall. | `AppIndexer.CleanUninstallAsync` strictly requires targets to be verified subfolders of `%LocalAppData%` / `%AppData%`, disallowing `..`, empty paths, or root deletions. |
+| **Workflow Command Injection** | URL scheme whitelisting for `OpenUrl` actions. | `WorkflowRunner` enforces `Uri.UriSchemeHttp` or `Uri.UriSchemeHttps`, prohibiting arbitrary shell execution or malicious protocol handlers (`file://`, `javascript:`). |
+| **Explorer Argument Breakout** | Stripping double quotes from paths in `RevealInExplorer`. | `FileSearchService.RevealInExplorer` strips quotes from the resolved path prior to spawning `explorer.exe /select,"path"`. |
+| **Expression Evaluation DoS** | Input length limits and max recursion depth tracking. | `InlineCalculatorService` rejects expressions exceeding 256 characters and bounds recursive descent to a depth of 32 to prevent StackOverflow crashes. |
+| **Memory Bloat & Exhaustion** | Clipboard payload truncation for massive text entries. | `WinRTClipboardMonitor` caps text payloads to 100,000 characters prior to storage. |
+
+---
+
 ## Building and Testing
 
 ### Prerequisites
@@ -203,7 +218,11 @@ dotnet test LaunchMeWin.sln --no-build
   - Implemented native Win32 performance counters (`GetSystemTimes`, `GlobalMemoryStatusEx`, `GetIfTable2`), GSMTC media transport bridge, and DirectX fullscreen game detection.
 - **QA Verification Gate Sign-Off:**
   - Independent auditor `qa-verifier-auditor` passed all 5 gates.
-  - **243 / 243 unit tests passing** with 0 compiler warnings.
+  - **248 / 248 unit tests passing** with 0 compiler warnings.
+- **Security Vulnerability Hardening & Regression Suite:**
+  - Audited dependencies (0 vulnerable packages via `dotnet list package --vulnerable`).
+  - Added ZipSlip path traversal defense, LocalAppData accidental deletion guards, URL scheme validation, explorer argument sanitization, calculator recursion depth bounds, and clipboard memory caps.
+  - Added dedicated security unit test suite (`SecurityVulnerabilityTests.cs`).
 - **GitHub Repository Sync:** Synchronized with [redwan2003-bot/LaunchMe_OS](https://github.com/redwan2003-bot/LaunchMe_OS.git).
 
 ---

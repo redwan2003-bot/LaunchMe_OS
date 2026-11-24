@@ -433,18 +433,31 @@ public sealed class SqliteSpaceStore : ISpaceStore, IDisposable
         importedSpace.SpaceId = Guid.NewGuid().ToString("N");
         importedSpace.IsDefault = false;
 
-        // Unpack local assets
-        var assetsDir = Path.Combine(_baseDirectory, "Assets", importedSpace.SpaceId);
+        // Unpack local assets safely with strict ZipSlip defense
+        var assetsDir = Path.GetFullPath(Path.Combine(_baseDirectory, "Assets", importedSpace.SpaceId));
+        var assetsDirPrefix = assetsDir.EndsWith(Path.DirectorySeparatorChar) ? assetsDir : assetsDir + Path.DirectorySeparatorChar;
+
         foreach (var entry in archive.Entries.Where(e => e.FullName.StartsWith("assets/", StringComparison.OrdinalIgnoreCase)))
         {
             if (string.IsNullOrEmpty(entry.Name)) continue;
+
+            // ZipSlip protection: extract only the terminal filename, reject path traversal sequences
+            var safeFileName = Path.GetFileName(entry.Name);
+            if (string.IsNullOrWhiteSpace(safeFileName) || safeFileName.Contains("..")) continue;
+
+            var targetPath = Path.GetFullPath(Path.Combine(assetsDir, safeFileName));
+            if (!targetPath.StartsWith(assetsDirPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                // Reject path traversal attempt
+                continue;
+            }
+
             Directory.CreateDirectory(assetsDir);
-            var targetPath = Path.Combine(assetsDir, entry.Name);
             using var entryStream = entry.Open();
             using var destStream = File.Create(targetPath);
             await entryStream.CopyToAsync(destStream, ct).ConfigureAwait(false);
 
-            if (importedSpace.Wallpaper.Asset.EndsWith(entry.Name, StringComparison.OrdinalIgnoreCase))
+            if (importedSpace.Wallpaper.Asset.EndsWith(safeFileName, StringComparison.OrdinalIgnoreCase))
             {
                 importedSpace.Wallpaper.Asset = targetPath;
             }

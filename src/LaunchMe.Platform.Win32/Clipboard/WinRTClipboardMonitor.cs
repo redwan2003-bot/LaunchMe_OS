@@ -60,6 +60,11 @@ public sealed class WinRTClipboardMonitor : IClipboardMonitor
             if (dataPackage.Contains(StandardDataFormats.Text))
             {
                 text = await dataPackage.GetTextAsync();
+                if (text != null && text.Length > 100_000)
+                {
+                    // Memory safety: Truncate massive clipboard payloads to 100k chars to prevent memory exhaustion
+                    text = text.Substring(0, 100_000);
+                }
             }
 
             if (dataPackage.Contains(StandardDataFormats.StorageItems))
