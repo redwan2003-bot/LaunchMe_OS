@@ -10,5 +10,6 @@
     <Platform Condition="'$(Platform)' == ''">x64</Platform>
     <EnableMsixTooling>true</EnableMsixTooling>
     <RollForward>LatestMajor</RollForward>
+    <WindowsAppSDKBootstrapInitialize>false</WindowsAppSDKBootstrapInitialize>
   </PropertyGroup>
 </Project>

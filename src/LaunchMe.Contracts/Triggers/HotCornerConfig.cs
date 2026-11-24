@@ -32,4 +32,13 @@ public sealed class HotCornerConfig
 
     [JsonPropertyName("dwellTimeMs")]
     public int DwellTimeMs { get; set; } = 150;
+
+    public HotCornerAction GetActionForCorner(HotCornerLocation corner) => corner switch
+    {
+        HotCornerLocation.TopLeft => TopLeft,
+        HotCornerLocation.TopRight => TopRight,
+        HotCornerLocation.BottomLeft => BottomLeft,
+        HotCornerLocation.BottomRight => BottomRight,
+        _ => HotCornerAction.None
+    };
 }
