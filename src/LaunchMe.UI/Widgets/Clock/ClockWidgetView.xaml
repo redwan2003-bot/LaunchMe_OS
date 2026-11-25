@@ -7,34 +7,435 @@
     xmlns:local="using:LaunchMe.UI.Widgets.Clock"
     mc:Ignorable="d">
 
-    <Border Background="#20FFFFFF" 
-            BorderBrush="#33FFFFFF" 
-            BorderThickness="1" 
-            CornerRadius="16" 
-            Padding="20"
-            MinWidth="200"
-            MinHeight="110">
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
-            <!-- Digital Readout -->
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="6">
-                <TextBlock Text="{x:Bind ViewModel.FormattedTime, Mode=OneWay}" 
-                           FontSize="32" 
-                           FontWeight="Bold" 
-                           Foreground="White"
-                           HorizontalAlignment="Center" />
-                <TextBlock Text="{x:Bind ViewModel.AmPm, Mode=OneWay}" 
-                           FontSize="14" 
-                           FontWeight="SemiBold" 
-                           Foreground="#94A3B8" 
-                           VerticalAlignment="Bottom" 
-                           Margin="0,0,0,4"/>
-            </StackPanel>
+    <UserControl.Resources>
 
-            <!-- Date Readout -->
-            <TextBlock Text="{x:Bind ViewModel.FormattedDate, Mode=OneWay}" 
-                       FontSize="13" 
-                       Foreground="#94A3B8" 
-                       HorizontalAlignment="Center" />
-        </StackPanel>
-    </Border>
+        <!-- ═══════════════════════════════════════════════════════════
+             Shared brushes
+        ═══════════════════════════════════════════════════════════ -->
+        <SolidColorBrush x:Key="GlassBrush" Color="#20FFFFFF"/>
+        <SolidColorBrush x:Key="GlassBorderBrush" Color="#33FFFFFF"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#C084FC"/>
+        <SolidColorBrush x:Key="AccentDimBrush" Color="#94A3B8"/>
+        <SolidColorBrush x:Key="NeonGreenBrush" Color="#39FF14"/>
+        <SolidColorBrush x:Key="NeonMagentaBrush" Color="#FF00FF"/>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             1. DIGITAL MINIMAL  — weightless mono digits
+        ═══════════════════════════════════════════════════════════ -->
+        <DataTemplate x:Key="DigitalMinimalTemplate">
+            <Border Background="{StaticResource GlassBrush}"
+                    BorderBrush="{StaticResource GlassBorderBrush}"
+                    BorderThickness="1" CornerRadius="16" Padding="20"
+                    MinWidth="200" MinHeight="110">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+                        <TextBlock Text="{Binding FormattedTime}"
+                                   FontSize="30" FontFamily="Consolas"
+                                   FontWeight="Light" Foreground="White"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding AmPm}" FontSize="12"
+                                   FontWeight="Light" Foreground="{StaticResource AccentDimBrush}"
+                                   VerticalAlignment="Bottom" Margin="0,0,0,4"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding FormattedDate}" FontSize="12"
+                               Foreground="{StaticResource AccentDimBrush}"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             2. DIGITAL BOLD  — editorial oversized weight
+        ═══════════════════════════════════════════════════════════ -->
+        <DataTemplate x:Key="DigitalBoldTemplate">
+            <Border Background="#1A000000"
+                    BorderBrush="{StaticResource AccentBrush}"
+                    BorderThickness="1" CornerRadius="20" Padding="24"
+                    MinWidth="220" MinHeight="120">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="2">
+                    <TextBlock Text="{Binding FormattedTime}"
+                               FontSize="42" FontWeight="Black"
+                               FontFamily="Segoe UI Variable Display"
+                               Foreground="{StaticResource AccentBrush}"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding FormattedDate}"
+                               FontSize="11" FontWeight="SemiBold"
+                               Foreground="{StaticResource AccentDimBrush}"
+                               CharacterSpacing="150"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             3. DIGITAL SQUARED  — Bauhaus grid mono
+        ═══════════════════════════════════════════════════════════ -->
+        <DataTemplate x:Key="DigitalSquaredTemplate">
+            <Border Background="#FF0D0D0D"
+                    BorderBrush="#FF1E1E1E"
+                    BorderThickness="2" CornerRadius="4" Padding="20"
+                    MinWidth="200" MinHeight="110">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6">
+                    <TextBlock Text="{Binding FormattedTime}"
+                               FontSize="34" FontFamily="Courier New"
+                               FontWeight="Bold" Foreground="#FFFFD700"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding FormattedDate}"
+                               FontSize="11" FontFamily="Courier New"
+                               Foreground="#FF888888"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             4. ANALOG CLASSIC  — full-circle sweep hands
+        ═══════════════════════════════════════════════════════════ -->
+        <DataTemplate x:Key="AnalogClassicTemplate">
+            <Border Background="{StaticResource GlassBrush}"
+                    BorderBrush="{StaticResource GlassBorderBrush}"
+                    BorderThickness="1" CornerRadius="100" Padding="8"
+                    Width="160" Height="160">
+                <Grid>
+                    <!-- Clock face -->
+                    <Ellipse Width="144" Height="144"
+                             Fill="#15FFFFFF"
+                             Stroke="#40FFFFFF" StrokeThickness="1"/>
+                    <!-- Hour hand -->
+                    <Line X1="72" Y1="72" X2="72" Y2="38"
+                          Stroke="White" StrokeThickness="4"
+                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                          RenderTransformOrigin="0.5,0.5">
+                        <Line.RenderTransform>
+                            <RotateTransform Angle="{Binding HourHandAngle}" CenterX="72" CenterY="72"/>
+                        </Line.RenderTransform>
+                    </Line>
+                    <!-- Minute hand -->
+                    <Line X1="72" Y1="72" X2="72" Y2="24"
+                          Stroke="White" StrokeThickness="2.5"
+                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                          RenderTransformOrigin="0.5,0.5">
+                        <Line.RenderTransform>
+                            <RotateTransform Angle="{Binding MinuteHandAngle}" CenterX="72" CenterY="72"/>
+                        </Line.RenderTransform>
+                    </Line>
+                    <!-- Second hand -->
+                    <Line X1="72" Y1="80" X2="72" Y2="18"
+                          Stroke="#C084FC" StrokeThickness="1"
+                          RenderTransformOrigin="0.5,0.5">
+                        <Line.RenderTransform>
+                            <RotateTransform Angle="{Binding SecondHandAngle}" CenterX="72" CenterY="72"/>
+                        </Line.RenderTransform>
+                    </Line>
+                    <!-- Center dot -->
+                    <Ellipse Width="8" Height="8" Fill="#C084FC"
+                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             5. ANALOG MINIMAL  — hairline marks, no numerals
+        ═══════════════════════════════════════════════════════════ -->
+        <DataTemplate x:Key="AnalogMinimalTemplate">
+            <Border Background="Transparent"
+                    BorderBrush="#20FFFFFF"
+                    BorderThickness="1" CornerRadius="90"
+                    Width="150" Height="150">
+                <Grid>
+                    <Ellipse Width="148" Height="148"
+                             Stroke="#18FFFFFF" StrokeThickness="0.5" Fill="Transparent"/>
+                    <!-- Hour hand — ultra thin -->
+                    <Line X1="75" Y1="75" X2="75" Y2="42"
+                          Stroke="White" StrokeThickness="1.5"
+                          StrokeEndLineCap="Round">
+                        <Line.RenderTransform>
+                            <RotateTransform Angle="{Binding HourHandAngle}" CenterX="75" CenterY="75"/>
+                        </Line.RenderTransform>
+                    </Line>
+                    <!-- Minute hand -->
+                    <Line X1="75" Y1="75" X2="75" Y2="20"
+                          Stroke="White" StrokeThickness="1"
+                          StrokeEndLineCap="Round">
+                        <Line.RenderTransform>
+                            <RotateTransform Angle="{Binding MinuteHandAngle}" CenterX="75" CenterY="75"/>
+                        </Line.RenderTransform>
+                    </Line>
+                    <!-- Second sweep — accent dot -->
+                    <Ellipse Width="4" Height="4" Fill="#C084FC"
+                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             6. ANALOG CHRONO  — sub-dial tachymeter aesthetic
+        ═══════════════════════════════════════════════════════════ -->
+        <DataTemplate x:Key="AnalogChronoTemplate">
+            <Border Background="#FF111827"
+                    BorderBrush="#FF374151"
+                    BorderThickness="3" CornerRadius="90"
+                    Width="170" Height="170">
+                <Grid>
+                    <!-- Outer ring -->
+                    <Ellipse Width="162" Height="162"
+                             Stroke="#FF6B7280" StrokeThickness="1" Fill="Transparent"/>
+                    <!-- Hour hand — wide baton -->
+                    <Rectangle Width="6" Height="45"
+                                Fill="White" RadiusX="3" RadiusY="3"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Margin="0,0,0,22"
+                                RenderTransformOrigin="0.5,1">
+                        <Rectangle.RenderTransform>
+                            <RotateTransform Angle="{Binding HourHandAngle}"/>
+                        </Rectangle.RenderTransform>
+                    </Rectangle>
+                    <!-- Minute hand -->
+                    <Rectangle Width="4" Height="60"
+                                Fill="White" RadiusX="2" RadiusY="2"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Margin="0,0,0,30"
+                                RenderTransformOrigin="0.5,1">
+                        <Rectangle.RenderTransform>
+                            <RotateTransform Angle="{Binding MinuteHandAngle}"/>
+                        </Rectangle.RenderTransform>
+                    </Rectangle>
+                    <!-- Second hand — red accent -->
+                    <Rectangle Width="2" Height="72"
+                                Fill="#FFEF4444" RadiusX="1" RadiusY="1"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Margin="0,0,0,36"
+                                RenderTransformOrigin="0.5,1">
+                        <Rectangle.RenderTransform>
+                            <RotateTransform Angle="{Binding SecondHandAngle}"/>
+                        </Rectangle.RenderTransform>
+                    </Rectangle>
+                    <!-- Center jewel -->
+                    <Ellipse Width="10" Height="10" Fill="#FFEF4444"
+                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             7. FLIP SPLIT-FLAP  — retro departures board (simulated)
+        ═══════════════════════════════════════════════════════════ -->
+        <DataTemplate x:Key="FlipSplitFlapTemplate">
+            <Border Background="#FF0A0A0A"
+                    BorderBrush="#FF222222"
+                    BorderThickness="2" CornerRadius="8" Padding="16"
+                    MinWidth="220" MinHeight="100">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                    <!-- Flip tiles row -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+                        <!-- Each "tile" is a styled Border with the digit -->
+                        <Border Background="#FF1A1A1A" BorderBrush="#FF333333"
+                                BorderThickness="1" CornerRadius="4" Padding="8,6"
+                                MinWidth="40">
+                            <TextBlock Text="{Binding FlipH1}" FontFamily="Courier New"
+                                       FontSize="28" FontWeight="Bold"
+                                       Foreground="#FFFFD700" HorizontalAlignment="Center"/>
+                        </Border>
+                        <Border Background="#FF1A1A1A" BorderBrush="#FF333333"
+                                BorderThickness="1" CornerRadius="4" Padding="8,6"
+                                MinWidth="40">
+                            <TextBlock Text="{Binding FlipH2}" FontFamily="Courier New"
+                                       FontSize="28" FontWeight="Bold"
+                                       Foreground="#FFFFD700" HorizontalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text=":" FontSize="28" FontWeight="Bold"
+                                   Foreground="#FF555555" VerticalAlignment="Center"/>
+                        <Border Background="#FF1A1A1A" BorderBrush="#FF333333"
+                                BorderThickness="1" CornerRadius="4" Padding="8,6"
+                                MinWidth="40">
+                            <TextBlock Text="{Binding FlipM1}" FontFamily="Courier New"
+                                       FontSize="28" FontWeight="Bold"
+                                       Foreground="#FFFFD700" HorizontalAlignment="Center"/>
+                        </Border>
+                        <Border Background="#FF1A1A1A" BorderBrush="#FF333333"
+                                BorderThickness="1" CornerRadius="4" Padding="8,6"
+                                MinWidth="40">
+                            <TextBlock Text="{Binding FlipM2}" FontFamily="Courier New"
+                                       FontSize="28" FontWeight="Bold"
+                                       Foreground="#FFFFD700" HorizontalAlignment="Center"/>
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Text="{Binding FormattedDate}"
+                               FontSize="11" FontFamily="Courier New"
+                               Foreground="#FF666666" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             8. SWISS RAIL  — SBB-inspired precise minimalism
+        ═══════════════════════════════════════════════════════════ -->
+        <DataTemplate x:Key="SwissRailTemplate">
+            <Border Background="#FFFAFAFA"
+                    BorderBrush="#FFE5E7EB"
+                    BorderThickness="1" CornerRadius="12" Padding="20"
+                    MinWidth="210" MinHeight="110">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="2">
+                        <TextBlock Text="{Binding FormattedTime}"
+                                   FontSize="38" FontWeight="Light"
+                                   FontFamily="Helvetica Neue, Segoe UI Variable Display"
+                                   Foreground="#FF111827"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                    <Rectangle Height="2" Fill="#FFEF4444" Margin="20,2"/>
+                    <TextBlock Text="{Binding FormattedDate}"
+                               FontSize="11" FontWeight="Regular"
+                               FontFamily="Helvetica Neue, Segoe UI"
+                               Foreground="#FF6B7280" HorizontalAlignment="Center"
+                               CharacterSpacing="80"/>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             9. EDITORIAL SERIF  — magazine cover typographic clock
+        ═══════════════════════════════════════════════════════════ -->
+        <DataTemplate x:Key="EditorialSerifTemplate">
+            <Border Background="#FF0C0C0E"
+                    BorderBrush="#20FFFFFF"
+                    BorderThickness="1" CornerRadius="2" Padding="24"
+                    MinWidth="230" MinHeight="120">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="2">
+                    <TextBlock Text="{Binding FormattedTime}"
+                               FontSize="52" FontWeight="Black"
+                               FontFamily="Georgia, Times New Roman"
+                               Foreground="White" HorizontalAlignment="Center"
+                               CharacterSpacing="-50"/>
+                    <TextBlock Text="{Binding FormattedDate}"
+                               FontSize="10" FontWeight="Regular"
+                               FontFamily="Georgia"
+                               FontStyle="Italic"
+                               Foreground="{StaticResource AccentDimBrush}"
+                               HorizontalAlignment="Center"
+                               CharacterSpacing="200"/>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             10. CONCENTRIC RING  — nested arc progress rings
+        ═══════════════════════════════════════════════════════════ -->
+        <DataTemplate x:Key="ConcentricRingTemplate">
+            <Border Background="{StaticResource GlassBrush}"
+                    BorderBrush="{StaticResource GlassBorderBrush}"
+                    BorderThickness="1" CornerRadius="90"
+                    Width="160" Height="160">
+                <Grid>
+                    <!-- Outer ring: Hours (progress 0–12h) -->
+                    <Ellipse Width="148" Height="148"
+                             Stroke="#20C084FC" StrokeThickness="8" Fill="Transparent"/>
+                    <!-- Middle ring: Minutes -->
+                    <Ellipse Width="128" Height="128"
+                             Stroke="#2094A3B8" StrokeThickness="6" Fill="Transparent"/>
+                    <!-- Inner ring: Seconds -->
+                    <Ellipse Width="108" Height="108"
+                             Stroke="#2039FF14" StrokeThickness="4" Fill="Transparent"/>
+                    <!-- Center digital readout -->
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="1">
+                        <TextBlock Text="{Binding FormattedTime}"
+                                   FontSize="20" FontWeight="SemiBold"
+                                   Foreground="White" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding FormattedDate}"
+                                   FontSize="8" Foreground="{StaticResource AccentDimBrush}"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             11. NEON BINARY  — cyberpunk binary matrix display
+        ═══════════════════════════════════════════════════════════ -->
+        <DataTemplate x:Key="NeonBinaryTemplate">
+            <Border Background="#FF000000"
+                    BorderBrush="#FF39FF14"
+                    BorderThickness="1" CornerRadius="4" Padding="16"
+                    MinWidth="200" MinHeight="120">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6">
+                    <TextBlock Text="{Binding FormattedTime}"
+                               FontFamily="Courier New" FontSize="28" FontWeight="Bold"
+                               Foreground="{StaticResource NeonGreenBrush}"
+                               HorizontalAlignment="Center">
+                        <TextBlock.Shadow>
+                            <ThemeShadow/>
+                        </TextBlock.Shadow>
+                    </TextBlock>
+                    <TextBlock Text="{Binding FormattedDate}"
+                               FontFamily="Courier New" FontSize="10"
+                               Foreground="#8039FF14" HorizontalAlignment="Center"
+                               CharacterSpacing="100"/>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             12. WORLD DUAL TIME  — two timezone readouts
+        ═══════════════════════════════════════════════════════════ -->
+        <DataTemplate x:Key="WorldDualTimeTemplate">
+            <Border Background="{StaticResource GlassBrush}"
+                    BorderBrush="{StaticResource GlassBorderBrush}"
+                    BorderThickness="1" CornerRadius="16" Padding="20"
+                    MinWidth="240" MinHeight="130">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                    <!-- Primary timezone -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="LOCAL" FontSize="9" FontWeight="SemiBold"
+                                       Foreground="{StaticResource AccentDimBrush}"
+                                       CharacterSpacing="200"/>
+                            <TextBlock Text="{Binding FormattedTime}"
+                                       FontSize="30" FontWeight="Bold"
+                                       Foreground="White"/>
+                        </StackPanel>
+                        <Rectangle Width="1" Fill="#30FFFFFF" Margin="0,4"/>
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="UTC" FontSize="9" FontWeight="SemiBold"
+                                       Foreground="{StaticResource AccentDimBrush}"
+                                       CharacterSpacing="200"/>
+                            <TextBlock Text="{Binding UtcTime}"
+                                       FontSize="30" FontWeight="Light"
+                                       Foreground="{StaticResource AccentDimBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <!-- Date strip -->
+                    <Rectangle Height="1" Fill="#20FFFFFF" Margin="0,0"/>
+                    <TextBlock Text="{Binding FormattedDate}"
+                               FontSize="11" Foreground="{StaticResource AccentDimBrush}"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             Template Selector resource
+        ═══════════════════════════════════════════════════════════ -->
+        <local:ClockStyleTemplateSelector x:Key="ClockStyleSelector"
+            DigitalMinimalTemplate="{StaticResource DigitalMinimalTemplate}"
+            DigitalBoldTemplate="{StaticResource DigitalBoldTemplate}"
+            DigitalSquaredTemplate="{StaticResource DigitalSquaredTemplate}"
+            AnalogClassicTemplate="{StaticResource AnalogClassicTemplate}"
+            AnalogMinimalTemplate="{StaticResource AnalogMinimalTemplate}"
+            AnalogChronoTemplate="{StaticResource AnalogChronoTemplate}"
+            FlipSplitFlapTemplate="{StaticResource FlipSplitFlapTemplate}"
+            SwissRailTemplate="{StaticResource SwissRailTemplate}"
+            EditorialSerifTemplate="{StaticResource EditorialSerifTemplate}"
+            ConcentricRingTemplate="{StaticResource ConcentricRingTemplate}"
+            NeonBinaryTemplate="{StaticResource NeonBinaryTemplate}"
+            WorldDualTimeTemplate="{StaticResource WorldDualTimeTemplate}"/>
+
+    </UserControl.Resources>
+
+    <!-- Root: delegate to ContentPresenter that swaps templates via selector -->
+    <ContentPresenter Content="{x:Bind ViewModel, Mode=OneWay}"
+                      ContentTemplateSelector="{StaticResource ClockStyleSelector}"/>
+
 </UserControl>

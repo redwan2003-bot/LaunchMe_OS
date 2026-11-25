@@ -31,6 +31,14 @@ public static class Program
             return;
         }
 
+        // Showcase-capture mode: headless WinUI render + DPI PNG export.
+        // Actual capturing is done from App.OnLaunched once the Window is live.
+        bool showcaseMode = LaunchMe.UI.Services.ShowcaseCaptureService.IsShowcaseMode(args);
+        if (showcaseMode)
+        {
+            System.Environment.SetEnvironmentVariable("LAUNCHME_SHOWCASE_MODE", "1");
+        }
+
         string? themePackagePath = ExtractImportThemePath(args);
         if (!string.IsNullOrWhiteSpace(themePackagePath))
         {

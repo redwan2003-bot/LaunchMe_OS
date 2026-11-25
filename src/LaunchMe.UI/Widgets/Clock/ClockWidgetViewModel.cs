@@ -4,10 +4,21 @@ using LaunchMe.UI.Widgets.Models;
 
 namespace LaunchMe.UI.Widgets.Clock;
 
+/// <summary>All 12 luxury clock skins — matches LaunchMe.Core.Widgets.Clock.ClockStyle.</summary>
 public enum ClockStyle
 {
-    Digital,
-    Analog
+    DigitalMinimal,
+    DigitalBold,
+    DigitalSquared,
+    AnalogClassic,
+    AnalogMinimal,
+    AnalogChrono,
+    FlipSplitFlap,
+    SwissRail,
+    EditorialSerif,
+    ConcentricRing,
+    NeonBinary,
+    WorldDualTime
 }
 
 public sealed class ClockWidgetViewModel : IWidgetViewModel
@@ -16,10 +27,15 @@ public sealed class ClockWidgetViewModel : IWidgetViewModel
     private readonly object _lock = new();
     private bool _is24HourFormat = true;
     private bool _showSeconds = true;
-    private ClockStyle _style = ClockStyle.Digital;
+    private ClockStyle _style = ClockStyle.DigitalMinimal;
     private string _formattedTime = string.Empty;
     private string _formattedDate = string.Empty;
     private string _amPm = string.Empty;
+    private string _utcTime = string.Empty;
+    private string _flipH1 = "0";
+    private string _flipH2 = "0";
+    private string _flipM1 = "0";
+    private string _flipM2 = "0";
     private double _hourHandAngle;
     private double _minuteHandAngle;
     private double _secondHandAngle;
@@ -89,6 +105,19 @@ public sealed class ClockWidgetViewModel : IWidgetViewModel
         get => _amPm;
         private set { if (_amPm != value) { _amPm = value; OnPropertyChanged(); } }
     }
+
+    /// <summary>UTC time string for WorldDualTime skin.</summary>
+    public string UtcTime
+    {
+        get => _utcTime;
+        private set { if (_utcTime != value) { _utcTime = value; OnPropertyChanged(); } }
+    }
+
+    // Individual flip-flap digit characters for FlipSplitFlap skin.
+    public string FlipH1 { get => _flipH1; private set { if (_flipH1 != value) { _flipH1 = value; OnPropertyChanged(); } } }
+    public string FlipH2 { get => _flipH2; private set { if (_flipH2 != value) { _flipH2 = value; OnPropertyChanged(); } } }
+    public string FlipM1 { get => _flipM1; private set { if (_flipM1 != value) { _flipM1 = value; OnPropertyChanged(); } } }
+    public string FlipM2 { get => _flipM2; private set { if (_flipM2 != value) { _flipM2 = value; OnPropertyChanged(); } } }
 
     public double HourHandAngle
     {
@@ -174,7 +203,19 @@ public sealed class ClockWidgetViewModel : IWidgetViewModel
         FormattedTime = time.ToString(format);
         FormattedDate = time.ToString("dddd, MMMM d");
 
-        // 2. Analog angles
+        // 3. Flip-flap individual digit chars
+        string hh = time.ToString(_is24HourFormat ? "HH" : "hh");
+        string mm = time.ToString("mm");
+        FlipH1 = hh[0].ToString();
+        FlipH2 = hh[1].ToString();
+        FlipM1 = mm[0].ToString();
+        FlipM2 = mm[1].ToString();
+
+        // 4. UTC readout for WorldDualTime skin
+        var utc = time.ToUniversalTime();
+        UtcTime = utc.ToString(_showSeconds ? "HH:mm:ss" : "HH:mm");
+
+        // 5. Analog angles
         double seconds = time.Second + (time.Millisecond / 1000.0);
         double minutes = time.Minute + (seconds / 60.0);
         double hours = (time.Hour % 12) + (minutes / 60.0);
