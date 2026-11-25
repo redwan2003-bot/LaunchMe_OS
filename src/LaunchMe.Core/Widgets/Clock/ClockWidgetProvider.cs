@@ -11,6 +11,8 @@ public interface IClockWidgetProvider
 
     AnalogClockInfo CalculateAnalogAngles(DateTimeOffset time, bool smoothSeconds = false);
     DigitalClockInfo FormatDigitalTime(DateTimeOffset time);
+    bool[,] GetBinaryTimeMatrix(DateTimeOffset time);
+    string GetStyleDisplayName(ClockStyle style);
 }
 
 public sealed class ClockWidgetProvider : IClockWidgetProvider
@@ -80,4 +82,50 @@ public sealed class ClockWidgetProvider : IClockWidgetProvider
             Millisecond = time.Millisecond
         };
     }
+
+    /// <summary>
+    /// Returns a 4-row (bits 8, 4, 2, 1) x 6-column (HH:MM:SS BCD digits) boolean matrix for the NeonBinary clock style.
+    /// </summary>
+    public bool[,] GetBinaryTimeMatrix(DateTimeOffset time)
+    {
+        Span<int> digits =
+        [
+            time.Hour / 10,
+            time.Hour % 10,
+            time.Minute / 10,
+            time.Minute % 10,
+            time.Second / 10,
+            time.Second % 10
+        ];
+
+        var matrix = new bool[4, 6];
+        for (var col = 0; col < 6; col++)
+        {
+            var digit = digits[col];
+            for (var row = 0; row < 4; row++)
+            {
+                var bitMask = 1 << (3 - row);
+                matrix[row, col] = (digit & bitMask) != 0;
+            }
+        }
+
+        return matrix;
+    }
+
+    public string GetStyleDisplayName(ClockStyle style) => style switch
+    {
+        ClockStyle.DigitalMinimal => "Digital Minimal",
+        ClockStyle.DigitalBold => "Digital Bold",
+        ClockStyle.DigitalSquared => "Digital Squared",
+        ClockStyle.AnalogClassic => "Analog Classic",
+        ClockStyle.AnalogMinimal => "Analog Minimal",
+        ClockStyle.AnalogChrono => "Analog Chrono",
+        ClockStyle.FlipSplitFlap => "Flip Split-Flap",
+        ClockStyle.SwissRail => "Swiss Rail",
+        ClockStyle.EditorialSerif => "Editorial Serif",
+        ClockStyle.ConcentricRing => "Concentric Ring",
+        ClockStyle.NeonBinary => "Neon Binary",
+        ClockStyle.WorldDualTime => "World Dual Time",
+        _ => style.ToString()
+    };
 }

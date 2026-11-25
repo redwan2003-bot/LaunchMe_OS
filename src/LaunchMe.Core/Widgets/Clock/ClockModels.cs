@@ -7,7 +7,13 @@ public enum ClockStyle
     DigitalSquared,
     AnalogClassic,
     AnalogMinimal,
-    AnalogChrono
+    AnalogChrono,
+    FlipSplitFlap,
+    SwissRail,
+    EditorialSerif,
+    ConcentricRing,
+    NeonBinary,
+    WorldDualTime
 }
 
 public sealed record DigitalClockInfo
