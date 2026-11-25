@@ -4,6 +4,9 @@ using LaunchMe.Contracts.Indexing;
 using LaunchMe.Contracts.Media;
 using LaunchMe.Contracts.Search;
 using LaunchMe.Contracts.Spaces;
+using LaunchMe.Contracts.Workflows;
+using LaunchMe.Core.Apps;
+using LaunchMe.Platform.Win32.Shell;
 using LaunchMe.UI.ViewModels;
 using LaunchMe.UI.Widgets.Catalog;
 using Microsoft.UI.Xaml;
@@ -23,8 +26,13 @@ public sealed class LauncherViewModelTests
     private readonly Mock<IAppLauncherService> _appLauncherMock = new();
     private readonly Mock<IClipboardWriter> _clipboardWriterMock = new();
     private readonly Mock<IMediaSessionService> _mediaServiceMock = new();
+    private readonly Mock<IWorkflowRunner> _workflowRunnerMock = new();
+    private readonly Mock<ISpaceSchedulerService> _spaceSchedulerMock = new();
+    private readonly Mock<IThemeAssociationService> _themeAssociationMock = new();
 
-    private LauncherViewModel CreateViewModel(WidgetCatalogViewModel? widgetCatalog = null)
+    private LauncherViewModel CreateViewModel(
+        WidgetCatalogViewModel? widgetCatalog = null,
+        PlatformDiagnosticsService? diagnosticsService = null)
     {
         return new LauncherViewModel(
             _appIndexerMock.Object,
@@ -35,7 +43,11 @@ public sealed class LauncherViewModelTests
             _spaceStoreMock.Object,
             _appLauncherMock.Object,
             _clipboardWriterMock.Object,
-            widgetCatalog);
+            widgetCatalog,
+            _workflowRunnerMock.Object,
+            _spaceSchedulerMock.Object,
+            _themeAssociationMock.Object,
+            diagnosticsService);
     }
 
     [Fact]
@@ -373,5 +385,192 @@ public sealed class LauncherViewModelTests
         vm.Wallpaper.IsPlaying.Should().BeFalse();
         vm.Wallpaper.ActiveGpuEstimatePercent.Should().Be(0.0);
         catalog.Clock.IsTimerRunning.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task SpacesAndThemes_SwitchExportAndImport_UpdatesActiveSpaceAndWorkflows()
+    {
+        // Arrange
+        var workSpace = new SpaceModel
+        {
+            SpaceId = "space-work",
+            Name = "Work Focus",
+            Theme = new ThemeSettings { TintHex = "#047857" },
+            Workflows =
+            [
+                new WorkflowDefinition
+                {
+                    Id = "wf-1",
+                    Name = "Morning Dev",
+                    Actions = [new WorkflowAction { ActionType = WorkflowActionType.Delay, DelayMs = 1 }]
+                }
+            ]
+        };
+        var personalSpace = new SpaceModel { SpaceId = "space-home", Name = "Personal" };
+
+        _spaceStoreMock.Setup(x => x.GetAllSpacesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync([personalSpace, workSpace]);
+        _spaceStoreMock.Setup(x => x.SwitchSpaceAsync("space-work", It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _spaceStoreMock.Setup(x => x.GetActiveSpaceAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(workSpace);
+        _spaceStoreMock.Setup(x => x.ExportThemeAsync("space-work", @"C:\tmp\work.launchmetheme", It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _spaceStoreMock.Setup(x => x.ImportThemeAsync(@"C:\tmp\imported.launchmetheme", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(personalSpace);
+        _spaceStoreMock.Setup(x => x.SwitchSpaceAsync("space-home", It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        using var vm = CreateViewModel();
+
+        // Act
+        await vm.RefreshSpacesAsync();
+        await vm.SwitchSpaceAsync("space-work");
+
+        // Assert switch
+        vm.Spaces.Should().HaveCount(2);
+        vm.ActiveSpaceName.Should().Be("Work Focus");
+        vm.SelectedSpaceName.Should().Be("Work Focus");
+        vm.Workflows.Should().ContainSingle(w => w.Name == "Morning Dev");
+        vm.WorkflowsStripVisibility.Should().Be(Visibility.Visible);
+
+        // Act export & import
+        await vm.ExportActiveThemeAsync(@"C:\tmp\work.launchmetheme");
+        _spaceStoreMock.Verify(x => x.ExportThemeAsync("space-work", @"C:\tmp\work.launchmetheme", It.IsAny<CancellationToken>()), Times.Once);
+
+        var imported = await vm.ImportThemePackageAsync(@"C:\tmp\imported.launchmetheme");
+        imported.SpaceId.Should().Be("space-home");
+        _spaceStoreMock.Verify(x => x.SwitchSpaceAsync("space-home", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Workflows_ExecuteAndMatchInUnifiedSearch()
+    {
+        // Arrange
+        var wf = new WorkflowDefinition
+        {
+            Id = "wf-focus",
+            Name = "Deep Focus Setup",
+            Actions = [new WorkflowAction { ActionType = WorkflowActionType.OpenUrl, Target = "https://example.com" }]
+        };
+        var space = new SpaceModel { SpaceId = "s1", Name = "Focus", Workflows = [wf] };
+
+        _fileSearchMock.Setup(x => x.SearchFilesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        _clipboardMock.Setup(x => x.GetItems(ClipboardCategory.Recent)).Returns([]);
+        _appIndexerMock.Setup(x => x.SearchApps(It.IsAny<string>())).Returns([]);
+
+        using var vm = CreateViewModel();
+        vm.ApplySpace(space);
+
+        // Act: Command execution
+        vm.ExecuteWorkflowCommand.Execute(wf);
+        await Task.Delay(50);
+        _workflowRunnerMock.Verify(x => x.ExecuteWorkflowAsync(wf, It.IsAny<CancellationToken>()), Times.Once);
+
+        // Act: Unified search match
+        await vm.ExecuteSearchAsync("Deep Focus");
+        vm.SearchResults.Should().ContainSingle(r => r.CategoryName == "Workflow" && r.Title == "Deep Focus Setup");
+    }
+
+    [Fact]
+    public void Categories_FilterMockedIndexerApps_Cleanly()
+    {
+        // Arrange
+        var apps = new List<AppItem>
+        {
+            new() { Id = "vscode", Name = "VS Code", Categories = ["Development"], IsRecentlyUsed = true },
+            new() { Id = "edge", Name = "Microsoft Edge", Categories = ["Browsers"] },
+            new() { Id = "secret", Name = "Internal Tool", Categories = ["Development"], IsHidden = true }
+        };
+        _appIndexerMock.Setup(x => x.SearchApps(string.Empty)).Returns(apps);
+
+        using var vm = CreateViewModel();
+
+        // Default "All" excludes hidden
+        vm.Categories.Should().Contain(["All", "Recently Used", "Development", "Browsers", "Media", "Productivity", "Hidden"]);
+        vm.Pages[0].Items.Select(i => i.Id).Should().BeEquivalentTo(["vscode", "edge"]);
+
+        // "Development" excludes hidden
+        vm.SelectCategoryCommand.Execute("Development");
+        vm.SelectedCategory.Should().Be("Development");
+        vm.Pages[0].Items.Select(i => i.Id).Should().BeEquivalentTo(["vscode"]);
+
+        // "Recently Used"
+        vm.SelectCategoryCommand.Execute("Recently Used");
+        vm.Pages[0].Items.Select(i => i.Id).Should().BeEquivalentTo(["vscode"]);
+
+        // "Hidden"
+        vm.SelectCategoryCommand.Execute("Hidden");
+        vm.Pages[0].Items.Select(i => i.Id).Should().BeEquivalentTo(["secret"]);
+    }
+
+    [Fact]
+    public async Task AppManagement_CleanUninstallHideAndRename_InvokeIndexerAndRefreshGrid()
+    {
+        // Arrange
+        var apps = new List<AppItem>
+        {
+            new() { Id = "app1", Name = "Sample App", ExecutablePath = "sample.exe" }
+        };
+        _appIndexerMock.Setup(x => x.SearchApps(string.Empty)).Returns(apps);
+        _appIndexerMock.Setup(x => x.CleanUninstallAsync("app1", true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() =>
+            {
+                apps.Clear();
+                return true;
+            });
+
+        using var vm = CreateViewModel();
+
+        // Act & Assert: Hide & Rename
+        vm.HideApp("app1", true);
+        _appIndexerMock.Verify(x => x.HideApp("app1", true), Times.Once);
+
+        vm.RenameApp("app1", "Renamed App");
+        _appIndexerMock.Verify(x => x.RenameApp("app1", "Renamed App"), Times.Once);
+
+        // Act & Assert: Clean Uninstall
+        bool removed = await vm.CleanUninstallAppAsync("app1");
+        removed.Should().BeTrue();
+        _appIndexerMock.Verify(x => x.CleanUninstallAsync("app1", true, It.IsAny<CancellationToken>()), Times.Once);
+        vm.Pages[0].Items.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void SchedulerAndThemeAssociationToggles_AndDiagnostics_WorkCorrectly()
+    {
+        // Arrange
+        bool schedulerRunning = false;
+        _spaceSchedulerMock.SetupGet(x => x.IsRunning).Returns(() => schedulerRunning);
+        _spaceSchedulerMock.Setup(x => x.Start()).Callback(() => schedulerRunning = true);
+        _spaceSchedulerMock.Setup(x => x.Stop()).Callback(() => schedulerRunning = false);
+
+        bool associationRegistered = false;
+        _themeAssociationMock.SetupGet(x => x.IsRegistered).Returns(() => associationRegistered);
+        _themeAssociationMock.Setup(x => x.RegisterFileAssociation(It.IsAny<string>()))
+            .Callback(() => associationRegistered = true);
+        _themeAssociationMock.Setup(x => x.UnregisterFileAssociation())
+            .Callback(() => associationRegistered = false);
+
+        using var vm = CreateViewModel(diagnosticsService: new PlatformDiagnosticsService());
+
+        // Assert diagnostics populated
+        vm.DiagnosticsSnapshot.Should().NotBeNull();
+        vm.PlatformDiagnosticsText.Should().Contain("DPI:");
+
+        // Toggle scheduler
+        vm.IsSchedulerEnabled.Should().BeFalse();
+        vm.ToggleSchedulerCommand.Execute(null);
+        vm.IsSchedulerEnabled.Should().BeTrue();
+        vm.ToggleSchedulerCommand.Execute(null);
+        vm.IsSchedulerEnabled.Should().BeFalse();
+
+        // Toggle theme association
+        vm.IsThemeAssociationRegistered.Should().BeFalse();
+        vm.ToggleThemeAssociationCommand.Execute(null);
+        vm.IsThemeAssociationRegistered.Should().BeTrue();
+        vm.ToggleThemeAssociationCommand.Execute(null);
+        vm.IsThemeAssociationRegistered.Should().BeFalse();
     }
 }

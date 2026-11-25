@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Windows.System;
+using LaunchMe.Contracts.Workflows;
 using LaunchMe.UI.ViewModels;
 
 namespace LaunchMe.UI.Views;
@@ -194,6 +195,30 @@ public sealed partial class LauncherWindow : Window
         if (sender is FrameworkElement fe && fe.Tag is string tintHex)
         {
             ViewModel.ApplyQuickThemeTint(tintHex);
+        }
+    }
+
+    private void CategoryButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.Tag is string category)
+        {
+            ViewModel.SelectedCategory = category;
+        }
+    }
+
+    private void SpaceButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.Tag is string spaceId)
+        {
+            _ = ViewModel.SwitchSpaceAsync(spaceId);
+        }
+    }
+
+    private void WorkflowButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.Tag is WorkflowDefinition workflow)
+        {
+            _ = ViewModel.ExecuteWorkflowAsync(workflow);
         }
     }
 

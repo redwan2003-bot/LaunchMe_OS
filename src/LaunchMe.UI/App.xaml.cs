@@ -4,11 +4,13 @@ using LaunchMe.Contracts.Media;
 using LaunchMe.Contracts.Search;
 using LaunchMe.Contracts.Spaces;
 using LaunchMe.Contracts.Triggers;
+using LaunchMe.Contracts.Workflows;
 using LaunchMe.Core.Apps;
 using LaunchMe.Core.Files;
 using LaunchMe.Core.Search;
 using LaunchMe.Core.Spaces;
 using LaunchMe.Core.Widgets.Weather;
+using LaunchMe.Core.Workflows;
 using LaunchMe.Platform.Win32.Clipboard;
 using LaunchMe.Platform.Win32.Gestures;
 using LaunchMe.Platform.Win32.Media;
@@ -30,6 +32,7 @@ public partial class App : Application
 {
     private DispatcherQueue? _dispatcherQueue;
     private SqliteSpaceStore? _spaceStore;
+    private SpaceSchedulerService? _spaceScheduler;
     private WinRTClipboardMonitor? _clipboardMonitor;
     private WinRTMediaSessionService? _mediaSession;
     private Win32SystemMetricsService? _systemMetrics;
@@ -62,6 +65,10 @@ public partial class App : Application
         IEmojiService emoji = new EmojiIndexService();
         _mediaSession = new WinRTMediaSessionService();
         _systemMetrics = new Win32SystemMetricsService();
+        IWorkflowRunner workflowRunner = new WorkflowRunner(appLauncher);
+        _spaceScheduler = new SpaceSchedulerService(_spaceStore);
+        IThemeAssociationService themeAssociation = new ThemeFileAssociationService();
+        var diagnosticsService = new PlatformDiagnosticsService();
 
         var statsAdapter = new Win32SystemStatsAdapter(_systemMetrics);
         var weatherAdapter = new CoreWeatherAdapter(new SimulatedWeatherProvider());
@@ -76,9 +83,15 @@ public partial class App : Application
             _spaceStore,
             appLauncher,
             clipboardWriter,
-            _widgetCatalog);
+            _widgetCatalog,
+            workflowRunner,
+            _spaceScheduler,
+            themeAssociation,
+            diagnosticsService);
 
         _launcherViewModel.QuitAppRequested += OnQuitAppRequested;
+        _spaceScheduler.ScheduledSpaceActivated += OnScheduledSpaceActivated;
+        _spaceScheduler.Start();
 
         _launcherWindow = new LauncherWindow(_launcherViewModel);
         _launcherWindow.Closed += OnWindowClosed;
@@ -121,11 +134,21 @@ public partial class App : Application
         {
             try
             {
+                var spaces = await _spaceStore.GetAllSpacesAsync().ConfigureAwait(false);
                 var activeSpace = await _spaceStore.GetActiveSpaceAsync().ConfigureAwait(false);
-                if (activeSpace != null)
+                _dispatcherQueue?.TryEnqueue(() =>
                 {
-                    _dispatcherQueue?.TryEnqueue(() => _launcherViewModel?.ApplySpace(activeSpace));
-                }
+                    if (_launcherViewModel is null) return;
+                    _launcherViewModel.Spaces.Clear();
+                    foreach (var space in spaces)
+                    {
+                        _launcherViewModel.Spaces.Add(space);
+                    }
+                    if (activeSpace != null)
+                    {
+                        _launcherViewModel.ApplySpace(activeSpace);
+                    }
+                });
             }
             catch
             {
@@ -145,6 +168,12 @@ public partial class App : Application
                 // Ignore partial scan errors
             }
         }
+    }
+
+    private void OnScheduledSpaceActivated(object? sender, SpaceChangedEventArgs e)
+    {
+        if (e.ActiveSpace is null) return;
+        _dispatcherQueue?.TryEnqueue(() => _launcherViewModel?.ApplySpace(e.ActiveSpace));
     }
 
     private void OnTriggerInvoked(object? sender, TriggerEventArgs e)
@@ -199,6 +228,14 @@ public partial class App : Application
     {
         if (_shuttingDown) return;
         _shuttingDown = true;
+
+        if (_spaceScheduler != null)
+        {
+            _spaceScheduler.ScheduledSpaceActivated -= OnScheduledSpaceActivated;
+            _spaceScheduler.Stop();
+            _spaceScheduler.Dispose();
+            _spaceScheduler = null;
+        }
 
         if (_launcherViewModel != null)
         {

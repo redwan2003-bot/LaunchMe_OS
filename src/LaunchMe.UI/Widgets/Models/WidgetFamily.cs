@@ -9,6 +9,7 @@ public enum WidgetFamily
     Pomodoro,
     Affirmations,
     Calendar,
+    PixelArt,
     Photo,
     ShapePhoto,
     Gif,

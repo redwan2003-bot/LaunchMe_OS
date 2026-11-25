@@ -82,6 +82,10 @@ public static class Win32Interop
     public const int SM_CYVIRTUALSCREEN = 79;
     public const int SM_CMONITORS = 80;
 
+    // Shell Change Notifications
+    public const int SHCNE_ASSOCCHANGED = 0x08000000;
+    public const uint SHCNF_IDLIST = 0x0000;
+
     public static readonly nint HWND_MESSAGE = new(-3);
 
     public delegate nint HookProc(int nCode, nint wParam, nint lParam);
@@ -491,4 +495,10 @@ public static class Win32Interop
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool GetCursorPos(out POINT lpPoint);
+
+    [DllImport("user32.dll")]
+    public static extern uint GetDpiForSystem();
+
+    [DllImport("shell32.dll")]
+    public static extern void SHChangeNotify(int wEventId, uint uFlags, nint dwItem1, nint dwItem2);
 }

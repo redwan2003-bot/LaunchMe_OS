@@ -11,6 +11,10 @@
     xmlns:pomodoro="using:LaunchMe.UI.Widgets.Pomodoro"
     xmlns:affirm="using:LaunchMe.UI.Widgets.Affirmations"
     xmlns:cal="using:LaunchMe.UI.Widgets.Calendar"
+    xmlns:pixelart="using:LaunchMe.UI.Widgets.PixelArt"
+    xmlns:photo="using:LaunchMe.UI.Widgets.Photo"
+    xmlns:shapephoto="using:LaunchMe.UI.Widgets.ShapePhoto"
+    xmlns:gif="using:LaunchMe.UI.Widgets.Gif"
     mc:Ignorable="d">
 
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
@@ -35,6 +39,18 @@
 
             <!-- Calendar -->
             <cal:CalendarWidgetView ViewModel="{x:Bind ViewModel.Calendar, Mode=OneWay}" />
+
+            <!-- Pixel Art -->
+            <pixelart:PixelArtWidgetView ViewModel="{x:Bind ViewModel.PixelArt, Mode=OneWay}" />
+
+            <!-- Photo -->
+            <photo:PhotoWidgetView ViewModel="{x:Bind ViewModel.Photo, Mode=OneWay}" />
+
+            <!-- Shape Photo -->
+            <shapephoto:ShapePhotoWidgetView ViewModel="{x:Bind ViewModel.ShapePhoto, Mode=OneWay}" />
+
+            <!-- Animated GIF -->
+            <gif:GifWidgetView ViewModel="{x:Bind ViewModel.Gif, Mode=OneWay}" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

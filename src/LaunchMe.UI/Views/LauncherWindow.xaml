@@ -5,6 +5,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:LaunchMe.UI.ViewModels"
+    xmlns:spaces="using:LaunchMe.Contracts.Spaces"
+    xmlns:workflows="using:LaunchMe.Contracts.Workflows"
     xmlns:theming="using:LaunchMe.UI.Theming"
     xmlns:wallpaper="using:LaunchMe.UI.Wallpaper"
     xmlns:widgets="using:LaunchMe.UI.Widgets.Catalog"
@@ -56,7 +58,7 @@
                             Background="#3338BDF8"
                             CornerRadius="6"
                             Padding="8,3"
-                            Visibility="{x:Bind ViewModel.IsEmojiModeVisible, Mode=OneWay}">
+                            Visibility="{x:Bind ViewModel.EmojiModeBadgeVisibility, Mode=OneWay}">
                         <TextBlock Text="EMOJI (TAB)" Foreground="#38BDF8" FontSize="11" FontWeight="SemiBold" />
                     </Border>
                 </Grid>
@@ -68,7 +70,7 @@
                         BorderThickness="1"
                         CornerRadius="12"
                         MaxHeight="380"
-                        Visibility="{x:Bind ViewModel.HasSearchResults, Mode=OneWay}">
+                        Visibility="{x:Bind ViewModel.SearchResultsVisibility, Mode=OneWay}">
                     <ListView x:Name="SearchResultsList"
                               ItemsSource="{x:Bind ViewModel.SearchResults, Mode=OneWay}"
                               SelectedIndex="{x:Bind ViewModel.SelectedSearchIndex, Mode=TwoWay}"
@@ -96,14 +98,43 @@
             </StackPanel>
 
             <!-- Main Content Area + Right-Side Widget Drawer -->
-            <Grid Grid.Row="1" Margin="0,24,0,16">
+            <Grid Grid.Row="1" Margin="0,16,0,16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
+                <!-- Category Tabs Bar above App Grid -->
+                <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8" Margin="0,0,0,12">
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.Categories, Mode=OneWay}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="6" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Button Content="{x:Bind}"
+                                        Tag="{x:Bind}"
+                                        Click="CategoryButton_Click"
+                                        Background="#26FFFFFF"
+                                        Foreground="White"
+                                        CornerRadius="14"
+                                        Padding="12,5"
+                                        FontSize="12" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
                 <!-- Main Page Items Grid (Virtualized Multi-Page Carousel) -->
                 <FlipView x:Name="LauncherFlipView"
+                          Grid.Row="1"
                           Grid.Column="0"
                           ItemsSource="{x:Bind ViewModel.Pages, Mode=OneWay}"
                           SelectedIndex="{x:Bind ViewModel.CurrentPageIndex, Mode=TwoWay}">
@@ -142,8 +173,68 @@
                     </FlipView.ItemTemplate>
                 </FlipView>
 
+                <!-- Space Switcher & Workflow Quick-Launch Strip -->
+                <StackPanel Grid.Row="2"
+                            Grid.Column="0"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            Spacing="16"
+                            Margin="0,10,0,0">
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="6"
+                                Visibility="{x:Bind ViewModel.SpacesBarVisibility, Mode=OneWay}">
+                        <TextBlock Text="Space:" Foreground="#94A3B8" FontSize="12" VerticalAlignment="Center" />
+                        <ItemsControl ItemsSource="{x:Bind ViewModel.Spaces, Mode=OneWay}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="6" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="spaces:SpaceModel">
+                                    <Button Content="{x:Bind Name}"
+                                            Tag="{x:Bind SpaceId}"
+                                            Click="SpaceButton_Click"
+                                            Background="#2638BDF8"
+                                            Foreground="White"
+                                            CornerRadius="8"
+                                            Padding="10,4"
+                                            FontSize="12" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="6"
+                                Visibility="{x:Bind ViewModel.WorkflowsStripVisibility, Mode=OneWay}">
+                        <TextBlock Text="Workflows:" Foreground="#94A3B8" FontSize="12" VerticalAlignment="Center" />
+                        <ItemsControl ItemsSource="{x:Bind ViewModel.Workflows, Mode=OneWay}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="6" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="workflows:WorkflowDefinition">
+                                    <Button Content="{x:Bind Name}"
+                                            Tag="{x:Bind}"
+                                            Click="WorkflowButton_Click"
+                                            Background="#3310B981"
+                                            Foreground="White"
+                                            CornerRadius="8"
+                                            Padding="10,4"
+                                            FontSize="12" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </StackPanel>
+
                 <!-- Right-Side Widget Catalog Drawer -->
-                <Border Grid.Column="1"
+                <Border Grid.Row="0"
+                        Grid.RowSpan="3"
+                        Grid.Column="1"
                         Width="360"
                         Margin="16,0,0,0"
                         Background="#D80F172A"
@@ -304,8 +395,24 @@
                             <TextBlock Text="Active Space" Foreground="#94A3B8" FontSize="12" />
                             <TextBlock Text="{x:Bind ViewModel.ActiveSpaceName, Mode=OneWay}" Foreground="White" FontSize="15" FontWeight="SemiBold" />
                             <TextBlock Text="{x:Bind ViewModel.DiagnosticsSummary, Mode=OneWay}" Foreground="#CBD5E1" FontSize="12" TextWrapping="Wrap" />
+                            <TextBlock Text="{x:Bind ViewModel.PlatformDiagnosticsText, Mode=OneWay}" Foreground="#94A3B8" FontSize="11" TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="{x:Bind ViewModel.SchedulerStatusText, Mode=OneWay}"
+                                Command="{x:Bind ViewModel.ToggleSchedulerCommand}"
+                                Background="#33FFFFFF"
+                                Foreground="White"
+                                CornerRadius="8"
+                                Padding="10,6" />
+                        <Button Content="{x:Bind ViewModel.ThemeAssociationStatusText, Mode=OneWay}"
+                                Command="{x:Bind ViewModel.ToggleThemeAssociationCommand}"
+                                Background="#33FFFFFF"
+                                Foreground="White"
+                                CornerRadius="8"
+                                Padding="10,6" />
+                    </StackPanel>
 
                     <StackPanel Spacing="8">
                         <TextBlock Text="Quick Theme Tint" Foreground="#94A3B8" FontSize="12" />

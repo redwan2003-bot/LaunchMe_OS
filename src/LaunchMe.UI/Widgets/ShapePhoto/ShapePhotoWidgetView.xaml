@@ -1,0 +1,49 @@
+<UserControl
+    x:Class="LaunchMe.UI.Widgets.ShapePhoto.ShapePhotoWidgetView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Width="{x:Bind ViewModel.WidgetWidth, Mode=OneWay}"
+          Height="{x:Bind ViewModel.WidgetHeight, Mode=OneWay}">
+        <Path x:Name="ShapeMaskPath"
+              Stroke="#44FFFFFF"
+              StrokeThickness="1.5"
+              Stretch="Uniform"
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Stretch" />
+
+        <StackPanel HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="4"
+                    Visibility="{x:Bind ViewModel.PlaceholderVisibility, Mode=OneWay}">
+            <FontIcon Glyph="&#xEB9F;" FontFamily="Segoe Fluent Icons" FontSize="22" Foreground="#94A3B8" HorizontalAlignment="Center" />
+            <TextBlock Text="{x:Bind ViewModel.ShapeLabel, Mode=OneWay}" FontSize="11" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" />
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Margin="6"
+                    Spacing="4">
+            <Button Command="{x:Bind ViewModel.NextShapeCommand}"
+                    Background="#55000000"
+                    BorderThickness="0"
+                    CornerRadius="6"
+                    Padding="6,3"
+                    ToolTipService.ToolTip="Next shape mask">
+                <FontIcon Glyph="&#xE8AB;" FontFamily="Segoe Fluent Icons" FontSize="11" Foreground="White" />
+            </Button>
+            <Button Command="{x:Bind ViewModel.CycleSizeCommand}"
+                    Background="#55000000"
+                    BorderThickness="0"
+                    CornerRadius="6"
+                    Padding="6,3"
+                    ToolTipService.ToolTip="Cycle size">
+                <FontIcon Glyph="&#xE740;" FontFamily="Segoe Fluent Icons" FontSize="11" Foreground="White" />
+            </Button>
+        </StackPanel>
+    </Grid>
+</UserControl>

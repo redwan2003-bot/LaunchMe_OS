@@ -5,9 +5,13 @@ using LaunchMe.Contracts.Media;
 using LaunchMe.UI.Widgets.Affirmations;
 using LaunchMe.UI.Widgets.Calendar;
 using LaunchMe.UI.Widgets.Clock;
+using LaunchMe.UI.Widgets.Gif;
 using LaunchMe.UI.Widgets.Models;
 using LaunchMe.UI.Widgets.Music;
+using LaunchMe.UI.Widgets.Photo;
+using LaunchMe.UI.Widgets.PixelArt;
 using LaunchMe.UI.Widgets.Pomodoro;
+using LaunchMe.UI.Widgets.ShapePhoto;
 using LaunchMe.UI.Widgets.SystemStats;
 using LaunchMe.UI.Widgets.Weather;
 
@@ -24,6 +28,10 @@ public sealed class WidgetCatalogViewModel : INotifyPropertyChanged, IDisposable
     public PomodoroWidgetViewModel Pomodoro { get; }
     public AffirmationWidgetViewModel Affirmations { get; }
     public CalendarWidgetViewModel Calendar { get; }
+    public PixelArtWidgetViewModel PixelArt { get; }
+    public PhotoWidgetViewModel Photo { get; }
+    public ShapePhotoWidgetViewModel ShapePhoto { get; }
+    public GifWidgetViewModel Gif { get; }
 
     public ObservableCollection<IWidgetViewModel> Widgets { get; } = new();
 
@@ -43,6 +51,10 @@ public sealed class WidgetCatalogViewModel : INotifyPropertyChanged, IDisposable
         Pomodoro = new PomodoroWidgetViewModel();
         Affirmations = new AffirmationWidgetViewModel();
         Calendar = new CalendarWidgetViewModel();
+        PixelArt = new PixelArtWidgetViewModel();
+        Photo = new PhotoWidgetViewModel();
+        ShapePhoto = new ShapePhotoWidgetViewModel();
+        Gif = new GifWidgetViewModel();
 
         Widgets.Add(Clock);
         Widgets.Add(Weather);
@@ -51,6 +63,10 @@ public sealed class WidgetCatalogViewModel : INotifyPropertyChanged, IDisposable
         Widgets.Add(Pomodoro);
         Widgets.Add(Affirmations);
         Widgets.Add(Calendar);
+        Widgets.Add(PixelArt);
+        Widgets.Add(Photo);
+        Widgets.Add(ShapePhoto);
+        Widgets.Add(Gif);
     }
 
     /// <summary>

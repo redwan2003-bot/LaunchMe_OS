@@ -8,7 +8,10 @@ using LaunchMe.Contracts.Indexing;
 using LaunchMe.Contracts.Launcher;
 using LaunchMe.Contracts.Search;
 using LaunchMe.Contracts.Spaces;
+using LaunchMe.Contracts.Workflows;
+using LaunchMe.Core.Apps;
 using LaunchMe.Core.Spaces;
+using LaunchMe.Platform.Win32.Shell;
 using LaunchMe.UI.Theming;
 using LaunchMe.UI.Wallpaper;
 using LaunchMe.UI.Widgets.Catalog;
@@ -26,6 +29,10 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
     private readonly ISpaceStore _spaceStore;
     private readonly IAppLauncherService? _appLauncher;
     private readonly IClipboardWriter? _clipboardWriter;
+    private readonly IWorkflowRunner? _workflowRunner;
+    private readonly ISpaceSchedulerService? _spaceScheduler;
+    private readonly IThemeAssociationService? _themeAssociation;
+    private readonly PlatformDiagnosticsService? _diagnosticsService;
     private readonly LiquidGlassTintService _tintService = new();
 
     private string _searchQuery = string.Empty;
@@ -35,8 +42,11 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
     private bool _isSettingsOpen;
     private bool _isFolderOpen;
     private LauncherFolderViewModel? _activeFolder;
+    private string _activeSpaceId = "default-space";
     private string _activeSpaceName = "Default Space";
+    private string _selectedCategory = "All";
     private string _currentTintHex = "#1E40AF";
+    private PlatformDiagnosticsSnapshot? _diagnosticsSnapshot;
     private int _currentPageIndex;
     private int _selectedSearchIndex = -1;
     private LauncherItemViewModel? _draggedItem;
@@ -56,6 +66,18 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<PageIndicatorViewModel> PageIndicators { get; } = new();
     public ObservableCollection<UnifiedSearchResultViewModel> SearchResults { get; } = new();
     public ObservableCollection<LauncherItemViewModel> SelectedBatchItems { get; } = new();
+    public ObservableCollection<SpaceModel> Spaces { get; } = new();
+    public ObservableCollection<WorkflowDefinition> Workflows { get; } = new();
+    public ObservableCollection<string> Categories { get; } =
+    [
+        "All",
+        "Recently Used",
+        "Development",
+        "Browsers",
+        "Media",
+        "Productivity",
+        "Hidden"
+    ];
 
     public string SearchQuery
     {
@@ -81,12 +103,17 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
                 _isEmojiMode = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsEmojiModeVisible));
+                OnPropertyChanged(nameof(EmojiModeBadgeVisibility));
             }
         }
     }
 
     public bool IsEmojiModeVisible => _isEmojiMode;
+    public Visibility EmojiModeBadgeVisibility => _isEmojiMode ? Visibility.Visible : Visibility.Collapsed;
     public bool HasSearchResults => SearchResults.Count > 0;
+    public Visibility SearchResultsVisibility => HasSearchResults ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility WorkflowsStripVisibility => Workflows.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility SpacesBarVisibility => Spaces.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
     public int SelectedSearchIndex
     {
@@ -152,8 +179,13 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
                 OnPropertyChanged(nameof(SettingsOverlayVisibility));
                 if (_isSettingsOpen)
                 {
+                    RefreshDiagnostics();
                     OnPropertyChanged(nameof(IndexedAppsCount));
                     OnPropertyChanged(nameof(DiagnosticsSummary));
+                    OnPropertyChanged(nameof(IsSchedulerEnabled));
+                    OnPropertyChanged(nameof(SchedulerStatusText));
+                    OnPropertyChanged(nameof(IsThemeAssociationRegistered));
+                    OnPropertyChanged(nameof(ThemeAssociationStatusText));
                 }
             }
         }
@@ -195,6 +227,19 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
     public string ActiveFolderName => _activeFolder?.Name ?? "Folder";
     public ObservableCollection<LauncherItemViewModel>? ActiveFolderChildren => _activeFolder?.Children;
 
+    public string ActiveSpaceId
+    {
+        get => _activeSpaceId;
+        private set
+        {
+            if (!string.Equals(_activeSpaceId, value, StringComparison.Ordinal))
+            {
+                _activeSpaceId = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
     public string ActiveSpaceName
     {
         get => _activeSpaceName;
@@ -204,10 +249,52 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
             {
                 _activeSpaceName = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(SelectedSpaceName));
                 OnPropertyChanged(nameof(DiagnosticsSummary));
             }
         }
     }
+
+    public string SelectedSpaceName => ActiveSpaceName;
+
+    public string SelectedCategory
+    {
+        get => _selectedCategory;
+        set
+        {
+            string normalized = string.IsNullOrWhiteSpace(value) ? "All" : value;
+            if (!string.Equals(_selectedCategory, normalized, StringComparison.OrdinalIgnoreCase))
+            {
+                _selectedCategory = normalized;
+                OnPropertyChanged();
+                LoadClassicView();
+            }
+        }
+    }
+
+    public bool IsSchedulerEnabled => _spaceScheduler?.IsRunning ?? false;
+    public string SchedulerStatusText => IsSchedulerEnabled ? "Auto-Schedule: On" : "Auto-Schedule: Off";
+
+    public bool IsThemeAssociationRegistered => _themeAssociation?.IsRegistered ?? false;
+    public string ThemeAssociationStatusText => IsThemeAssociationRegistered ? ".launchmetheme: Registered" : ".launchmetheme: Register";
+
+    public PlatformDiagnosticsSnapshot? DiagnosticsSnapshot
+    {
+        get => _diagnosticsSnapshot;
+        private set
+        {
+            if (_diagnosticsSnapshot != value)
+            {
+                _diagnosticsSnapshot = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(PlatformDiagnosticsText));
+            }
+        }
+    }
+
+    public string PlatformDiagnosticsText => _diagnosticsSnapshot is null
+        ? "Display & OS diagnostics unavailable"
+        : $"DPI: {_diagnosticsSnapshot.SystemDpi} ({_diagnosticsSnapshot.ScalePercentage:0}%)  |  Monitors: {_diagnosticsSnapshot.MonitorCount}  |  Elevated: {(_diagnosticsSnapshot.IsElevated ? "Yes" : "No")}  |  {_diagnosticsSnapshot.OsVersion}";
 
     public int IndexedAppsCount =>
         (_appIndexer.AllApps?.Count is > 0 ? _appIndexer.AllApps.Count : _appIndexer.SearchApps(string.Empty)?.Count) ?? 0;
@@ -234,6 +321,11 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
     public ICommand ToggleSettingsCommand { get; }
     public ICommand CloseFolderCommand { get; }
     public ICommand QuitAppCommand { get; }
+    public ICommand SelectCategoryCommand { get; }
+    public ICommand SwitchSpaceCommand { get; }
+    public ICommand ToggleSchedulerCommand { get; }
+    public ICommand ToggleThemeAssociationCommand { get; }
+    public ICommand ExecuteWorkflowCommand { get; }
 
     public LauncherViewModel(
         IAppIndexer appIndexer,
@@ -244,7 +336,11 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
         ISpaceStore spaceStore,
         IAppLauncherService? appLauncher = null,
         IClipboardWriter? clipboardWriter = null,
-        WidgetCatalogViewModel? widgetCatalog = null)
+        WidgetCatalogViewModel? widgetCatalog = null,
+        IWorkflowRunner? workflowRunner = null,
+        ISpaceSchedulerService? spaceScheduler = null,
+        IThemeAssociationService? themeAssociation = null,
+        PlatformDiagnosticsService? diagnosticsService = null)
     {
         _appIndexer = appIndexer ?? throw new ArgumentNullException(nameof(appIndexer));
         _fileSearchService = fileSearchService ?? throw new ArgumentNullException(nameof(fileSearchService));
@@ -255,24 +351,205 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
         _appLauncher = appLauncher;
         _clipboardWriter = clipboardWriter;
         WidgetCatalog = widgetCatalog;
+        _workflowRunner = workflowRunner;
+        _spaceScheduler = spaceScheduler;
+        _themeAssociation = themeAssociation;
+        _diagnosticsService = diagnosticsService;
 
         ToggleEditModeCommand = new RelayCommand(() => IsEditMode = !IsEditMode);
         ToggleWidgetDrawerCommand = new RelayCommand(() => IsWidgetDrawerOpen = !IsWidgetDrawerOpen);
         ToggleSettingsCommand = new RelayCommand(() => IsSettingsOpen = !IsSettingsOpen);
         CloseFolderCommand = new RelayCommand(CloseFolder);
         QuitAppCommand = new RelayCommand(() => QuitAppRequested?.Invoke(this, EventArgs.Empty));
+        SelectCategoryCommand = new RelayCommand<string>(cat =>
+        {
+            if (!string.IsNullOrWhiteSpace(cat))
+            {
+                SelectedCategory = cat;
+            }
+        });
+        SwitchSpaceCommand = new RelayCommand<string>(spaceId =>
+        {
+            if (!string.IsNullOrWhiteSpace(spaceId))
+            {
+                _ = SwitchSpaceAsync(spaceId);
+            }
+        });
+        ToggleSchedulerCommand = new RelayCommand(ToggleScheduler);
+        ToggleThemeAssociationCommand = new RelayCommand(ToggleThemeAssociation);
+        ExecuteWorkflowCommand = new RelayCommand<WorkflowDefinition>(wf =>
+        {
+            if (wf is not null)
+            {
+                _ = ExecuteWorkflowAsync(wf);
+            }
+        });
 
+        RefreshDiagnostics();
+        Spaces.CollectionChanged += (_, _) => OnPropertyChanged(nameof(SpacesBarVisibility));
+        Workflows.CollectionChanged += (_, _) => OnPropertyChanged(nameof(WorkflowsStripVisibility));
         Wallpaper.AttachToLauncher(this);
         LoadClassicView();
+    }
+
+    public void RefreshDiagnostics()
+    {
+        if (_diagnosticsService is null)
+        {
+            return;
+        }
+
+        try
+        {
+            DiagnosticsSnapshot = _diagnosticsService.CollectSnapshot();
+        }
+        catch
+        {
+            // Keep existing diagnostics snapshot on transient Win32 query failure
+        }
     }
 
     public void ApplySpace(SpaceModel space)
     {
         ArgumentNullException.ThrowIfNull(space);
 
+        ActiveSpaceId = string.IsNullOrWhiteSpace(space.SpaceId) ? "default-space" : space.SpaceId;
         ActiveSpaceName = string.IsNullOrWhiteSpace(space.Name) ? "Default Space" : space.Name;
         ApplyTheme(space.Theme);
         ApplyWallpaper(space.Wallpaper);
+
+        Workflows.Clear();
+        if (space.Workflows is not null)
+        {
+            foreach (var workflow in space.Workflows)
+            {
+                Workflows.Add(workflow);
+            }
+        }
+        OnPropertyChanged(nameof(WorkflowsStripVisibility));
+    }
+
+    public async Task RefreshSpacesAsync(CancellationToken ct = default)
+    {
+        var spaces = await _spaceStore.GetAllSpacesAsync(ct);
+        Spaces.Clear();
+        foreach (var space in spaces)
+        {
+            Spaces.Add(space);
+        }
+        OnPropertyChanged(nameof(SpacesBarVisibility));
+    }
+
+    public async Task SwitchSpaceAsync(string spaceId, CancellationToken ct = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(spaceId);
+
+        await _spaceStore.SwitchSpaceAsync(spaceId, ct);
+        var active = await _spaceStore.GetActiveSpaceAsync(ct)
+            ?? Spaces.FirstOrDefault(s => string.Equals(s.SpaceId, spaceId, StringComparison.OrdinalIgnoreCase));
+
+        if (active is not null)
+        {
+            ApplySpace(active);
+        }
+    }
+
+    public void ToggleScheduler()
+    {
+        if (_spaceScheduler is null) return;
+
+        if (_spaceScheduler.IsRunning)
+        {
+            _spaceScheduler.Stop();
+        }
+        else
+        {
+            _spaceScheduler.Start();
+        }
+
+        OnPropertyChanged(nameof(IsSchedulerEnabled));
+        OnPropertyChanged(nameof(SchedulerStatusText));
+    }
+
+    public void ToggleThemeAssociation()
+    {
+        if (_themeAssociation is null) return;
+
+        if (_themeAssociation.IsRegistered)
+        {
+            _themeAssociation.UnregisterFileAssociation();
+        }
+        else
+        {
+            string exePath = Environment.ProcessPath ?? Path.Combine(AppContext.BaseDirectory, "LaunchMe.UI.exe");
+            _themeAssociation.RegisterFileAssociation(exePath);
+        }
+
+        OnPropertyChanged(nameof(IsThemeAssociationRegistered));
+        OnPropertyChanged(nameof(ThemeAssociationStatusText));
+    }
+
+    public async Task ExportActiveThemeAsync(string path, CancellationToken ct = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+
+        var activeSpace = await _spaceStore.GetActiveSpaceAsync(ct).ConfigureAwait(false);
+        string spaceId = activeSpace?.SpaceId ?? ActiveSpaceId;
+        await _spaceStore.ExportThemeAsync(spaceId, path, ct).ConfigureAwait(false);
+    }
+
+    public async Task<SpaceModel> ImportThemePackageAsync(string path, CancellationToken ct = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+
+        var imported = await _spaceStore.ImportThemeAsync(path, ct);
+        await _spaceStore.SwitchSpaceAsync(imported.SpaceId, ct);
+        ApplySpace(imported);
+        await RefreshSpacesAsync(ct);
+        return imported;
+    }
+
+    public async Task ExecuteWorkflowAsync(WorkflowDefinition workflow, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(workflow);
+        if (_workflowRunner is null) return;
+
+        await _workflowRunner.ExecuteWorkflowAsync(workflow, ct).ConfigureAwait(false);
+    }
+
+    public async Task<bool> CleanUninstallAppAsync(string appId, bool moveLeftoversToRecycleBin = true, CancellationToken ct = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(appId);
+
+        bool removed = await _appIndexer.CleanUninstallAsync(appId, moveLeftoversToRecycleBin, ct);
+        if (removed)
+        {
+            LoadClassicView();
+        }
+        return removed;
+    }
+
+    public IReadOnlyList<string> PreviewAppUninstallLeftovers(string appId)
+    {
+        if (_appIndexer is AppIndexer concreteIndexer)
+        {
+            return concreteIndexer.PreviewUninstallLeftovers(appId);
+        }
+        return [];
+    }
+
+    public void HideApp(string appId, bool isHidden)
+    {
+        if (string.IsNullOrWhiteSpace(appId)) return;
+        _appIndexer.HideApp(appId, isHidden);
+        LoadClassicView();
+    }
+
+    public void RenameApp(string appId, string newName)
+    {
+        if (string.IsNullOrWhiteSpace(appId) || string.IsNullOrWhiteSpace(newName)) return;
+        _appIndexer.RenameApp(appId, newName);
+        LoadClassicView();
     }
 
     public void ApplyTheme(ThemeSettings settings)
@@ -321,6 +598,8 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
         WidgetCatalog?.OnLauncherHidden();
         SearchQuery = string.Empty;
         SearchResults.Clear();
+        OnPropertyChanged(nameof(HasSearchResults));
+        OnPropertyChanged(nameof(SearchResultsVisibility));
         IsEmojiMode = false;
         CloseFolder();
         IsSettingsOpen = false;
@@ -335,14 +614,25 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
     public void LoadClassicView()
     {
         Pages.Clear();
-        var allApps = _appIndexer.SearchApps(string.Empty) ?? [];
+        IReadOnlyList<AppItem> filteredApps;
+
+        if (_appIndexer is AppIndexer concreteIndexer)
+        {
+            filteredApps = concreteIndexer.GetAppsByCategory(SelectedCategory);
+        }
+        else
+        {
+            var allApps = _appIndexer.SearchApps(string.Empty) ?? [];
+            filteredApps = FilterAppsByCategory(allApps, SelectedCategory);
+        }
+
         const int itemsPerPage = 24; // 4 rows x 6 columns
-        int totalPages = Math.Max(1, (int)Math.Ceiling(allApps.Count / (double)itemsPerPage));
+        int totalPages = Math.Max(1, (int)Math.Ceiling(filteredApps.Count / (double)itemsPerPage));
 
         for (int p = 0; p < totalPages; p++)
         {
             var page = new LauncherPageViewModel(p);
-            var pageApps = allApps.Skip(p * itemsPerPage).Take(itemsPerPage);
+            var pageApps = filteredApps.Skip(p * itemsPerPage).Take(itemsPerPage);
             foreach (var app in pageApps)
             {
                 page.Items.Add(new LauncherItemViewModel(app.Id, app.DisplayName, app.IconCachePath ?? string.Empty, LauncherItemType.App));
@@ -359,6 +649,30 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
         UpdatePageIndicators();
         OnPropertyChanged(nameof(IndexedAppsCount));
         OnPropertyChanged(nameof(DiagnosticsSummary));
+    }
+
+    private static IReadOnlyList<AppItem> FilterAppsByCategory(IReadOnlyList<AppItem> apps, string category)
+    {
+        string trimmed = string.IsNullOrWhiteSpace(category) ? "All" : category.Trim();
+
+        if (string.Equals(trimmed, "All", StringComparison.OrdinalIgnoreCase))
+        {
+            return apps.Where(static a => !a.IsHidden).ToList();
+        }
+
+        if (string.Equals(trimmed, "Hidden", StringComparison.OrdinalIgnoreCase))
+        {
+            return apps.Where(static a => a.IsHidden).ToList();
+        }
+
+        if (string.Equals(trimmed, "Recently Used", StringComparison.OrdinalIgnoreCase))
+        {
+            return apps.Where(static a => a.IsRecentlyUsed).ToList();
+        }
+
+        return apps
+            .Where(a => !a.IsHidden && a.Categories.Any(c => string.Equals(c, trimmed, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
     }
 
     public void ToggleEmojiMode()
@@ -383,6 +697,7 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
         if (string.IsNullOrWhiteSpace(query))
         {
             OnPropertyChanged(nameof(HasSearchResults));
+            OnPropertyChanged(nameof(SearchResultsVisibility));
             return;
         }
 
@@ -487,10 +802,30 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
                         DismissRequested?.Invoke(this, EventArgs.Empty);
                     }));
             }
+
+            // 5. Workflows Search
+            var matchingWorkflows = Workflows
+                .Where(w => !string.IsNullOrWhiteSpace(w.Name) && w.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
+                .Take(3);
+            foreach (var wf in matchingWorkflows)
+            {
+                var capturedWorkflow = wf;
+                SearchResults.Add(new UnifiedSearchResultViewModel(
+                    capturedWorkflow.Name,
+                    $"{capturedWorkflow.Actions.Count} workflow action(s)",
+                    "Workflow",
+                    "\uE768",
+                    () =>
+                    {
+                        _ = ExecuteWorkflowAsync(capturedWorkflow);
+                        DismissRequested?.Invoke(this, EventArgs.Empty);
+                    }));
+            }
         }
 
         SelectedSearchIndex = SearchResults.Count > 0 ? 0 : -1;
         OnPropertyChanged(nameof(HasSearchResults));
+        OnPropertyChanged(nameof(SearchResultsVisibility));
     }
 
     public void NavigateSearchSelection(int offset)

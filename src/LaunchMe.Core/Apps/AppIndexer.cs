@@ -241,6 +241,58 @@ public sealed class AppIndexer : IAppIndexer
             .ToList();
     }
 
+    /// <summary>
+    /// Returns indexed apps filtered by category name, or the virtual categories "All", "Hidden", and "Recently Used".
+    /// </summary>
+    public IReadOnlyList<AppItem> GetAppsByCategory(string category)
+    {
+        if (string.IsNullOrWhiteSpace(category))
+        {
+            return [];
+        }
+
+        var trimmed = category.Trim();
+        var apps = _indexedApps.Values;
+
+        IEnumerable<AppItem> filtered;
+        if (string.Equals(trimmed, "All", StringComparison.OrdinalIgnoreCase))
+        {
+            filtered = apps.Where(static a => !a.IsHidden);
+        }
+        else if (string.Equals(trimmed, "Hidden", StringComparison.OrdinalIgnoreCase))
+        {
+            filtered = apps.Where(static a => a.IsHidden);
+        }
+        else if (string.Equals(trimmed, "Recently Used", StringComparison.OrdinalIgnoreCase))
+        {
+            filtered = apps.Where(static a => a.IsRecentlyUsed);
+        }
+        else
+        {
+            filtered = apps.Where(a =>
+                !a.IsHidden &&
+                a.Categories.Any(c => string.Equals(c, trimmed, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        return filtered
+            .OrderBy(static a => a.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Returns the distinct, alphabetically sorted categories across all visible indexed apps.
+    /// </summary>
+    public IReadOnlyList<string> GetCategories()
+    {
+        return _indexedApps.Values
+            .Where(static a => !a.IsHidden)
+            .SelectMany(static a => a.Categories)
+            .Where(static c => !string.IsNullOrWhiteSpace(c))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(static c => c, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
     private static double CalculateScore(string text, string query)
     {
         if (text.Equals(query, StringComparison.OrdinalIgnoreCase)) return 1.0;
@@ -266,6 +318,34 @@ public sealed class AppIndexer : IAppIndexer
         {
             app.CustomDisplayName = customDisplayName;
         }
+    }
+
+    /// <summary>
+    /// Returns existing safe leftover trace folders under %LocalAppData% and %AppData% for the specified desktop app.
+    /// </summary>
+    public IReadOnlyList<string> PreviewUninstallLeftovers(string appId)
+    {
+        if (string.IsNullOrWhiteSpace(appId) || !_indexedApps.TryGetValue(appId, out var app))
+        {
+            return [];
+        }
+
+        if (app.AppType == AppType.MsixPackage || string.IsNullOrWhiteSpace(app.Name))
+        {
+            return [];
+        }
+
+        var results = new List<string>();
+        foreach (var baseFolder in GetLeftoverBaseFolders())
+        {
+            var safePath = ResolveSafeLeftoverPath(baseFolder, app.Name);
+            if (safePath is not null)
+            {
+                results.Add(safePath);
+            }
+        }
+
+        return results;
     }
 
     public async Task<bool> CleanUninstallAsync(string appId, bool moveLeftoversToRecycleBin = true, CancellationToken ct = default)
@@ -294,44 +374,81 @@ public sealed class AppIndexer : IAppIndexer
         // Desktop App Uninstall: clean leftovers safely to Recycle Bin
         if (moveLeftoversToRecycleBin && !string.IsNullOrWhiteSpace(app.Name))
         {
-            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-
-            StageFolderToRecycleBin(localAppData, app.Name);
-            StageFolderToRecycleBin(appData, app.Name);
+            foreach (var baseFolder in GetLeftoverBaseFolders())
+            {
+                StageFolderToRecycleBin(baseFolder, app.Name);
+            }
         }
 
         _indexedApps.TryRemove(appId, out _);
         return true;
     }
 
-    private static void StageFolderToRecycleBin(string basePath, string appName)
+    private static IEnumerable<string> GetLeftoverBaseFolders()
     {
-        if (string.IsNullOrWhiteSpace(appName) || string.IsNullOrWhiteSpace(basePath)) return;
-
-        // Disallow path traversal, root navigation, and relative parent references
-        var sanitizedAppName = Path.GetFileName(appName.Trim().TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-        if (string.IsNullOrWhiteSpace(sanitizedAppName) || sanitizedAppName == "." || sanitizedAppName == ".." || sanitizedAppName.Contains(".."))
+        var candidates = new[]
         {
-            return;
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)
+        };
+
+        return candidates
+            .Where(static path => !string.IsNullOrWhiteSpace(path))
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static string? ResolveSafeLeftoverPath(string basePath, string appName)
+    {
+        if (string.IsNullOrWhiteSpace(appName) || string.IsNullOrWhiteSpace(basePath))
+        {
+            return null;
+        }
+
+        var trimmedName = appName.Trim();
+        // Reject explicit traversal or separator sequences before extracting filename.
+        if (trimmedName.Contains("..") ||
+            trimmedName.Contains(Path.DirectorySeparatorChar) ||
+            trimmedName.Contains(Path.AltDirectorySeparatorChar))
+        {
+            return null;
+        }
+
+        var sanitizedAppName = Path.GetFileName(trimmedName);
+        if (string.IsNullOrWhiteSpace(sanitizedAppName) ||
+            sanitizedAppName == "." ||
+            sanitizedAppName == ".." ||
+            sanitizedAppName.Contains(".."))
+        {
+            return null;
         }
 
         var fullBasePath = Path.GetFullPath(basePath);
         var targetPath = Path.GetFullPath(Path.Combine(fullBasePath, sanitizedAppName));
-        var basePrefix = fullBasePath.EndsWith(Path.DirectorySeparatorChar) ? fullBasePath : fullBasePath + Path.DirectorySeparatorChar;
+        var basePrefix = fullBasePath.EndsWith(Path.DirectorySeparatorChar)
+            ? fullBasePath
+            : fullBasePath + Path.DirectorySeparatorChar;
 
         // Ensure target is strictly a subfolder of basePath and never the basePath itself
-        if (!targetPath.StartsWith(basePrefix, StringComparison.OrdinalIgnoreCase) || targetPath.Equals(fullBasePath, StringComparison.OrdinalIgnoreCase))
+        if (!targetPath.StartsWith(basePrefix, StringComparison.OrdinalIgnoreCase) ||
+            targetPath.Equals(fullBasePath, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return Directory.Exists(targetPath) ? targetPath : null;
+    }
+
+    private static void StageFolderToRecycleBin(string basePath, string appName)
+    {
+        var targetPath = ResolveSafeLeftoverPath(basePath, appName);
+        if (targetPath is null)
         {
             return;
         }
 
         try
         {
-            if (Directory.Exists(targetPath))
-            {
-                FileSystem.DeleteDirectory(targetPath, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
-            }
+            FileSystem.DeleteDirectory(targetPath, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
         }
         catch { /* Continue on partial cleanup */ }
     }
