@@ -2,7 +2,10 @@ using LaunchMe.Contracts.Agent;
 
 namespace LaunchMe.Contracts.Sync;
 
-public interface IPhoneLinkService
+/// <summary>
+/// Zero-cloud encrypted local P2P mobile companion relay ("Leash") for remote agent approvals.
+/// </summary>
+public interface ILeashService
 {
     event EventHandler<DevicePeer> PeerDiscovered;
     event EventHandler<DevicePeer> PeerConnected;

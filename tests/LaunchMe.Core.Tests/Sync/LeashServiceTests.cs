@@ -5,12 +5,12 @@ using Xunit;
 
 namespace LaunchMe.Core.Tests.Sync;
 
-public class PhoneLinkServiceTests
+public class LeashServiceTests
 {
     [Fact]
     public async Task StartPairingSession_Generates6DigitNumericPin()
     {
-        using var service = new PhoneLinkService();
+        using var service = new LeashService();
 
         string pin = await service.StartPairingSessionAsync("Pixel 9 Pro");
 
@@ -21,12 +21,12 @@ public class PhoneLinkServiceTests
     [Fact]
     public async Task CompletePairing_WithMatchingPin_RegistersPairedDevice()
     {
-        using var service = new PhoneLinkService();
+        using var service = new LeashService();
         DevicePeer? connectedPeer = null;
         service.PeerConnected += (_, p) => connectedPeer = p;
 
-        string pin = await service.StartPairingSessionAsync("iPhone 16");
-        bool success = await service.CompletePairingAsync(pin, "device-uuid-1", "iPhone 16", "iOS");
+        string pin = await service.StartPairingSessionAsync("Android Phone");
+        bool success = await service.CompletePairingAsync(pin, "device-uuid-1", "Pixel 9", "Android");
 
         success.Should().BeTrue();
         connectedPeer.Should().NotBeNull();
@@ -37,7 +37,7 @@ public class PhoneLinkServiceTests
     [Fact]
     public async Task CompletePairing_WithWrongPin_Fails()
     {
-        using var service = new PhoneLinkService();
+        using var service = new LeashService();
 
         _ = await service.StartPairingSessionAsync("Pixel 9");
         bool success = await service.CompletePairingAsync("000000", "device-uuid-2", "Pixel 9", "Android");
@@ -49,7 +49,7 @@ public class PhoneLinkServiceTests
     [Fact]
     public async Task UnpairDevice_RemovesDeviceAndFiresEvent()
     {
-        using var service = new PhoneLinkService();
+        using var service = new LeashService();
         DevicePeer? disconnectedPeer = null;
         service.PeerDisconnected += (_, p) => disconnectedPeer = p;
 

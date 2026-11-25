@@ -18,4 +18,10 @@ public sealed class ThemeSettings
 
     [JsonPropertyName("titleColor")]
     public string TitleColor { get; set; } = "Auto";
+
+    [JsonPropertyName("specularIntensity")]
+    public double SpecularIntensity { get; set; } = 0.85;
+
+    [JsonPropertyName("enableGrain")]
+    public bool EnableGrain { get; set; } = true;
 }

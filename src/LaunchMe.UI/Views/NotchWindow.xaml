@@ -44,7 +44,7 @@
                             Padding="8,2"
                             Command="{x:Bind ViewModel.ToggleExpandCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBlock Text="{x:Bind ViewModel.Mochi.MoodEmoji, Mode=OneWay}"
+                            <TextBlock Text="{x:Bind ViewModel.Blobbo.MoodEmoji, Mode=OneWay}"
                                        FontSize="11" Foreground="#FB7185" FontWeight="Bold" />
                             <TextBlock Text="{x:Bind ViewModel.NowPlayingTitle, Mode=OneWay}"
                                        FontSize="11" Foreground="White" FontWeight="Bold" MaxWidth="140" TextTrimming="CharacterEllipsis" />
@@ -71,9 +71,9 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <!-- Pomodoro Controls & Mochi Mood -->
+                    <!-- Pomodoro Controls & Blobbo Mood -->
                     <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10" Margin="0,4,0,8">
-                        <Button Content="Poke Mochi" FontSize="11" Padding="8,4" Command="{x:Bind ViewModel.Mochi.PokeCommand}" />
+                        <Button Content="Poke Blobbo" FontSize="11" Padding="8,4" Command="{x:Bind ViewModel.Blobbo.PokeCommand}" />
                         <Button Content="Start 25m" FontSize="11" Padding="8,4" Command="{x:Bind ViewModel.StartTimerCommand}" />
                         <Button Content="Pause" FontSize="11" Padding="8,4" Command="{x:Bind ViewModel.PauseTimerCommand}" />
                         <Button Content="Reset" FontSize="11" Padding="8,4" Command="{x:Bind ViewModel.ResetTimerCommand}" />
@@ -93,7 +93,7 @@
                             <StackPanel Spacing="4">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <FontIcon Glyph="&#xE7BA;" FontSize="11" Foreground="#F59E0B" />
-                                    <TextBlock Text="Agent Permission Approval" FontSize="10" FontWeight="Bold" Foreground="#F59E0B" />
+                                    <TextBlock Text="Pookie Permission Alert" FontSize="10" FontWeight="Bold" Foreground="#F59E0B" />
                                 </StackPanel>
                                 <TextBlock Text="{x:Bind ViewModel.Approvals.ActiveRequest.CommandOrAction, Mode=OneWay}"
                                            FontSize="10" Foreground="#E2E8F0" TextWrapping="Wrap" MaxHeight="40" />

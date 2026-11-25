@@ -126,7 +126,7 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<PocketItem> PocketItems { get; } = [];
     public ObservableCollection<ClipboardEntry> RecentClipboardCards { get; } = [];
 
-    public MochiCharacterViewModel Mochi { get; }
+    public BlobboCharacterViewModel Blobbo { get; }
     public ApprovalNotificationViewModel Approvals { get; }
 
     public ICommand ToggleExpandCommand { get; }
@@ -141,7 +141,7 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
         IPocketService? pocketService = null,
         IMediaSessionService? mediaService = null,
         IClipboardMonitor? clipboardMonitor = null,
-        IMochiController? mochiController = null,
+        IBlobboController? blobboController = null,
         IAgentApprovalService? approvalService = null,
         IDiffParserService? diffParser = null)
     {
@@ -150,7 +150,7 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
         _mediaService = mediaService;
         _clipboardMonitor = clipboardMonitor;
 
-        Mochi = new MochiCharacterViewModel(mochiController ?? new LaunchMe.Core.Agent.MochiController());
+        Blobbo = new BlobboCharacterViewModel(blobboController ?? new LaunchMe.Core.Agent.BlobboController());
         Approvals = new ApprovalNotificationViewModel(
             approvalService ?? new LaunchMe.Core.Agent.AgentApprovalService(),
             diffParser ?? new LaunchMe.Core.Agent.DiffParserService());
@@ -159,7 +159,7 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
         {
             if (e.PropertyName == nameof(ApprovalNotificationViewModel.HasPendingApproval) && Approvals.HasPendingApproval)
             {
-                Mochi.SetMood(MochiMood.Alert);
+                Blobbo.SetMood(BlobboMood.Alert);
             }
         };
 

@@ -3,9 +3,9 @@ using LaunchMe.Contracts.Tiling;
 namespace LaunchMe.Core.Tiling;
 
 /// <summary>
-/// Master coordinator of the dynamic BSP tiling window engine.
+/// Squish dynamic BSP tiling window engine ("Squish") for Windows 11.
 /// </summary>
-public class TilingEngine : ITilingEngine
+public class SquishEngine : ITilingEngine
 {
     private readonly Dictionary<(string DisplayId, int WorkspaceId), BSPTree> _trees = new();
     private readonly Dictionary<nint, TiledWindow> _windows = new();
@@ -130,7 +130,6 @@ public class TilingEngine : ITilingEngine
                     continue;
                 }
 
-                // Weighted Manhattan distance prioritizing primary direction axis
                 double distance = direction is SplitDirection.Left or SplitDirection.Right
                     ? Math.Abs(dx) + (Math.Abs(dy) * 1.5)
                     : (Math.Abs(dx) * 1.5) + Math.Abs(dy);
@@ -244,7 +243,6 @@ public class TilingEngine : ITilingEngine
             var tree = GetOrCreateTree(displayId, workspaceId);
             var layout = tree.ComputeLayout(availableArea, Config);
 
-            // Update tracked frames
             foreach (var (handle, rect) in layout)
             {
                 if (_windows.TryGetValue(handle, out var win))

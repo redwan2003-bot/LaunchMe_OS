@@ -8,26 +8,26 @@ using LaunchMe.UI.ViewModels;
 namespace LaunchMe.UI.Sync;
 
 /// <summary>
-/// ViewModel coordinating cross-device pairing and device management.
+/// ViewModel coordinating cross-device Leash pairing and mobile device management.
 /// </summary>
-public class PhoneLinkViewModel : INotifyPropertyChanged
+public class LeashViewModel : INotifyPropertyChanged
 {
-    private readonly IPhoneLinkService _phoneLink;
+    private readonly ILeashService _leash;
     private string _currentPairingPin = string.Empty;
     private bool _isPairingActive;
 
     public ObservableCollection<DevicePeer> PairedDevices { get; } = [];
 
-    public PhoneLinkViewModel(IPhoneLinkService phoneLink)
+    public LeashViewModel(ILeashService leash)
     {
-        _phoneLink = phoneLink;
-        _phoneLink.PeerConnected += (_, peer) =>
+        _leash = leash;
+        _leash.PeerConnected += (_, peer) =>
         {
             PairedDevices.Add(peer);
             IsPairingActive = false;
         };
 
-        _phoneLink.PeerDisconnected += (_, peer) =>
+        _leash.PeerDisconnected += (_, peer) =>
         {
             var existing = PairedDevices.FirstOrDefault(p => p.DeviceId == peer.DeviceId);
             if (existing != null)
@@ -40,7 +40,7 @@ public class PhoneLinkViewModel : INotifyPropertyChanged
 
         StartPairingCommand = new RelayCommand(async () =>
         {
-            CurrentPairingPin = await _phoneLink.StartPairingSessionAsync(Environment.MachineName);
+            CurrentPairingPin = await _leash.StartPairingSessionAsync(Environment.MachineName);
             IsPairingActive = true;
         });
 
@@ -48,7 +48,7 @@ public class PhoneLinkViewModel : INotifyPropertyChanged
         {
             if (!string.IsNullOrWhiteSpace(deviceId))
             {
-                _phoneLink.UnpairDevice(deviceId);
+                _leash.UnpairDevice(deviceId);
             }
         });
     }
@@ -85,7 +85,7 @@ public class PhoneLinkViewModel : INotifyPropertyChanged
     private void RefreshPairedDevices()
     {
         PairedDevices.Clear();
-        foreach (var device in _phoneLink.GetPairedDevices())
+        foreach (var device in _leash.GetPairedDevices())
         {
             PairedDevices.Add(device);
         }

@@ -45,21 +45,21 @@ public partial class App : Application
     private DockViewModel? _dockViewModel;
     private MusicPlayerViewModel? _musicPlayerViewModel;
     private IAppIndexer? _appIndexer;
-    private LaunchMe.Core.Tiling.TilingEngine? _tilingEngine;
+    private LaunchMe.Core.Tiling.SquishEngine? _tilingEngine;
     private LaunchMe.Core.Tiling.WindowRuleService? _windowRuleService;
     private LaunchMe.Platform.Win32.Tiling.Win32TilingDispatcher? _tilingDispatcher;
     private LaunchMe.UI.Tiling.FocusBorderService? _focusBorderService;
     private LaunchMe.UI.Tiling.TiledDropPreviewService? _dropPreviewService;
     private LaunchMe.Platform.Win32.Tiling.Win32WindowTracker? _windowTracker;
     private LaunchMe.Core.Agent.AgentApprovalService? _agentApprovalService;
-    private LaunchMe.Core.Agent.AgentHookServer? _agentHookServer;
-    private LaunchMe.Core.Agent.MochiController? _mochiController;
+    private LaunchMe.Core.Agent.PookieHookServer? _pookieHookServer;
+    private LaunchMe.Core.Agent.BlobboController? _blobboController;
     private LaunchMe.Core.Agent.DiffParserService? _diffParserService;
     private LaunchMe.Platform.Win32.Voice.Win32KeystrokeInjector? _keystrokeInjector;
     private LaunchMe.Core.Voice.FlowDictationService? _flowDictationService;
     private LaunchMe.UI.Voice.FlowPillViewModel? _flowPillViewModel;
-    private LaunchMe.Core.Sync.PhoneLinkService? _phoneLinkService;
-    private LaunchMe.UI.Sync.PhoneLinkViewModel? _phoneLinkViewModel;
+    private LaunchMe.Core.Sync.LeashService? _leashService;
+    private LaunchMe.UI.Sync.LeashViewModel? _leashViewModel;
     private bool _shuttingDown;
 
     public App()
@@ -121,35 +121,35 @@ public partial class App : Application
         var dockSpaceService = new LaunchMe.Core.Dock.DockSpaceService();
         var ambientSoundService = new LaunchMe.Core.Dock.AmbientSoundService();
 
-        // Phase 6 Mochi Character & AI Agent Cockpit
+        // Phase 6 Pookie AI Cockpit & Blobbo Character
         _agentApprovalService = new LaunchMe.Core.Agent.AgentApprovalService();
         _diffParserService = new LaunchMe.Core.Agent.DiffParserService();
-        _mochiController = new LaunchMe.Core.Agent.MochiController();
-        _agentHookServer = new LaunchMe.Core.Agent.AgentHookServer(_agentApprovalService);
-        _agentHookServer.Start();
+        _blobboController = new LaunchMe.Core.Agent.BlobboController();
+        _pookieHookServer = new LaunchMe.Core.Agent.PookieHookServer(_agentApprovalService);
+        _pookieHookServer.Start();
 
         // Phase 7 Flow Voice Dictation & Audio Waveform Pill
         _keystrokeInjector = new LaunchMe.Platform.Win32.Voice.Win32KeystrokeInjector(clipboardWriter);
         _flowDictationService = new LaunchMe.Core.Voice.FlowDictationService(_keystrokeInjector);
         _flowPillViewModel = new LaunchMe.UI.Voice.FlowPillViewModel(_flowDictationService);
 
-        // Phase 8 Cross-Device Phone Link & Remote Relay
-        _phoneLinkService = new LaunchMe.Core.Sync.PhoneLinkService(_agentApprovalService);
-        _phoneLinkViewModel = new LaunchMe.UI.Sync.PhoneLinkViewModel(_phoneLinkService);
+        // Phase 8 Leash Cross-Device Remote Relay
+        _leashService = new LaunchMe.Core.Sync.LeashService(_agentApprovalService);
+        _leashViewModel = new LaunchMe.UI.Sync.LeashViewModel(_leashService);
 
         _notchViewModel = new NotchViewModel(
             notchWindowService,
             pocketService,
             _mediaSession,
             _clipboardMonitor,
-            _mochiController,
+            _blobboController,
             _agentApprovalService,
             _diffParserService);
         _dockViewModel = new DockViewModel(dockShellService, dockSpaceService, _systemMetrics, ambientSoundService, appLauncher);
         _musicPlayerViewModel = new MusicPlayerViewModel(_mediaSession);
 
-        // Phase 5 HyprWin Dynamic Tiling Engine
-        _tilingEngine = new LaunchMe.Core.Tiling.TilingEngine();
+        // Squish Dynamic Tiling Engine
+        _tilingEngine = new LaunchMe.Core.Tiling.SquishEngine();
         _windowRuleService = new LaunchMe.Core.Tiling.WindowRuleService();
         _tilingDispatcher = new LaunchMe.Platform.Win32.Tiling.Win32TilingDispatcher();
         _focusBorderService = new LaunchMe.UI.Tiling.FocusBorderService();
@@ -333,9 +333,9 @@ public partial class App : Application
         _windowTracker?.Dispose();
         _windowTracker = null;
 
-        _agentHookServer?.Stop();
-        _agentHookServer?.Dispose();
-        _agentHookServer = null;
+        _pookieHookServer?.Stop();
+        _pookieHookServer?.Dispose();
+        _pookieHookServer = null;
 
         _flowPillViewModel?.Dispose();
         _flowPillViewModel = null;
@@ -343,8 +343,8 @@ public partial class App : Application
         _flowDictationService?.Dispose();
         _flowDictationService = null;
 
-        _phoneLinkService?.Dispose();
-        _phoneLinkService = null;
+        _leashService?.Dispose();
+        _leashService = null;
 
         if (_triggerService != null)
         {

@@ -7,9 +7,9 @@ using LaunchMe.Contracts.Sync;
 namespace LaunchMe.Core.Sync;
 
 /// <summary>
-/// Service managing local cross-device pairing, discovery, and notification mirroring.
+/// Leash service managing zero-cloud encrypted local cross-device pairing, discovery, and notification mirroring.
 /// </summary>
-public class PhoneLinkService : IPhoneLinkService, IDisposable
+public class LeashService : ILeashService, IDisposable
 {
     private readonly IAgentApprovalService? _approvalService;
     private readonly ConcurrentDictionary<string, DevicePeer> _pairedDevices = new();
@@ -23,7 +23,7 @@ public class PhoneLinkService : IPhoneLinkService, IDisposable
     public event EventHandler<DevicePeer>? PeerConnected;
     public event EventHandler<DevicePeer>? PeerDisconnected;
 
-    public PhoneLinkService(IAgentApprovalService? approvalService = null)
+    public LeashService(IAgentApprovalService? approvalService = null)
     {
         _approvalService = approvalService;
 
@@ -76,7 +76,6 @@ public class PhoneLinkService : IPhoneLinkService, IDisposable
 
     public Task BroadcastNotificationAsync(string title, string body)
     {
-        // Pack into JSON and broadcast across paired devices
         var payload = new { Title = title, Body = body, Timestamp = DateTime.UtcNow };
         _ = JsonSerializer.Serialize(payload);
         return Task.CompletedTask;

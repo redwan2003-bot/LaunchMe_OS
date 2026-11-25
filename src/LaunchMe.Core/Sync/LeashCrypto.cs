@@ -4,9 +4,9 @@ using System.Text;
 namespace LaunchMe.Core.Sync;
 
 /// <summary>
-/// End-to-end authenticated cryptographic encryption for cross-device Phone Link payloads.
+/// End-to-end authenticated cryptographic encryption for cross-device Leash relay payloads.
 /// </summary>
-public static class PhoneLinkCrypto
+public static class LeashCrypto
 {
     public static byte[] DeriveKeyFromPin(string pin, byte[] salt)
     {

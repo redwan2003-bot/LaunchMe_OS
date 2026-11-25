@@ -312,8 +312,8 @@ public static class Program
 
             gestureTrigger.EnableTouchpadPinch(3, true);
 
-            // Phase 5 Smoke Validations: HyprWin Dynamic Tiling Engine & Pause-on-Hide
-            var smokeTiling = new LaunchMe.Core.Tiling.TilingEngine();
+            // Phase 5 Smoke Validations: Squish Dynamic Tiling Engine & Pause-on-Hide
+            var smokeTiling = new LaunchMe.Core.Tiling.SquishEngine();
             var smokeRules = new LaunchMe.Core.Tiling.WindowRuleService();
             var smokeDispatcher = new LaunchMe.Platform.Win32.Tiling.Win32TilingDispatcher();
             var smokeBorder = new LaunchMe.UI.Tiling.FocusBorderService();
@@ -348,15 +348,15 @@ public static class Program
                 throw new InvalidOperationException("Smoke test failed: TiledDropPreviewService Pause-on-Hide violated.");
             }
 
-            // Phase 6 Smoke Validations: Mochi Character & Agent Approval Cockpit
+            // Phase 6 Smoke Validations: Blobbo Character & Pookie Approval Cockpit
             var smokeApprovalService = new LaunchMe.Core.Agent.AgentApprovalService();
             var smokeDiffParser = new LaunchMe.Core.Agent.DiffParserService();
-            var smokeMochi = new LaunchMe.Core.Agent.MochiController();
+            var smokeBlobbo = new LaunchMe.Core.Agent.BlobboController();
 
-            smokeMochi.Poke();
-            if (smokeMochi.CurrentMood != LaunchMe.Contracts.Agent.MochiMood.Poked)
+            smokeBlobbo.Poke();
+            if (smokeBlobbo.CurrentMood != LaunchMe.Contracts.Agent.BlobboMood.Poked)
             {
-                throw new InvalidOperationException("Smoke test failed: MochiController Poke failed.");
+                throw new InvalidOperationException("Smoke test failed: BlobboController Poke failed.");
             }
 
             var smokeApprovalReq = new LaunchMe.Contracts.Agent.AgentApprovalRequest(
@@ -412,26 +412,26 @@ public static class Program
                 throw new InvalidOperationException("Smoke test failed: FlowPill Pause-on-Hide violated.");
             }
 
-            // Phase 8 Smoke Validations: Cross-Device Phone Link & Crypto
-            using var smokePhoneLink = new LaunchMe.Core.Sync.PhoneLinkService();
-            var smokePhoneLinkVm = new LaunchMe.UI.Sync.PhoneLinkViewModel(smokePhoneLink);
+            // Phase 8 Smoke Validations: Cross-Device Leash Relay & Crypto
+            using var smokeLeash = new LaunchMe.Core.Sync.LeashService();
+            var smokeLeashVm = new LaunchMe.UI.Sync.LeashViewModel(smokeLeash);
 
-            string smokePin = smokePhoneLink.StartPairingSessionAsync("SmokeDevice").GetAwaiter().GetResult();
+            string smokePin = smokeLeash.StartPairingSessionAsync("SmokeDevice").GetAwaiter().GetResult();
             if (smokePin.Length != 6)
             {
-                throw new InvalidOperationException("Smoke test failed: PhoneLink PIN generation failed.");
+                throw new InvalidOperationException("Smoke test failed: Leash PIN generation failed.");
             }
 
-            bool smokePairSuccess = smokePhoneLink.CompletePairingAsync(smokePin, "dev-smoke-1", "SmokePhone", "Android").GetAwaiter().GetResult();
-            if (!smokePairSuccess || smokePhoneLink.GetPairedDevices().Count != 1)
+            bool smokePairSuccess = smokeLeash.CompletePairingAsync(smokePin, "dev-smoke-1", "SmokePhone", "Android").GetAwaiter().GetResult();
+            if (!smokePairSuccess || smokeLeash.GetPairedDevices().Count != 1)
             {
-                throw new InvalidOperationException("Smoke test failed: PhoneLink pairing failed.");
+                throw new InvalidOperationException("Smoke test failed: Leash pairing failed.");
             }
 
-            smokePhoneLink.UnpairDevice("dev-smoke-1");
-            if (smokePhoneLink.GetPairedDevices().Count != 0)
+            smokeLeash.UnpairDevice("dev-smoke-1");
+            if (smokeLeash.GetPairedDevices().Count != 0)
             {
-                throw new InvalidOperationException("Smoke test failed: PhoneLink unpair failed.");
+                throw new InvalidOperationException("Smoke test failed: Leash unpair failed.");
             }
 
             Console.WriteLine("SMOKE_TEST_OK");

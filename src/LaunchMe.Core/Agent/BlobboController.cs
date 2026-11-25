@@ -3,21 +3,21 @@ using LaunchMe.Contracts.Agent;
 namespace LaunchMe.Core.Agent;
 
 /// <summary>
-/// State machine and physics coordinator for the Mochi notch character.
+/// State machine and physics coordinator for the Blobbo Snoot HUD pet.
 /// </summary>
-public class MochiController : IMochiController
+public class BlobboController : IBlobboController
 {
-    private MochiMood _currentMood = MochiMood.Idle;
+    private BlobboMood _currentMood = BlobboMood.Idle;
     private (double PupilX, double PupilY) _pupilOffset = (0, 0);
     private int _consecutivePokes;
     private DateTime _lastPokeTime = DateTime.MinValue;
 
-    public MochiMood CurrentMood => _currentMood;
+    public BlobboMood CurrentMood => _currentMood;
     public (double PupilX, double PupilY) PupilOffset => _pupilOffset;
 
-    public event EventHandler<MochiMood>? MoodChanged;
+    public event EventHandler<BlobboMood>? MoodChanged;
 
-    public void SetMood(MochiMood mood)
+    public void SetMood(BlobboMood mood)
     {
         if (_currentMood != mood)
         {
@@ -26,16 +26,16 @@ public class MochiController : IMochiController
         }
     }
 
-    public void UpdatePupils(double cursorX, double cursorY, double notchCenterX, double notchCenterY)
+    public void UpdatePupils(double cursorX, double cursorY, double snootCenterX, double snootCenterY)
     {
-        if (_currentMood == MochiMood.Sleeping || _currentMood == MochiMood.Dizzy)
+        if (_currentMood == BlobboMood.Sleeping || _currentMood == BlobboMood.Dizzy)
         {
             _pupilOffset = (0, 0);
             return;
         }
 
-        double dx = cursorX - notchCenterX;
-        double dy = cursorY - notchCenterY;
+        double dx = cursorX - snootCenterX;
+        double dy = cursorY - snootCenterY;
         double distance = Math.Sqrt((dx * dx) + (dy * dy));
 
         if (distance < 1.0)
@@ -68,11 +68,11 @@ public class MochiController : IMochiController
 
         if (_consecutivePokes >= 3)
         {
-            SetMood(MochiMood.Dizzy);
+            SetMood(BlobboMood.Dizzy);
         }
         else
         {
-            SetMood(MochiMood.Poked);
+            SetMood(BlobboMood.Poked);
         }
     }
 }

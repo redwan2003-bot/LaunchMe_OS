@@ -6,9 +6,9 @@ using LaunchMe.Contracts.Agent;
 namespace LaunchMe.Core.Agent;
 
 /// <summary>
-/// Local HTTP loopback hook listener for receiving agent permission prompts from Claude Code, AGY, and CLI tools.
+/// Local HTTP loopback Pookie hook listener for receiving agent permission prompts from Claude Code, AGY, and CLI tools.
 /// </summary>
-public class AgentHookServer : IDisposable
+public class PookieHookServer : IDisposable
 {
     private readonly AgentApprovalService _approvalService;
     private readonly int _port;
@@ -20,7 +20,7 @@ public class AgentHookServer : IDisposable
     public bool IsRunning => _listener != null && _listener.IsListening;
     public int Port => _port;
 
-    public AgentHookServer(AgentApprovalService approvalService, int port = 49152)
+    public PookieHookServer(AgentApprovalService approvalService, int port = 49152)
     {
         _approvalService = approvalService;
         _port = port;
@@ -117,7 +117,7 @@ public class AgentHookServer : IDisposable
             string body = await reader.ReadToEndAsync(ct);
 
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var payload = JsonSerializer.Deserialize<AgentHookPayload>(body, options);
+            var payload = JsonSerializer.Deserialize<PookieHookPayload>(body, options);
 
             if (payload == null || string.IsNullOrWhiteSpace(payload.RequestId))
             {
@@ -128,7 +128,7 @@ public class AgentHookServer : IDisposable
 
             var request = new AgentApprovalRequest(
                 payload.RequestId,
-                payload.AgentName ?? "AI Agent",
+                payload.AgentName ?? "Pookie Agent",
                 payload.ToolName ?? "Tool",
                 payload.CommandOrAction ?? string.Empty,
                 payload.FileDiffUnified,
@@ -173,7 +173,7 @@ public class AgentHookServer : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private record AgentHookPayload(
+    private record PookieHookPayload(
         string? RequestId,
         string? AgentName,
         string? ToolName,
