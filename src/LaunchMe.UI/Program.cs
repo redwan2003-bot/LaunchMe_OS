@@ -275,6 +275,43 @@ public static class Program
                 throw new InvalidOperationException("Smoke test failed: emoji index returned no results.");
             }
 
+            // Phase 4 Smoke Validations: Dynamic Notch, Multi-Display Dock, Music Player, Precision Touchpad
+            using var smokePocket = new LaunchMe.Core.Notch.PocketService(Path.Combine(tempRoot, "smoke_pocket.json"));
+            using var smokeNotchWindow = new NotchWindowService();
+            using var smokeDockShell = new DockShellService();
+            using var smokeDockSpace = new LaunchMe.Core.Dock.DockSpaceService(Path.Combine(tempRoot, "smoke_dock.json"));
+            using var smokeAmbient = new LaunchMe.Core.Dock.AmbientSoundService();
+            var smokeRing = new LaunchMe.Core.Dock.RingImageProcessor();
+
+            using var smokeNotchVm = new NotchViewModel(smokeNotchWindow, smokePocket, mediaSession, clipboardMonitor);
+            using var smokeDockVm = new DockViewModel(smokeDockShell, smokeDockSpace, systemMetrics, smokeAmbient, appLauncher);
+            using var smokeMusicVm = new MusicPlayerViewModel(mediaSession);
+
+            smokeNotchVm.ToggleExpand();
+            if (!smokeNotchVm.IsExpanded)
+            {
+                throw new InvalidOperationException("Smoke test failed: NotchViewModel failed to expand.");
+            }
+            smokeNotchVm.AddPocketFile(Path.Combine(tempRoot, "dummy.txt"));
+            smokeNotchVm.StartTimer(5);
+            smokeNotchVm.CheckFullscreenGame();
+
+            smokeDockVm.NextSpace();
+            smokeDockVm.ToggleAmbientSound();
+            if (!smokeDockVm.IsAmbientPlaying)
+            {
+                throw new InvalidOperationException("Smoke test failed: DockViewModel failed to activate ambient sound.");
+            }
+            smokeDockVm.ToggleAmbientSound();
+
+            smokeMusicVm.CycleVisualizerMode();
+            if (smokeMusicVm.VisualizerMode != LaunchMe.Contracts.Media.MusicVisualizerMode.FullScreenArt)
+            {
+                throw new InvalidOperationException("Smoke test failed: MusicPlayerViewModel failed to cycle visualizer mode.");
+            }
+
+            gestureTrigger.EnableTouchpadPinch(3, true);
+
             Console.WriteLine("SMOKE_TEST_OK");
         }
         finally

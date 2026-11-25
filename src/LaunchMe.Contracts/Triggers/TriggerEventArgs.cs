@@ -5,6 +5,7 @@ public enum TriggerType
     Hotkey,
     HotCorner,
     TouchpadPinch,
+    TouchpadSpread,
     NotchClick,
     DockItem
 }

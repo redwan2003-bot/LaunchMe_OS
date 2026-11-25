@@ -65,4 +65,26 @@ public sealed class PlatformDiagnosticsService
         var principal = new WindowsPrincipal(identity);
         return principal.IsInRole(WindowsBuiltInRole.Administrator);
     }
+
+    public bool IsPrecisionTouchpadPresent()
+    {
+        try
+        {
+            uint deviceCount = 0;
+            uint size = (uint)Marshal.SizeOf<Win32Interop.RAWINPUTDEVICELIST>();
+            if (Win32Interop.GetRawInputDeviceList(null, ref deviceCount, size) != uint.MaxValue && deviceCount > 0)
+            {
+                var devices = new Win32Interop.RAWINPUTDEVICELIST[deviceCount];
+                if (Win32Interop.GetRawInputDeviceList(devices, ref deviceCount, size) != uint.MaxValue)
+                {
+                    return devices.Any(d => d.dwType == 2);
+                }
+            }
+        }
+        catch
+        {
+        }
+
+        return false;
+    }
 }

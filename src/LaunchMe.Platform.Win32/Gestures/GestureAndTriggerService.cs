@@ -6,6 +6,7 @@ public sealed class GestureAndTriggerService : IGestureAndTriggerService
 {
     private readonly Win32HotkeyService _hotkeyService;
     private readonly Win32HotCornerService _hotCornerService;
+    private readonly Win32TouchpadService _touchpadService;
     private bool _disposed;
 
     public event EventHandler<TriggerEventArgs>? Invoked;
@@ -14,9 +15,11 @@ public sealed class GestureAndTriggerService : IGestureAndTriggerService
     {
         _hotkeyService = new Win32HotkeyService();
         _hotCornerService = new Win32HotCornerService();
+        _touchpadService = new Win32TouchpadService();
 
         _hotkeyService.HotkeyTriggered += OnServiceTriggered;
         _hotCornerService.CornerTriggered += OnServiceTriggered;
+        _touchpadService.GestureDetected += OnServiceTriggered;
         _hotCornerService.Start();
     }
 
@@ -42,7 +45,8 @@ public sealed class GestureAndTriggerService : IGestureAndTriggerService
 
     public void EnableTouchpadPinch(int fingerCount, bool enabled)
     {
-        // Touchpad pinch handler
+        _touchpadService.TargetFingerCount = fingerCount;
+        _touchpadService.IsEnabled = enabled;
     }
 
     private void OnServiceTriggered(object? sender, TriggerEventArgs e)
@@ -60,8 +64,10 @@ public sealed class GestureAndTriggerService : IGestureAndTriggerService
         _disposed = true;
         _hotkeyService.HotkeyTriggered -= OnServiceTriggered;
         _hotCornerService.CornerTriggered -= OnServiceTriggered;
+        _touchpadService.GestureDetected -= OnServiceTriggered;
 
         _hotkeyService.Dispose();
         _hotCornerService.Dispose();
+        _touchpadService.Dispose();
     }
 }

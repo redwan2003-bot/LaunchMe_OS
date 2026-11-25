@@ -501,4 +501,59 @@ public static class Win32Interop
 
     [DllImport("shell32.dll")]
     public static extern void SHChangeNotify(int wEventId, uint uFlags, nint dwItem1, nint dwItem2);
+
+    // Raw Input
+    public const uint WM_INPUT = 0x00FF;
+    public const uint RID_INPUT = 0x10000003;
+    public const uint RIDEV_INPUTSINK = 0x00000100;
+    public const uint RIDEV_REMOVE = 0x00000001;
+    public const ushort HID_USAGE_PAGE_DIGITIZER = 0x0D;
+    public const ushort HID_USAGE_DIGITIZER_TOUCH_PAD = 0x05;
+    public const ushort HID_USAGE_DIGITIZER_TOUCH_SCREEN = 0x04;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RAWINPUTDEVICE
+    {
+        public ushort usUsagePage;
+        public ushort usUsage;
+        public uint dwFlags;
+        public nint hwndTarget;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RAWINPUTHEADER
+    {
+        public uint dwType;
+        public uint dwSize;
+        public nint hDevice;
+        public nint wParam;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RAWINPUTDEVICELIST
+    {
+        public nint hDevice;
+        public uint dwType;
+    }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool RegisterRawInputDevices(
+        [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 1)] RAWINPUTDEVICE[] pRawInputDevices,
+        uint uiNumDevices,
+        uint cbSize);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern uint GetRawInputData(
+        nint hRawInput,
+        uint uiCommand,
+        nint pData,
+        ref uint pcbSize,
+        uint cbSizeHeader);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern uint GetRawInputDeviceList(
+        [Out] RAWINPUTDEVICELIST[]? pRawInputDeviceList,
+        ref uint puiNumDevices,
+        uint cbSize);
 }

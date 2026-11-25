@@ -41,6 +41,9 @@ public partial class App : Application
     private WidgetCatalogViewModel? _widgetCatalog;
     private LauncherViewModel? _launcherViewModel;
     private LauncherWindow? _launcherWindow;
+    private NotchViewModel? _notchViewModel;
+    private DockViewModel? _dockViewModel;
+    private MusicPlayerViewModel? _musicPlayerViewModel;
     private IAppIndexer? _appIndexer;
     private bool _shuttingDown;
 
@@ -96,8 +99,20 @@ public partial class App : Application
         _launcherWindow = new LauncherWindow(_launcherViewModel);
         _launcherWindow.Closed += OnWindowClosed;
 
-        // Global Hotkey (Alt+Space: modifiers = 1, vk = 0x20) + Hot Corners
+        // Phase 4 Shells: Dynamic Notch, Multi-Display Dock & Music Player
+        var pocketService = new LaunchMe.Core.Notch.PocketService();
+        var notchWindowService = new NotchWindowService();
+        var dockShellService = new DockShellService();
+        var dockSpaceService = new LaunchMe.Core.Dock.DockSpaceService();
+        var ambientSoundService = new LaunchMe.Core.Dock.AmbientSoundService();
+
+        _notchViewModel = new NotchViewModel(notchWindowService, pocketService, _mediaSession, _clipboardMonitor);
+        _dockViewModel = new DockViewModel(dockShellService, dockSpaceService, _systemMetrics, ambientSoundService, appLauncher);
+        _musicPlayerViewModel = new MusicPlayerViewModel(_mediaSession);
+
+        // Global Hotkey (Alt+Space: modifiers = 1, vk = 0x20) + Hot Corners + Precision Touchpad Pinch
         _triggerService = new GestureAndTriggerService();
+        _triggerService.EnableTouchpadPinch(3, true);
         _triggerService.RegisterGlobalHotkey(1, 0x20);
         _triggerService.SetHotCorners(new HotCornerConfig
         {
@@ -181,6 +196,17 @@ public partial class App : Application
         _dispatcherQueue?.TryEnqueue(() =>
         {
             if (_launcherWindow == null) return;
+            if (e.TriggerType == TriggerType.TouchpadSpread)
+            {
+                if (_launcherWindow.IsLauncherVisible) _launcherWindow.Dismiss();
+                return;
+            }
+            if (e.TriggerType == TriggerType.TouchpadPinch)
+            {
+                if (!_launcherWindow.IsLauncherVisible) _launcherWindow.ShowLauncher();
+                return;
+            }
+
             if (_launcherWindow.IsLauncherVisible)
             {
                 _launcherWindow.Dismiss();
@@ -243,6 +269,15 @@ public partial class App : Application
             _launcherViewModel.Dispose();
             _launcherViewModel = null;
         }
+
+        _notchViewModel?.Dispose();
+        _notchViewModel = null;
+
+        _dockViewModel?.Dispose();
+        _dockViewModel = null;
+
+        _musicPlayerViewModel?.Dispose();
+        _musicPlayerViewModel = null;
 
         if (_triggerService != null)
         {
