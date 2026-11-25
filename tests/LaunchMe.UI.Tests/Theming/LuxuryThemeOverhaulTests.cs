@@ -118,7 +118,7 @@ public sealed class LuxuryThemeOverhaulTests
         SnootSpringController.CollapseDampingRatio.Should().Be(0.88f);
         SnootSpringController.CollapsePeriodMs.Should().Be(180);
 
-        var controller = new SnootSpringController();
+        using var controller = new SnootSpringController();
         controller.IsAttached.Should().BeFalse();
 
         controller.AnimateExpand().Should().BeFalse();
@@ -126,6 +126,15 @@ public sealed class LuxuryThemeOverhaulTests
 
         controller.AnimateCollapse().Should().BeFalse();
         controller.IsLastExpanded.Should().BeFalse();
+
+        // Pause-on-Hide stop & detach safety in headless mode
+        var stopAct = () =>
+        {
+            controller.StopAnimation();
+            controller.Detach();
+        };
+        stopAct.Should().NotThrow();
+        controller.IsAttached.Should().BeFalse();
 
         // Dock hover spring helper safe on null UIElement
         var act = () =>

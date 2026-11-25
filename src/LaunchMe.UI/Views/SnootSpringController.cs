@@ -10,7 +10,7 @@ namespace LaunchMe.UI.Views;
 /// using WinUI Composition <see cref="SpringVector3NaturalMotionAnimation"/>.
 /// Guarded safely for headless unit test environments.
 /// </summary>
-public sealed class SnootSpringController
+public sealed class SnootSpringController : IDisposable
 {
     public const float ExpandDampingRatio = 0.82f;
     public const int ExpandPeriodMs = 220;
@@ -29,6 +29,41 @@ public sealed class SnootSpringController
     public void Attach(UIElement? targetElement)
     {
         _targetElement = targetElement;
+    }
+
+    /// <summary>
+    /// Immediately stops any running Composition spring animation to satisfy Pause-on-Hide GPU Law.
+    /// </summary>
+    public void StopAnimation()
+    {
+        if (_targetElement == null)
+        {
+            return;
+        }
+
+        try
+        {
+            var visual = ElementCompositionPreview.GetElementVisual(_targetElement);
+            visual?.StopAnimation("Scale");
+        }
+        catch
+        {
+            // Headless / test environment without WinUI Visual/Compositor
+        }
+    }
+
+    /// <summary>
+    /// Stops active animations and detaches the target UIElement reference.
+    /// </summary>
+    public void Detach()
+    {
+        StopAnimation();
+        _targetElement = null;
+    }
+
+    public void Dispose()
+    {
+        Detach();
     }
 
     /// <summary>

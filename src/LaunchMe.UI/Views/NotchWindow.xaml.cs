@@ -56,6 +56,7 @@ public sealed partial class NotchWindow : Window
         Closed += (_, _) =>
         {
             ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            _springController.Detach();
             ViewModel.Dispose();
         };
     }
@@ -74,6 +75,19 @@ public sealed partial class NotchWindow : Window
             }
 
             PositionTopCenter();
+        }
+        else if (e.PropertyName == nameof(NotchViewModel.IsHiddenByFullscreenGame))
+        {
+            if (ViewModel.IsHiddenByFullscreenGame)
+            {
+                _springController.StopAnimation();
+                _appWindow.Hide();
+            }
+            else
+            {
+                _appWindow.Show();
+                PositionTopCenter();
+            }
         }
     }
 

@@ -52,7 +52,11 @@ public sealed partial class LauncherWindow : Window
         PositionOnCursorMonitor();
 
         ViewModel.DismissRequested += (_, _) => Dismiss();
-        Closed += (_, _) => WallpaperSurface.Dispose();
+        Closed += (_, _) =>
+        {
+            LiquidGlassBackdrop.Detach();
+            WallpaperSurface.Dispose();
+        };
     }
 
     private void ApplyToolWindowStyle()
@@ -71,15 +75,17 @@ public sealed partial class LauncherWindow : Window
         PositionOnCursorMonitor();
         _appWindow.Show();
         IsLauncherVisible = true;
+        LiquidGlassBackdrop.Attach();
         ViewModel.OnShown();
         SearchBox.Focus(FocusState.Programmatic);
     }
 
     public void Dismiss()
     {
-        // Enforce Pause-on-Hide GPU Law: Immediately stop timers, render loops, and video decoding
+        // Enforce Pause-on-Hide GPU Law: Immediately stop timers, render loops, compositor effects, and video decoding
         IsLauncherVisible = false;
         ViewModel.OnHidden();
+        LiquidGlassBackdrop.Detach();
         _appWindow.Hide();
     }
 

@@ -33,12 +33,28 @@ public sealed partial class LiquidGlassOverlayControl : UserControl
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        _compositor.TryAttachToElement(CompositorSurface, (float)ActualWidth, (float)ActualHeight);
+        Attach();
     }
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
         // Enforce Pause-on-Hide GPU Law when control leaves the visual tree
+        Detach();
+    }
+
+    /// <summary>
+    /// Attaches the Win2D Composition liquid glass backdrop effect when visible.
+    /// </summary>
+    public void Attach()
+    {
+        _compositor.TryAttachToElement(CompositorSurface, (float)ActualWidth, (float)ActualHeight);
+    }
+
+    /// <summary>
+    /// Releases the Win2D Composition effect brush and visual resources when hidden or unloaded.
+    /// </summary>
+    public void Detach()
+    {
         _compositor.Detach(CompositorSurface);
     }
 
