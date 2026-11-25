@@ -33,3 +33,5 @@ dist/LaunchMe-Win-x64/
 dist/*.zip
 dist/installer/*.exe
 dist/mobile/*.apk
+dist/videos/*.mp4
+dist/videos/*.webm
