@@ -4,36 +4,51 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    UseLayoutRounding="False">
 
-    <Grid x:Name="OverlayRoot">
+    <Grid x:Name="OverlayRoot" UseLayoutRounding="False">
+        <!-- Win2D / Composition Multi-Stage Blur & Grain Backdrop Host -->
+        <Grid x:Name="CompositorSurface"
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Stretch"
+              UseLayoutRounding="False" />
+
         <!-- Acrylic Glass Base Layer -->
         <Border x:Name="GlassBackdropBorder"
                 Background="{x:Bind VisualState.BackdropBrush, Mode=OneWay}"
                 HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch" />
-
-        <!-- Specular Highlight Overlay (Glass Edge Refraction Effect) -->
-        <Border x:Name="GlassRefractionBorder"
-                HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
-                BorderThickness="1"
-                Opacity="0.25">
-            <Border.BorderBrush>
-                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                    <GradientStop Color="#80FFFFFF" Offset="0.0" />
-                    <GradientStop Color="#10FFFFFF" Offset="0.5" />
-                    <GradientStop Color="#00FFFFFF" Offset="1.0" />
-                </LinearGradientBrush>
-            </Border.BorderBrush>
-        </Border>
+                UseLayoutRounding="False" />
 
         <!-- Tint Overlay for custom color adjustments -->
         <Border x:Name="TintOverlayBorder"
                 Background="{x:Bind VisualState.TintBrush, Mode=OneWay}"
                 Opacity="{x:Bind VisualState.TintOpacity, Mode=OneWay}"
                 HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch" />
+                VerticalAlignment="Stretch"
+                UseLayoutRounding="False" />
+
+        <!-- Double-Rim 0.5px 135-deg Outer Specular Chamfer -->
+        <Border x:Name="GlassRefractionBorder"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                BorderThickness="0.5"
+                UseLayoutRounding="False"
+                IsHitTestVisible="False"
+                BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                Opacity="0.9" />
+
+        <!-- Double-Rim 0.5px Inner Specular Refraction Lip -->
+        <Border x:Name="GlassInnerRefractionBorder"
+                Margin="0.5"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                BorderThickness="0.5"
+                UseLayoutRounding="False"
+                IsHitTestVisible="False"
+                BorderBrush="{StaticResource SpecularInnerRimBrush}"
+                Opacity="0.65" />
 
         <!-- Hosted Content Slot -->
         <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />

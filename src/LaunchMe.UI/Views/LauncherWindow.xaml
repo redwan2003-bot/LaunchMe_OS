@@ -12,7 +12,7 @@
     xmlns:widgets="using:LaunchMe.UI.Widgets.Catalog"
     mc:Ignorable="d">
 
-    <Grid x:Name="RootGrid" Background="Transparent" KeyDown="RootGrid_KeyDown">
+    <Grid x:Name="RootGrid" Background="#FF080A0F" KeyDown="RootGrid_KeyDown" UseLayoutRounding="False">
         <!-- Live / Dynamic / Static Wallpaper layer -->
         <wallpaper:LiveWallpaperControl x:Name="WallpaperSurface"
                                         ViewModel="{x:Bind ViewModel.Wallpaper, Mode=OneWay}"
@@ -24,51 +24,67 @@
                                            VisualState="{x:Bind ViewModel.ThemeVisualState, Mode=OneWay}"
                                            PointerPressed="DismissBackdrop_PointerPressed" />
 
-        <Grid Margin="48,32,48,40">
+        <Grid Margin="48,32,48,40" UseLayoutRounding="False">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Top Center: Unified Search Bar -->
-            <StackPanel Grid.Row="0" HorizontalAlignment="Center" Width="680" Spacing="8">
-                <Grid CornerRadius="12" Background="#D81F293D" BorderBrush="#33FFFFFF" BorderThickness="1" Padding="12,6">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <FontIcon Grid.Column="0" Glyph="&#xE721;" Foreground="#94A3B8" Margin="4,0,8,0" FontSize="16" />
-
-                    <TextBox x:Name="SearchBox"
-                             Grid.Column="1"
-                             Background="Transparent"
-                             BorderThickness="0"
-                             Foreground="White"
-                             PlaceholderText="Search apps, files, math, or press TAB for Emoji..."
-                             PlaceholderForeground="#64748B"
-                             FontSize="16"
-                             Text="{x:Bind ViewModel.SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                             PreviewKeyDown="SearchBox_PreviewKeyDown" />
-
-                    <!-- Search / Emoji Mode Badge -->
-                    <Border Grid.Column="2"
-                            Background="#3338BDF8"
-                            CornerRadius="6"
-                            Padding="8,3"
-                            Visibility="{x:Bind ViewModel.EmojiModeBadgeVisibility, Mode=OneWay}">
-                        <TextBlock Text="EMOJI (TAB)" Foreground="#38BDF8" FontSize="11" FontWeight="SemiBold" />
-                    </Border>
-                </Grid>
-
-                <!-- Search Results Dropdown overlay -->
-                <Border x:Name="SearchResultsPopup"
-                        Background="#E6111827"
-                        BorderBrush="#33FFFFFF"
+            <!-- Top Center: Specular Glass Search Capsule with #00F0FF Glow -->
+            <StackPanel Grid.Row="0" HorizontalAlignment="Center" Width="690" Spacing="10">
+                <Border CornerRadius="20"
+                        Background="#D90E131F"
+                        BorderBrush="{StaticResource SpecularCyanHaloBorderBrush}"
                         BorderThickness="1"
-                        CornerRadius="12"
+                        UseLayoutRounding="False"
+                        Padding="2">
+                    <Border CornerRadius="18"
+                            Background="#E6161D2E"
+                            BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                            BorderThickness="0.5"
+                            UseLayoutRounding="False"
+                            Padding="14,7">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <FontIcon Grid.Column="0" Glyph="&#xE721;" Foreground="#FF00F0FF" Margin="4,0,10,0" FontSize="16" />
+
+                            <TextBox x:Name="SearchBox"
+                                     Grid.Column="1"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Foreground="#FFF8FAFC"
+                                     PlaceholderText="Search apps, files, math, or press TAB for Emoji..."
+                                     PlaceholderForeground="#FF64748B"
+                                     FontFamily="Segoe UI Variable Display"
+                                     FontSize="16"
+                                     Text="{x:Bind ViewModel.SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     PreviewKeyDown="SearchBox_PreviewKeyDown" />
+
+                            <!-- Search / Emoji Mode Badge -->
+                            <Border Grid.Column="2"
+                                    Style="{StaticResource EditorialMicroBadge}"
+                                    Background="#2200F0FF"
+                                    BorderBrush="#8800F0FF"
+                                    Visibility="{x:Bind ViewModel.EmojiModeBadgeVisibility, Mode=OneWay}">
+                                <TextBlock Text="EMOJI (TAB)" Style="{StaticResource EditorialMicroBadgeTextStyle}" />
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Border>
+
+                <!-- Search Results Dropdown Overlay -->
+                <Border x:Name="SearchResultsPopup"
+                        Background="#E6161D2E"
+                        BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                        BorderThickness="0.5"
+                        UseLayoutRounding="False"
+                        CornerRadius="18"
                         MaxHeight="380"
                         Visibility="{x:Bind ViewModel.SearchResultsVisibility, Mode=OneWay}">
                     <ListView x:Name="SearchResultsList"
@@ -78,18 +94,18 @@
                               IsItemClickEnabled="True">
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="vm:UnifiedSearchResultViewModel">
-                                <Grid Padding="8,6">
+                                <Grid Padding="10,7">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="32" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="{x:Bind CategoryGlyph}" FontFamily="Segoe Fluent Icons" VerticalAlignment="Center" Foreground="#38BDF8"/>
+                                    <TextBlock Grid.Column="0" Text="{x:Bind CategoryGlyph}" FontFamily="Segoe Fluent Icons" VerticalAlignment="Center" Foreground="#FF00F0FF"/>
                                     <StackPanel Grid.Column="1" Spacing="2">
-                                        <TextBlock Text="{x:Bind Title}" Foreground="White" FontWeight="SemiBold" />
-                                        <TextBlock Text="{x:Bind Subtitle}" Foreground="#94A3B8" FontSize="12" />
+                                        <TextBlock Text="{x:Bind Title}" Foreground="#FFF8FAFC" FontWeight="SemiBold" />
+                                        <TextBlock Text="{x:Bind Subtitle}" Foreground="#FF94A3B8" FontSize="12" />
                                     </StackPanel>
-                                    <TextBlock Grid.Column="2" Text="{x:Bind CategoryName}" Foreground="#64748B" FontSize="11" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="2" Text="{x:Bind CategoryName}" Foreground="#FF64748B" FontSize="11" VerticalAlignment="Center" />
                                 </Grid>
                             </DataTemplate>
                         </ListView.ItemTemplate>
@@ -97,8 +113,8 @@
                 </Border>
             </StackPanel>
 
-            <!-- Main Content Area + Right-Side Widget Drawer -->
-            <Grid Grid.Row="1" Margin="0,16,0,16">
+            <!-- Main Content Area + Right-Side Bento Widget Drawer -->
+            <Grid Grid.Row="1" Margin="0,18,0,16" UseLayoutRounding="False">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -109,8 +125,8 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Category Tabs Bar above App Grid -->
-                <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8" Margin="0,0,0,12">
+                <!-- Category Pills Bar -->
+                <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8" Margin="0,0,0,14">
                     <ItemsControl ItemsSource="{x:Bind ViewModel.Categories, Mode=OneWay}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -122,17 +138,20 @@
                                 <Button Content="{x:Bind}"
                                         Tag="{x:Bind}"
                                         Click="CategoryButton_Click"
-                                        Background="#26FFFFFF"
-                                        Foreground="White"
-                                        CornerRadius="14"
-                                        Padding="12,5"
-                                        FontSize="12" />
+                                        Background="#D90E131F"
+                                        BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                                        BorderThickness="0.5"
+                                        Foreground="#FFF8FAFC"
+                                        CornerRadius="16"
+                                        Padding="14,5"
+                                        FontSize="12"
+                                        FontWeight="SemiBold" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </StackPanel>
 
-                <!-- Main Page Items Grid (Virtualized Multi-Page Carousel) -->
+                <!-- Main Page Items Grid (Virtualized Multi-Page Carousel with 64x64 Squircle Pedestals) -->
                 <FlipView x:Name="LauncherFlipView"
                           Grid.Row="1"
                           Grid.Column="0"
@@ -148,19 +167,32 @@
                                       VerticalAlignment="Center">
                                 <GridView.ItemTemplate>
                                     <DataTemplate x:DataType="vm:LauncherItemViewModel">
-                                        <Grid Width="96" Height="110" Margin="12"
+                                        <Grid Width="98" Height="112" Margin="12"
                                               Background="Transparent"
                                               CanDrag="{x:Bind IsEditModeActive, Mode=OneWay}"
                                               DragStarting="Item_DragStarting"
                                               Drop="Item_Drop"
-                                              AllowDrop="True">
+                                              AllowDrop="True"
+                                              UseLayoutRounding="False">
                                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-                                                <Border Width="64" Height="64" CornerRadius="16" Background="#1F2937" BorderBrush="#33FFFFFF" BorderThickness="1">
-                                                    <Image Source="{x:Bind IconImageSource, Mode=OneWay}" Width="48" Height="48" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <Border Width="64"
+                                                        Height="64"
+                                                        CornerRadius="18"
+                                                        Background="#D90E131F"
+                                                        BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                                                        BorderThickness="0.5"
+                                                        UseLayoutRounding="False">
+                                                    <Border CornerRadius="17"
+                                                            BorderBrush="{StaticResource SpecularInnerRimBrush}"
+                                                            BorderThickness="0.5"
+                                                            UseLayoutRounding="False">
+                                                        <Image Source="{x:Bind IconImageSource, Mode=OneWay}" Width="44" Height="44" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
                                                 </Border>
                                                 <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}"
-                                                           Foreground="White"
+                                                           Foreground="#FFF8FAFC"
                                                            FontSize="12"
+                                                           FontWeight="SemiBold"
                                                            TextTrimming="CharacterEllipsis"
                                                            HorizontalAlignment="Center"
                                                            Visibility="{x:Bind IsTitleVisible, Mode=OneWay}"/>
@@ -173,17 +205,20 @@
                     </FlipView.ItemTemplate>
                 </FlipView>
 
-                <!-- Space Switcher & Workflow Quick-Launch Strip -->
+                <!-- Space Switcher & Workflow Luxury Pills Strip -->
                 <StackPanel Grid.Row="2"
                             Grid.Column="0"
                             Orientation="Horizontal"
                             HorizontalAlignment="Center"
-                            Spacing="16"
+                            Spacing="18"
                             Margin="0,10,0,0">
                     <StackPanel Orientation="Horizontal"
-                                Spacing="6"
+                                Spacing="8"
                                 Visibility="{x:Bind ViewModel.SpacesBarVisibility, Mode=OneWay}">
-                        <TextBlock Text="Space:" Foreground="#94A3B8" FontSize="12" VerticalAlignment="Center" />
+                        <TextBlock Text="SPACES"
+                                   Style="{StaticResource EditorialMicroEyebrowStyle}"
+                                   Foreground="#FF00F0FF"
+                                   VerticalAlignment="Center" />
                         <ItemsControl ItemsSource="{x:Bind ViewModel.Spaces, Mode=OneWay}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -195,20 +230,26 @@
                                     <Button Content="{x:Bind Name}"
                                             Tag="{x:Bind SpaceId}"
                                             Click="SpaceButton_Click"
-                                            Background="#2638BDF8"
-                                            Foreground="White"
-                                            CornerRadius="8"
-                                            Padding="10,4"
-                                            FontSize="12" />
+                                            Background="#1E00F0FF"
+                                            BorderBrush="#6600F0FF"
+                                            BorderThickness="0.5"
+                                            Foreground="#FFF8FAFC"
+                                            CornerRadius="12"
+                                            Padding="12,4"
+                                            FontSize="12"
+                                            FontWeight="SemiBold" />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal"
-                                Spacing="6"
+                                Spacing="8"
                                 Visibility="{x:Bind ViewModel.WorkflowsStripVisibility, Mode=OneWay}">
-                        <TextBlock Text="Workflows:" Foreground="#94A3B8" FontSize="12" VerticalAlignment="Center" />
+                        <TextBlock Text="WORKFLOWS"
+                                   Style="{StaticResource EditorialMicroEyebrowStyle}"
+                                   Foreground="#FF00FF9D"
+                                   VerticalAlignment="Center" />
                         <ItemsControl ItemsSource="{x:Bind ViewModel.Workflows, Mode=OneWay}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -220,36 +261,40 @@
                                     <Button Content="{x:Bind Name}"
                                             Tag="{x:Bind}"
                                             Click="WorkflowButton_Click"
-                                            Background="#3310B981"
-                                            Foreground="White"
-                                            CornerRadius="8"
-                                            Padding="10,4"
-                                            FontSize="12" />
+                                            Background="#1E00FF9D"
+                                            BorderBrush="#6600FF9D"
+                                            BorderThickness="0.5"
+                                            Foreground="#FFF8FAFC"
+                                            CornerRadius="12"
+                                            Padding="12,4"
+                                            FontSize="12"
+                                            FontWeight="SemiBold" />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </StackPanel>
                 </StackPanel>
 
-                <!-- Right-Side Widget Catalog Drawer -->
+                <!-- Right-Side Bento Widget Catalog Drawer -->
                 <Border Grid.Row="0"
                         Grid.RowSpan="3"
                         Grid.Column="1"
                         Width="360"
                         Margin="16,0,0,0"
-                        Background="#D80F172A"
-                        BorderBrush="#33FFFFFF"
-                        BorderThickness="1"
-                        CornerRadius="16"
+                        Background="#D90E131F"
+                        BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                        BorderThickness="0.5"
+                        UseLayoutRounding="False"
+                        CornerRadius="22"
                         Visibility="{x:Bind ViewModel.WidgetDrawerVisibility, Mode=OneWay}">
                     <widgets:WidgetCatalogView ViewModel="{x:Bind ViewModel.WidgetCatalog, Mode=OneWay}" />
                 </Border>
             </Grid>
 
-            <!-- Bottom Pagination Dots & Toolbar Actions -->
-            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12">
+            <!-- Bottom Pagination Dots & Luxury Toolbar Actions -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
                 <!-- Page Switcher Dots -->
-                <ItemsControl ItemsSource="{x:Bind ViewModel.PageIndicators, Mode=OneWay}" VerticalAlignment="Center">
+                <ItemsControl ItemsSource="{x:Bind ViewModel.PageIndicators, Mode=OneWay}" VerticalAlignment="Center" Margin="0,0,6,0">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <StackPanel Orientation="Horizontal" Spacing="8"/>
@@ -267,48 +312,57 @@
                 <!-- Edit Mode Button -->
                 <Button Content="{x:Bind ViewModel.EditModeButtonText, Mode=OneWay}"
                         Command="{x:Bind ViewModel.ToggleEditModeCommand}"
-                        Background="#33FFFFFF"
-                        Foreground="White"
-                        CornerRadius="8"
-                        Padding="12,4" />
+                        Background="#D90E131F"
+                        BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                        BorderThickness="0.5"
+                        Foreground="#FFF8FAFC"
+                        CornerRadius="12"
+                        Padding="14,5" />
 
                 <!-- Widgets Drawer Toggle Button -->
                 <Button Content="Widgets"
                         Command="{x:Bind ViewModel.ToggleWidgetDrawerCommand}"
-                        Background="#33FFFFFF"
-                        Foreground="White"
-                        CornerRadius="8"
-                        Padding="12,4" />
+                        Background="#D90E131F"
+                        BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                        BorderThickness="0.5"
+                        Foreground="#FFF8FAFC"
+                        CornerRadius="12"
+                        Padding="14,5" />
 
                 <!-- Settings & Diagnostics Toggle Button -->
                 <Button Content="Settings"
                         Command="{x:Bind ViewModel.ToggleSettingsCommand}"
-                        Background="#33FFFFFF"
-                        Foreground="White"
-                        CornerRadius="8"
-                        Padding="12,4" />
+                        Background="#D90E131F"
+                        BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                        BorderThickness="0.5"
+                        Foreground="#FFF8FAFC"
+                        CornerRadius="12"
+                        Padding="14,5" />
 
                 <!-- Exit App Button -->
                 <Button Content="Exit"
                         Command="{x:Bind ViewModel.QuitAppCommand}"
-                        Background="#44EF4444"
-                        Foreground="White"
-                        CornerRadius="8"
-                        Padding="12,4" />
+                        Background="#33EF4444"
+                        BorderBrush="#66EF4444"
+                        BorderThickness="0.5"
+                        Foreground="#FFFCA5A5"
+                        CornerRadius="12"
+                        Padding="14,5" />
             </StackPanel>
         </Grid>
 
         <!-- Smart Folder Modal Overlay -->
         <Grid x:Name="FolderModalOverlay"
-              Background="#80000000"
+              Background="#99080A0F"
               Visibility="{x:Bind ViewModel.FolderModalVisibility, Mode=OneWay}"
               PointerPressed="FolderScrim_PointerPressed">
             <Border Width="540"
                     MaxHeight="460"
-                    Background="#EC111827"
-                    BorderBrush="#44FFFFFF"
-                    BorderThickness="1"
-                    CornerRadius="20"
+                    Background="#E6161D2E"
+                    BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                    BorderThickness="0.5"
+                    UseLayoutRounding="False"
+                    CornerRadius="24"
                     Padding="24"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
@@ -320,17 +374,22 @@
                     </Grid.RowDefinitions>
 
                     <Grid Grid.Row="0">
-                        <TextBlock Text="{x:Bind ViewModel.ActiveFolderName, Mode=OneWay}"
-                                   Foreground="White"
-                                   FontSize="20"
-                                   FontWeight="SemiBold"
-                                   VerticalAlignment="Center" />
+                        <StackPanel Spacing="2" VerticalAlignment="Center">
+                            <TextBlock Text="SQUISH WORKSPACE FOLDER"
+                                       Style="{StaticResource EditorialMicroEyebrowStyle}"
+                                       Foreground="#FF00F0FF" />
+                            <TextBlock Text="{x:Bind ViewModel.ActiveFolderName, Mode=OneWay}"
+                                       Style="{StaticResource EditorialBentoHeaderStyle}"
+                                       FontSize="22" />
+                        </StackPanel>
                         <Button Content="Close"
                                 Command="{x:Bind ViewModel.CloseFolderCommand}"
                                 HorizontalAlignment="Right"
-                                Background="#33FFFFFF"
-                                Foreground="White"
-                                CornerRadius="8"
+                                Background="#1FFFFFFF"
+                                BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                                BorderThickness="0.5"
+                                Foreground="#FFF8FAFC"
+                                CornerRadius="10"
                                 Padding="12,4" />
                     </Grid>
 
@@ -341,13 +400,19 @@
                               ItemClick="FolderGridView_ItemClick">
                         <GridView.ItemTemplate>
                             <DataTemplate x:DataType="vm:LauncherItemViewModel">
-                                <Grid Width="92" Height="104" Margin="8" Background="Transparent">
+                                <Grid Width="92" Height="104" Margin="8" Background="Transparent" UseLayoutRounding="False">
                                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6">
-                                        <Border Width="56" Height="56" CornerRadius="14" Background="#1F2937" BorderBrush="#33FFFFFF" BorderThickness="1">
-                                            <Image Source="{x:Bind IconImageSource, Mode=OneWay}" Width="40" Height="40" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        <Border Width="56"
+                                                Height="56"
+                                                CornerRadius="16"
+                                                Background="#D90E131F"
+                                                BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                                                BorderThickness="0.5"
+                                                UseLayoutRounding="False">
+                                            <Image Source="{x:Bind IconImageSource, Mode=OneWay}" Width="38" Height="38" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
                                         <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}"
-                                                   Foreground="White"
+                                                   Foreground="#FFF8FAFC"
                                                    FontSize="12"
                                                    TextTrimming="CharacterEllipsis"
                                                    HorizontalAlignment="Center" />
@@ -360,77 +425,106 @@
             </Border>
         </Grid>
 
-        <!-- Settings & Diagnostics Flyout Overlay -->
+        <!-- Settings & Diagnostics Flyout Overlay (Leash & Squish Branded) -->
         <Grid x:Name="SettingsOverlay"
-              Background="#66000000"
+              Background="#99080A0F"
               Visibility="{x:Bind ViewModel.SettingsOverlayVisibility, Mode=OneWay}"
               PointerPressed="SettingsScrim_PointerPressed">
-            <Border Width="440"
-                    Background="#F0111827"
-                    BorderBrush="#44FFFFFF"
-                    BorderThickness="1"
-                    CornerRadius="16"
+            <Border Width="460"
+                    Background="#E6161D2E"
+                    BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                    BorderThickness="0.5"
+                    UseLayoutRounding="False"
+                    CornerRadius="24"
                     Padding="24"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     PointerPressed="ModalCard_PointerPressed">
                 <StackPanel Spacing="16">
                     <Grid>
-                        <TextBlock Text="Settings &amp; Diagnostics"
-                                   Foreground="White"
-                                   FontSize="18"
-                                   FontWeight="SemiBold"
-                                   VerticalAlignment="Center" />
+                        <StackPanel Spacing="2" VerticalAlignment="Center">
+                            <TextBlock Text="LEASH &amp; SQUISH ENGINE"
+                                       Style="{StaticResource EditorialMicroEyebrowStyle}"
+                                       Foreground="#FF00F0FF" />
+                            <TextBlock Text="Settings &amp; Diagnostics"
+                                       Style="{StaticResource EditorialBentoHeaderStyle}"
+                                       FontSize="20" />
+                        </StackPanel>
                         <Button Content="Close"
                                 Command="{x:Bind ViewModel.ToggleSettingsCommand}"
                                 HorizontalAlignment="Right"
-                                Background="#33FFFFFF"
-                                Foreground="White"
-                                CornerRadius="8"
-                                Padding="10,4" />
+                                Background="#1FFFFFFF"
+                                BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                                BorderThickness="0.5"
+                                Foreground="#FFF8FAFC"
+                                CornerRadius="10"
+                                Padding="12,4" />
                     </Grid>
 
-                    <Border Background="#1FFFFFFF" CornerRadius="10" Padding="12">
+                    <!-- Leash & Squish Status Badges -->
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Border Style="{StaticResource EditorialMicroBadge}" Background="#1400FF9D" BorderBrush="#5500FF9D">
+                            <TextBlock Text="LEASH REMOTE SYNC READY" Style="{StaticResource EditorialMicroBadgeTextStyle}" Foreground="#FF00FF9D" FontSize="9.5" />
+                        </Border>
+                        <Border Style="{StaticResource EditorialMicroBadge}" Background="#1400F0FF" BorderBrush="#5500F0FF">
+                            <TextBlock Text="SQUISH BSP TILING" Style="{StaticResource EditorialMicroBadgeTextStyle}" Foreground="#FF00F0FF" FontSize="9.5" />
+                        </Border>
+                    </StackPanel>
+
+                    <Border Background="#D90E131F"
+                            BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                            BorderThickness="0.5"
+                            UseLayoutRounding="False"
+                            CornerRadius="14"
+                            Padding="14">
                         <StackPanel Spacing="6">
-                            <TextBlock Text="Active Space" Foreground="#94A3B8" FontSize="12" />
-                            <TextBlock Text="{x:Bind ViewModel.ActiveSpaceName, Mode=OneWay}" Foreground="White" FontSize="15" FontWeight="SemiBold" />
-                            <TextBlock Text="{x:Bind ViewModel.DiagnosticsSummary, Mode=OneWay}" Foreground="#CBD5E1" FontSize="12" TextWrapping="Wrap" />
-                            <TextBlock Text="{x:Bind ViewModel.PlatformDiagnosticsText, Mode=OneWay}" Foreground="#94A3B8" FontSize="11" TextWrapping="Wrap" />
+                            <TextBlock Text="ACTIVE SPACE" Style="{StaticResource EditorialMicroEyebrowStyle}" />
+                            <TextBlock Text="{x:Bind ViewModel.ActiveSpaceName, Mode=OneWay}"
+                                       Style="{StaticResource EditorialBentoHeaderStyle}"
+                                       FontSize="16" />
+                            <TextBlock Text="{x:Bind ViewModel.DiagnosticsSummary, Mode=OneWay}" Foreground="#FFCBD5E1" FontSize="12" TextWrapping="Wrap" />
+                            <TextBlock Text="{x:Bind ViewModel.PlatformDiagnosticsText, Mode=OneWay}" Foreground="#FF94A3B8" FontSize="11" TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
 
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <Button Content="{x:Bind ViewModel.SchedulerStatusText, Mode=OneWay}"
                                 Command="{x:Bind ViewModel.ToggleSchedulerCommand}"
-                                Background="#33FFFFFF"
-                                Foreground="White"
-                                CornerRadius="8"
-                                Padding="10,6" />
+                                Background="#D90E131F"
+                                BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                                BorderThickness="0.5"
+                                Foreground="#FFF8FAFC"
+                                CornerRadius="10"
+                                Padding="12,6" />
                         <Button Content="{x:Bind ViewModel.ThemeAssociationStatusText, Mode=OneWay}"
                                 Command="{x:Bind ViewModel.ToggleThemeAssociationCommand}"
-                                Background="#33FFFFFF"
-                                Foreground="White"
-                                CornerRadius="8"
-                                Padding="10,6" />
+                                Background="#D90E131F"
+                                BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                                BorderThickness="0.5"
+                                Foreground="#FFF8FAFC"
+                                CornerRadius="10"
+                                Padding="12,6" />
                     </StackPanel>
 
                     <StackPanel Spacing="8">
-                        <TextBlock Text="Quick Theme Tint" Foreground="#94A3B8" FontSize="12" />
+                        <TextBlock Text="QUICK THEME TINT" Style="{StaticResource EditorialMicroEyebrowStyle}" />
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button Content="Cobalt" Tag="#1E40AF" Click="QuickTintButton_Click" Background="#1E40AF" Foreground="White" CornerRadius="8" />
-                            <Button Content="Emerald" Tag="#047857" Click="QuickTintButton_Click" Background="#047857" Foreground="White" CornerRadius="8" />
-                            <Button Content="Crimson" Tag="#9F1239" Click="QuickTintButton_Click" Background="#9F1239" Foreground="White" CornerRadius="8" />
-                            <Button Content="Slate" Tag="#1E293B" Click="QuickTintButton_Click" Background="#1E293B" Foreground="White" CornerRadius="8" />
+                            <Button Content="Cobalt" Tag="#1E40AF" Click="QuickTintButton_Click" Background="#1E40AF" BorderBrush="{StaticResource SpecularGlassChamferBrush}" BorderThickness="0.5" Foreground="White" CornerRadius="10" />
+                            <Button Content="Emerald" Tag="#047857" Click="QuickTintButton_Click" Background="#047857" BorderBrush="{StaticResource SpecularGlassChamferBrush}" BorderThickness="0.5" Foreground="White" CornerRadius="10" />
+                            <Button Content="Crimson" Tag="#9F1239" Click="QuickTintButton_Click" Background="#9F1239" BorderBrush="{StaticResource SpecularGlassChamferBrush}" BorderThickness="0.5" Foreground="White" CornerRadius="10" />
+                            <Button Content="Obsidian" Tag="#080A0F" Click="QuickTintButton_Click" Background="#080A0F" BorderBrush="{StaticResource SpecularGlassChamferBrush}" BorderThickness="0.5" Foreground="White" CornerRadius="10" />
                         </StackPanel>
                     </StackPanel>
 
                     <Button Content="Exit LaunchMe-Win"
                             Command="{x:Bind ViewModel.QuitAppCommand}"
                             HorizontalAlignment="Stretch"
-                            Background="#CCDC2626"
-                            Foreground="White"
-                            CornerRadius="8"
-                            Padding="12,8" />
+                            Background="#33EF4444"
+                            BorderBrush="#88EF4444"
+                            BorderThickness="0.5"
+                            Foreground="#FFFCA5A5"
+                            CornerRadius="12"
+                            Padding="12,9" />
                 </StackPanel>
             </Border>
         </Grid>

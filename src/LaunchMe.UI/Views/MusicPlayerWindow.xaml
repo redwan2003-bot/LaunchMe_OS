@@ -7,51 +7,108 @@
     xmlns:vm="using:LaunchMe.UI.ViewModels"
     mc:Ignorable="d">
 
-    <Grid x:Name="RootGrid" Background="#DD0B0F19" KeyDown="RootGrid_KeyDown">
+    <!-- Audiophile Vinyl & Prismatic Focus Canvas -->
+    <Grid x:Name="RootGrid" Background="#FF05070B" KeyDown="RootGrid_KeyDown" UseLayoutRounding="False">
         <!-- Close Button (Top Right) -->
         <Button HorizontalAlignment="Right"
                 VerticalAlignment="Top"
                 Margin="0,32,32,0"
-                Background="Transparent"
-                BorderThickness="0"
+                Background="#1A0E131F"
+                BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                BorderThickness="0.5"
+                CornerRadius="16"
                 Padding="12"
                 Command="{x:Bind ViewModel.DismissCommand}">
-            <FontIcon Glyph="&#xE711;" FontSize="18" Foreground="#94A3B8" />
+            <FontIcon Glyph="&#xE711;" FontSize="16" Foreground="#FF94A3B8" />
         </Button>
 
-        <!-- Center Player & Visualizer -->
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="24" MaxWidth="520">
-            <!-- Visualizer Container -->
-            <Grid Width="280" Height="280" HorizontalAlignment="Center">
-                <!-- Glowing Beats Outer Halo -->
-                <Ellipse Width="270" Height="270"
-                         Fill="#1E38BDF8"
+        <!-- Center Audiophile Player & Visualizer -->
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="24" MaxWidth="540">
+            <!-- Prismatic Focus Eyebrow -->
+            <TextBlock Text="PRISMATIC FOCUS CANVAS"
+                       Style="{StaticResource EditorialMicroEyebrowStyle}"
+                       Foreground="#FF00F0FF"
+                       HorizontalAlignment="Center" />
+
+            <!-- Vinyl & Multi-Ring Neon Beats Container -->
+            <Grid Width="310" Height="310" HorizontalAlignment="Center" UseLayoutRounding="False">
+                <!-- Outer Multi-Ring Neon Beats Glow (Paused cleanly when hidden/stopped via ViewModel) -->
+                <Ellipse Width="304" Height="304"
+                         Fill="#1400F0FF"
+                         Stroke="#4400F0FF"
+                         StrokeThickness="1"
+                         Opacity="{x:Bind ViewModel.GlowPulse, Mode=OneWay}" />
+                <Ellipse Width="282" Height="282"
+                         Fill="#18A855F7"
+                         Stroke="#66A855F7"
+                         StrokeThickness="1.2"
+                         Opacity="{x:Bind ViewModel.GlowPulse, Mode=OneWay}" />
+                <Ellipse Width="260" Height="260"
+                         Stroke="#AA00F0FF"
+                         StrokeThickness="1.5"
                          Opacity="{x:Bind ViewModel.GlowPulse, Mode=OneWay}" />
 
-                <!-- Vinyl Mode: Rotating Record -->
-                <Grid Width="240" Height="240" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <!-- Holographic Multi-Ring Vinyl Disc -->
+                <Grid Width="240" Height="240" HorizontalAlignment="Center" VerticalAlignment="Center" UseLayoutRounding="False">
                     <Grid.RenderTransform>
                         <RotateTransform Angle="{x:Bind ViewModel.VinylAngle, Mode=OneWay}" CenterX="120" CenterY="120" />
                     </Grid.RenderTransform>
-                    <!-- Vinyl Grooves -->
-                    <Ellipse Fill="#18181B" Stroke="#3F3F46" StrokeThickness="4" />
-                    <Ellipse Width="180" Height="180" Stroke="#27272A" StrokeThickness="2" />
-                    <Ellipse Width="120" Height="120" Stroke="#27272A" StrokeThickness="2" />
-                    <!-- Center Label -->
-                    <Ellipse Width="70" Height="70" Fill="#E11D48" />
-                    <Ellipse Width="16" Height="16" Fill="#09090B" />
+
+                    <!-- Outer Obsidian Vinyl Disc -->
+                    <Ellipse Fill="#FF080A0F"
+                             Stroke="{StaticResource SpecularGlassChamferBrush}"
+                             StrokeThickness="1" />
+
+                    <!-- Holographic Multi-Ring Grooves -->
+                    <Ellipse Width="218" Height="218" Stroke="#2800F0FF" StrokeThickness="1" />
+                    <Ellipse Width="196" Height="196" Stroke="#22A855F7" StrokeThickness="1" />
+                    <Ellipse Width="174" Height="174" Stroke="#331E293B" StrokeThickness="2" />
+                    <Ellipse Width="152" Height="152" Stroke="#2000F0FF" StrokeThickness="1" />
+                    <Ellipse Width="130" Height="130" Stroke="#3327272A" StrokeThickness="1.5" />
+                    <Ellipse Width="108" Height="108" Stroke="#26A855F7" StrokeThickness="1" />
+
+                    <!-- Center Metallic Ring -->
+                    <Ellipse Width="82" Height="82" StrokeThickness="3">
+                        <Ellipse.Stroke>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#FFF1F5F9" Offset="0.0" />
+                                <GradientStop Color="#FF64748B" Offset="0.35" />
+                                <GradientStop Color="#FFE2E8F0" Offset="0.65" />
+                                <GradientStop Color="#FF334155" Offset="1.0" />
+                            </LinearGradientBrush>
+                        </Ellipse.Stroke>
+                        <Ellipse.Fill>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#FF1E293B" Offset="0.0" />
+                                <GradientStop Color="#FF080A0F" Offset="1.0" />
+                            </LinearGradientBrush>
+                        </Ellipse.Fill>
+                    </Ellipse>
+
+                    <!-- Center Prismatic Spindle Ring & Hole -->
+                    <Ellipse Width="24" Height="24" Stroke="#FF00F0FF" StrokeThickness="1.5" Fill="#FF05070B" />
+                    <Ellipse Width="10" Height="10" Fill="#FF05070B" />
                 </Grid>
             </Grid>
 
-            <!-- Track Info -->
-            <StackPanel HorizontalAlignment="Center" Spacing="4">
+            <!-- Editorial Track Info -->
+            <StackPanel HorizontalAlignment="Center" Spacing="5">
                 <TextBlock Text="{x:Bind ViewModel.TrackTitle, Mode=OneWay}"
-                           FontSize="22" FontWeight="Bold" Foreground="White"
-                           HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="440" />
+                           Style="{StaticResource EditorialHeroMetricStyle}"
+                           FontSize="26"
+                           HorizontalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           MaxWidth="460" />
                 <TextBlock Text="{x:Bind ViewModel.Artist, Mode=OneWay}"
-                           FontSize="15" Foreground="#94A3B8" HorizontalAlignment="Center" />
+                           FontSize="15"
+                           FontWeight="SemiBold"
+                           Foreground="#FF94A3B8"
+                           HorizontalAlignment="Center" />
                 <TextBlock Text="{x:Bind ViewModel.Album, Mode=OneWay}"
-                           FontSize="12" Foreground="#64748B" HorizontalAlignment="Center" />
+                           Style="{StaticResource EditorialMicroEyebrowStyle}"
+                           FontSize="11"
+                           Foreground="#FF64748B"
+                           HorizontalAlignment="Center" />
             </StackPanel>
 
             <!-- Seek Slider & Time -->
@@ -61,27 +118,45 @@
                         HorizontalAlignment="Stretch" />
                 <Grid>
                     <TextBlock Text="{x:Bind ViewModel.PositionFormatted, Mode=OneWay}"
-                               FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Left" />
+                               FontSize="11" Foreground="#FF94A3B8" HorizontalAlignment="Left" />
                     <TextBlock Text="{x:Bind ViewModel.DurationFormatted, Mode=OneWay}"
-                               FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Right" />
+                               FontSize="11" Foreground="#FF94A3B8" HorizontalAlignment="Right" />
                 </Grid>
             </StackPanel>
 
-            <!-- Transport Controls -->
+            <!-- Transport Controls with Glowing #00F0FF Play/Pause Orb -->
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="24">
-                <Button Background="Transparent" BorderThickness="0" Padding="12"
+                <Button Background="#14FFFFFF"
+                        BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                        BorderThickness="0.5"
+                        CornerRadius="20"
+                        Padding="12"
                         Command="{x:Bind ViewModel.PreviousCommand}">
-                    <FontIcon Glyph="&#xE892;" FontSize="20" Foreground="White" />
+                    <FontIcon Glyph="&#xE892;" FontSize="18" Foreground="#FFF8FAFC" />
                 </Button>
 
-                <Button Width="56" Height="56" CornerRadius="28" Background="#38BDF8" BorderThickness="0"
-                        Command="{x:Bind ViewModel.PlayPauseCommand}">
-                    <FontIcon Glyph="&#xE768;" FontSize="24" Foreground="Black" />
-                </Button>
+                <Grid Width="72" Height="72" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Ellipse Width="72" Height="72" Fill="#3300F0FF" Stroke="#6600F0FF" StrokeThickness="0.8" />
+                    <Button Width="60"
+                            Height="60"
+                            CornerRadius="30"
+                            Background="#FF00F0FF"
+                            BorderBrush="#AAFFFFFF"
+                            BorderThickness="0.8"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Command="{x:Bind ViewModel.PlayPauseCommand}">
+                        <FontIcon Glyph="&#xE768;" FontSize="24" Foreground="#FF05070B" />
+                    </Button>
+                </Grid>
 
-                <Button Background="Transparent" BorderThickness="0" Padding="12"
+                <Button Background="#14FFFFFF"
+                        BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                        BorderThickness="0.5"
+                        CornerRadius="20"
+                        Padding="12"
                         Command="{x:Bind ViewModel.NextCommand}">
-                    <FontIcon Glyph="&#xE893;" FontSize="20" Foreground="White" />
+                    <FontIcon Glyph="&#xE893;" FontSize="18" Foreground="#FFF8FAFC" />
                 </Button>
             </StackPanel>
 
@@ -89,7 +164,12 @@
             <Button Content="Visualizer Mode"
                     FontSize="11"
                     HorizontalAlignment="Center"
-                    Padding="12,4"
+                    CornerRadius="14"
+                    Background="#D90E131F"
+                    BorderBrush="{StaticResource SpecularGlassChamferBrush}"
+                    BorderThickness="0.5"
+                    Foreground="#FFE2E8F0"
+                    Padding="16,6"
                     Command="{x:Bind ViewModel.CycleModeCommand}" />
         </StackPanel>
     </Grid>

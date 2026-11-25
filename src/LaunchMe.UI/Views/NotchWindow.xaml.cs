@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Windows.Graphics;
 using Microsoft.UI;
@@ -13,13 +14,18 @@ public sealed partial class NotchWindow : Window
     private readonly AppWindow _appWindow;
     private readonly OverlappedPresenter _presenter;
     private readonly nint _hwnd;
+    private readonly SnootSpringController _springController = new();
 
     public NotchViewModel ViewModel { get; }
+    public SnootSpringController SpringController => _springController;
 
     public NotchWindow(NotchViewModel viewModel)
     {
         ViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         InitializeComponent();
+
+        _springController.Attach(NotchContainer);
+        ViewModel.PropertyChanged += OnViewModelPropertyChanged;
 
         try
         {
@@ -47,7 +53,28 @@ public sealed partial class NotchWindow : Window
         // Screen Capture Exclusion
         ViewModel.ApplyScreenCaptureExclusion(_hwnd);
 
-        Closed += (_, _) => ViewModel.Dispose();
+        Closed += (_, _) =>
+        {
+            ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            ViewModel.Dispose();
+        };
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(NotchViewModel.IsExpanded))
+        {
+            if (ViewModel.IsExpanded)
+            {
+                _springController.AnimateExpand();
+            }
+            else
+            {
+                _springController.AnimateCollapse();
+            }
+
+            PositionTopCenter();
+        }
     }
 
     private void ApplyToolWindowStyle()
