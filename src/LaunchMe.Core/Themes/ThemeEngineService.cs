@@ -19,6 +19,33 @@ public sealed class ThemeEngineService : IThemeEngineService
         return LiquidGlassTintResolver.Resolve(settings);
     }
 
+    /// <summary>
+    /// Returns a normalized copy of <see cref="ThemeSettings"/> with intensity and specular intensity clamped to [0.0, 1.0],
+    /// preserving <see cref="ThemeSettings.EnableGrain"/>.
+    /// </summary>
+    public static ThemeSettings NormalizeSettings(ThemeSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+
+        return new ThemeSettings
+        {
+            Style = string.IsNullOrWhiteSpace(settings.Style) ? "LiquidGlass" : settings.Style,
+            Mode = string.IsNullOrWhiteSpace(settings.Mode) ? "Tinted" : settings.Mode,
+            TintHex = string.IsNullOrWhiteSpace(settings.TintHex) ? "#1E40AF" : settings.TintHex,
+            Intensity = double.IsNaN(settings.Intensity)
+                ? LiquidGlassTintResolver.DefaultIntensity
+                : Math.Clamp(settings.Intensity, 0.0, 1.0),
+            TitleColor = string.IsNullOrWhiteSpace(settings.TitleColor) ? "Auto" : settings.TitleColor,
+            SpecularIntensity = LiquidGlassTintResolver.ClampSpecularIntensity(settings.SpecularIntensity),
+            EnableGrain = settings.EnableGrain
+        };
+    }
+
+    public static double ClampSpecularIntensity(double specularIntensity)
+    {
+        return LiquidGlassTintResolver.ClampSpecularIntensity(specularIntensity);
+    }
+
     public ColorRgba ParseColor(string hex)
     {
         return ColorParser.ParseHex(hex);

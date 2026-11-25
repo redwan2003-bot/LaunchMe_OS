@@ -85,7 +85,9 @@ public sealed class SqliteSpaceStore : ISpaceStore, IDisposable
                         Mode = "Tinted",
                         TintHex = "#1E40AF",
                         Intensity = 0.65,
-                        TitleColor = "Auto"
+                        TitleColor = "Auto",
+                        SpecularIntensity = 0.85,
+                        EnableGrain = true
                     },
                     Wallpaper = new WallpaperSettings
                     {
@@ -274,6 +276,8 @@ public sealed class SqliteSpaceStore : ISpaceStore, IDisposable
         ArgumentException.ThrowIfNullOrWhiteSpace(space.SpaceId);
         await EnsureInitializedAsync(ct).ConfigureAwait(false);
 
+        space.Theme = LaunchMe.Core.Themes.ThemeEngineService.NormalizeSettings(space.Theme ?? new ThemeSettings());
+
         await _lock.WaitAsync(ct).ConfigureAwait(false);
         try
         {
@@ -432,6 +436,7 @@ public sealed class SqliteSpaceStore : ISpaceStore, IDisposable
         // Assign a fresh ID to avoid collisions
         importedSpace.SpaceId = Guid.NewGuid().ToString("N");
         importedSpace.IsDefault = false;
+        importedSpace.Theme = LaunchMe.Core.Themes.ThemeEngineService.NormalizeSettings(importedSpace.Theme ?? new ThemeSettings());
 
         // Unpack local assets safely with strict ZipSlip defense
         var assetsDir = Path.GetFullPath(Path.Combine(_baseDirectory, "Assets", importedSpace.SpaceId));
