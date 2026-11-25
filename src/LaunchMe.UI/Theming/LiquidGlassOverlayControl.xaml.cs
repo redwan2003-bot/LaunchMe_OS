@@ -7,6 +7,7 @@ namespace LaunchMe.UI.Theming;
 public sealed partial class LiquidGlassOverlayControl : UserControl
 {
     private static readonly LiquidGlassTintService TintService = new();
+    private readonly LiquidGlassCompositor _compositor = new();
 
     public static readonly DependencyProperty VisualStateProperty =
         DependencyProperty.Register(
@@ -21,9 +22,24 @@ public sealed partial class LiquidGlassOverlayControl : UserControl
         set => SetValue(VisualStateProperty, value);
     }
 
+    public bool IsCompositorActive => _compositor.IsActive;
+
     public LiquidGlassOverlayControl()
     {
         InitializeComponent();
+        Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        _compositor.TryAttachToElement(CompositorSurface, (float)ActualWidth, (float)ActualHeight);
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        // Enforce Pause-on-Hide GPU Law when control leaves the visual tree
+        _compositor.Detach(CompositorSurface);
     }
 
     /// <summary>

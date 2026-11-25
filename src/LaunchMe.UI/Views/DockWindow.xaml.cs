@@ -1,8 +1,10 @@
+using System.Numerics;
 using System.Runtime.InteropServices;
 using Windows.Graphics;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using LaunchMe.UI.ViewModels;
 
@@ -45,6 +47,41 @@ public sealed partial class DockWindow : Window
         PositionBottomCenter();
 
         Closed += (_, _) => ViewModel.Dispose();
+    }
+
+    /// <summary>
+    /// Applies a magnetic spring hover scale animation to a dock item visual.
+    /// Safely no-ops in headless unit test environments without a WinUI Compositor.
+    /// </summary>
+    public static void ApplyDockItemHoverSpring(UIElement? element, bool isHovered)
+    {
+        if (element == null)
+        {
+            return;
+        }
+
+        Vector3 targetScale = isHovered ? new Vector3(1.18f, 1.18f, 1.0f) : Vector3.One;
+        Vector3 initialScale = isHovered ? Vector3.One : new Vector3(1.18f, 1.18f, 1.0f);
+        float dampingRatio = isHovered ? 0.72f : 0.85f;
+        int periodMs = isHovered ? 160 : 180;
+
+        SnootSpringController.StartScaleSpring(element, initialScale, targetScale, dampingRatio, periodMs);
+    }
+
+    private void DockItem_PointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        if (sender is UIElement element)
+        {
+            ApplyDockItemHoverSpring(element, isHovered: true);
+        }
+    }
+
+    private void DockItem_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        if (sender is UIElement element)
+        {
+            ApplyDockItemHoverSpring(element, isHovered: false);
+        }
     }
 
     private void ApplyToolWindowStyle()
