@@ -4,6 +4,7 @@ namespace LaunchMe.Core.Dock;
 
 public sealed class AmbientSoundService : IAmbientSoundService
 {
+    private readonly IAudioDspEngine? _dspEngine;
     private AmbientSoundPreset _currentPreset = AmbientSoundPreset.None;
     private bool _isPlaying;
     private double _volume = 0.7;
@@ -11,6 +12,16 @@ public sealed class AmbientSoundService : IAmbientSoundService
     private bool _disposed;
 
     public event EventHandler? StateChanged;
+    public event EventHandler<float[]>? WaveformBandsUpdated;
+
+    public AmbientSoundService(IAudioDspEngine? dspEngine = null)
+    {
+        _dspEngine = dspEngine;
+        if (_dspEngine is not null)
+        {
+            _dspEngine.WaveformBandsUpdated += OnDspWaveformBandsUpdated;
+        }
+    }
 
     public AmbientSoundPreset CurrentPreset
     {
@@ -36,10 +47,14 @@ public sealed class AmbientSoundService : IAmbientSoundService
         }
         set
         {
+            double clamped;
             lock (_lock)
             {
-                _volume = Math.Clamp(value, 0.0, 1.0);
+                clamped = Math.Clamp(value, 0.0, 1.0);
+                _volume = clamped;
             }
+
+            _dspEngine?.SetVolume(clamped);
             StateChanged?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -48,6 +63,7 @@ public sealed class AmbientSoundService : IAmbientSoundService
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
+        double volumeSnapshot;
         lock (_lock)
         {
             if (preset == AmbientSoundPreset.None)
@@ -60,6 +76,17 @@ public sealed class AmbientSoundService : IAmbientSoundService
                 _currentPreset = preset;
                 _isPlaying = true;
             }
+
+            volumeSnapshot = _volume;
+        }
+
+        if (preset == AmbientSoundPreset.None)
+        {
+            _dspEngine?.StopPlayback();
+        }
+        else
+        {
+            _dspEngine?.StartPreset(preset, volumeSnapshot);
         }
 
         StateChanged?.Invoke(this, EventArgs.Empty);
@@ -74,6 +101,7 @@ public sealed class AmbientSoundService : IAmbientSoundService
             _isPlaying = false;
         }
 
+        _dspEngine?.StopPlayback();
         StateChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -87,7 +115,14 @@ public sealed class AmbientSoundService : IAmbientSoundService
             _currentPreset = AmbientSoundPreset.None;
         }
 
+        _dspEngine?.StopPlayback();
         StateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnDspWaveformBandsUpdated(object? sender, float[] bands)
+    {
+        if (_disposed) return;
+        WaveformBandsUpdated?.Invoke(this, bands);
     }
 
     public void Dispose()
@@ -95,5 +130,12 @@ public sealed class AmbientSoundService : IAmbientSoundService
         if (_disposed) return;
         _disposed = true;
         _isPlaying = false;
+
+        if (_dspEngine is not null)
+        {
+            _dspEngine.WaveformBandsUpdated -= OnDspWaveformBandsUpdated;
+            _dspEngine.StopPlayback();
+            _dspEngine.Dispose();
+        }
     }
 }
