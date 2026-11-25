@@ -113,6 +113,7 @@ public class Win32WindowTracker : IDisposable
             {
                 _focusBorder?.AttachToWindow(focused.Value, bounds);
             }
+            Win32TilingDispatcher.ApplyWindows11SquishChrome(focused.Value, isFocused: true);
         }
         else
         {
@@ -124,8 +125,15 @@ public class Win32WindowTracker : IDisposable
     {
         if (Win32Interop.IsWindow(hwnd) && TryGetWindowBounds(hwnd, out var bounds))
         {
+            var previousFocused = _engine.GetFocusedWindow();
+            if (previousFocused.HasValue && previousFocused.Value != nint.Zero && previousFocused.Value != hwnd)
+            {
+                Win32TilingDispatcher.ApplyWindows11SquishChrome(previousFocused.Value, isFocused: false);
+            }
+
             _engine.FocusWindow(hwnd);
             _focusBorder?.AttachToWindow(hwnd, bounds);
+            Win32TilingDispatcher.ApplyWindows11SquishChrome(hwnd, isFocused: true);
         }
     }
 

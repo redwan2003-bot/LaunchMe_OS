@@ -23,6 +23,7 @@ public class Win32TilingDispatcher : IWindowTilingDispatcher
             if (Win32Interop.IsWindow(hwnd))
             {
                 Win32Interop.SetWindowPos(hwnd, nint.Zero, rect.X, rect.Y, rect.Width, rect.Height, flags);
+                ApplyWindows11SquishChrome(hwnd, isFocused: false);
             }
             return;
         }
@@ -36,6 +37,7 @@ public class Win32TilingDispatcher : IWindowTilingDispatcher
                 if (Win32Interop.IsWindow(hwnd))
                 {
                     Win32Interop.SetWindowPos(hwnd, nint.Zero, rect.X, rect.Y, rect.Width, rect.Height, flags);
+                    ApplyWindows11SquishChrome(hwnd, isFocused: false);
                 }
             }
             return;
@@ -46,6 +48,7 @@ public class Win32TilingDispatcher : IWindowTilingDispatcher
             if (Win32Interop.IsWindow(hwnd))
             {
                 hdwp = Win32Interop.DeferWindowPos(hdwp, hwnd, nint.Zero, rect.X, rect.Y, rect.Width, rect.Height, flags);
+                ApplyWindows11SquishChrome(hwnd, isFocused: false);
                 if (hdwp == nint.Zero)
                 {
                     break;
@@ -56,6 +59,38 @@ public class Win32TilingDispatcher : IWindowTilingDispatcher
         if (hdwp != nint.Zero)
         {
             Win32Interop.EndDeferWindowPos(hdwp);
+        }
+    }
+
+    /// <summary>
+    /// Applies Windows 11 rounded corners and active neon cyan DWM border styling to a tiled window.
+    /// </summary>
+    public static void ApplyWindows11SquishChrome(nint hwnd, bool isFocused, uint activeBgrColor = 0x00FFF000)
+    {
+        if (hwnd == nint.Zero || !Win32Interop.IsWindow(hwnd))
+        {
+            return;
+        }
+
+        try
+        {
+            int cornerPreference = Win32Interop.DWMWCP_ROUND;
+            Win32Interop.DwmSetWindowAttribute(
+                hwnd,
+                Win32Interop.DWMWA_WINDOW_CORNER_PREFERENCE,
+                ref cornerPreference,
+                sizeof(int));
+
+            uint borderColor = isFocused ? activeBgrColor : Win32Interop.DWMWA_COLOR_DEFAULT;
+            Win32Interop.DwmSetWindowAttribute(
+                hwnd,
+                Win32Interop.DWMWA_BORDER_COLOR,
+                ref borderColor,
+                sizeof(uint));
+        }
+        catch
+        {
+            // Guard against unsupported OS builds, virtual desktops, or protected windows.
         }
     }
 

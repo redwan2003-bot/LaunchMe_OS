@@ -69,6 +69,16 @@ public static class Win32Interop
 
     // DWM
     public const uint DWMWA_EXTENDED_FRAME_BOUNDS = 9;
+    public const uint DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+    public const uint DWMWA_BORDER_COLOR = 34;
+
+    public const int DWMWCP_DEFAULT = 0;
+    public const int DWMWCP_DONOTROUND = 1;
+    public const int DWMWCP_ROUND = 2;
+    public const int DWMWCP_ROUNDSMALL = 3;
+
+    public const uint DWMWA_COLOR_DEFAULT = 0xFFFFFFFF;
+    public const uint DWMWA_COLOR_NONE = 0xFFFFFFFE;
 
     // Monitor flags
     public const uint MONITOR_DEFAULTTONULL = 0;
@@ -416,6 +426,12 @@ public static class Win32Interop
 
     [DllImport("dwmapi.dll")]
     public static extern int DwmGetWindowAttribute(nint hwnd, uint dwAttribute, out int pvAttribute, uint cbAttribute);
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmSetWindowAttribute(nint hwnd, uint dwAttribute, ref int pvAttribute, uint cbAttribute);
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmSetWindowAttribute(nint hwnd, uint dwAttribute, ref uint pvAttribute, uint cbAttribute);
 
     [DllImport("user32.dll")]
     public static extern nint MonitorFromWindow(nint hwnd, uint dwFlags);
