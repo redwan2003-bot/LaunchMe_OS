@@ -1,17 +1,22 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using LaunchMe.Contracts.Clipboard;
 using LaunchMe.Contracts.Indexing;
+using LaunchMe.Contracts.Launcher;
 using LaunchMe.Contracts.Search;
 using LaunchMe.Contracts.Spaces;
+using LaunchMe.Core.Spaces;
 using LaunchMe.UI.Theming;
 using LaunchMe.UI.Wallpaper;
+using LaunchMe.UI.Widgets.Catalog;
+using Microsoft.UI.Xaml;
 
 namespace LaunchMe.UI.ViewModels;
 
-public sealed class LauncherViewModel : INotifyPropertyChanged
+public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
 {
     private readonly IAppIndexer _appIndexer;
     private readonly IFileSearchService _fileSearchService;
@@ -19,23 +24,34 @@ public sealed class LauncherViewModel : INotifyPropertyChanged
     private readonly ICalculatorService _calculatorService;
     private readonly IEmojiService _emojiService;
     private readonly ISpaceStore _spaceStore;
+    private readonly IAppLauncherService? _appLauncher;
+    private readonly IClipboardWriter? _clipboardWriter;
     private readonly LiquidGlassTintService _tintService = new();
 
     private string _searchQuery = string.Empty;
     private bool _isEmojiMode;
     private bool _isEditMode;
+    private bool _isWidgetDrawerOpen;
+    private bool _isSettingsOpen;
+    private bool _isFolderOpen;
+    private LauncherFolderViewModel? _activeFolder;
+    private string _activeSpaceName = "Default Space";
+    private string _currentTintHex = "#1E40AF";
     private int _currentPageIndex;
     private int _selectedSearchIndex = -1;
     private LauncherItemViewModel? _draggedItem;
     private CancellationTokenSource? _searchCts;
+    private bool _disposed;
 
     public event EventHandler? DismissRequested;
     public event EventHandler? LauncherHidden;
     public event EventHandler? LauncherShown;
+    public event EventHandler? QuitAppRequested;
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public ThemeVisualState ThemeVisualState { get; } = new();
     public LiveWallpaperViewModel Wallpaper { get; } = new();
+    public WidgetCatalogViewModel? WidgetCatalog { get; }
     public ObservableCollection<LauncherPageViewModel> Pages { get; } = new();
     public ObservableCollection<PageIndicatorViewModel> PageIndicators { get; } = new();
     public ObservableCollection<UnifiedSearchResultViewModel> SearchResults { get; } = new();
@@ -108,6 +124,97 @@ public sealed class LauncherViewModel : INotifyPropertyChanged
 
     public string EditModeButtonText => _isEditMode ? "Done" : "Edit Layout";
 
+    public bool IsWidgetDrawerOpen
+    {
+        get => _isWidgetDrawerOpen;
+        set
+        {
+            if (_isWidgetDrawerOpen != value)
+            {
+                _isWidgetDrawerOpen = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(WidgetDrawerVisibility));
+            }
+        }
+    }
+
+    public Visibility WidgetDrawerVisibility => _isWidgetDrawerOpen ? Visibility.Visible : Visibility.Collapsed;
+
+    public bool IsSettingsOpen
+    {
+        get => _isSettingsOpen;
+        set
+        {
+            if (_isSettingsOpen != value)
+            {
+                _isSettingsOpen = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(SettingsOverlayVisibility));
+                if (_isSettingsOpen)
+                {
+                    OnPropertyChanged(nameof(IndexedAppsCount));
+                    OnPropertyChanged(nameof(DiagnosticsSummary));
+                }
+            }
+        }
+    }
+
+    public Visibility SettingsOverlayVisibility => _isSettingsOpen ? Visibility.Visible : Visibility.Collapsed;
+
+    public bool IsFolderOpen
+    {
+        get => _isFolderOpen;
+        set
+        {
+            if (_isFolderOpen != value)
+            {
+                _isFolderOpen = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(FolderModalVisibility));
+            }
+        }
+    }
+
+    public Visibility FolderModalVisibility => _isFolderOpen ? Visibility.Visible : Visibility.Collapsed;
+
+    public LauncherFolderViewModel? ActiveFolder
+    {
+        get => _activeFolder;
+        private set
+        {
+            if (_activeFolder != value)
+            {
+                _activeFolder = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(ActiveFolderName));
+                OnPropertyChanged(nameof(ActiveFolderChildren));
+            }
+        }
+    }
+
+    public string ActiveFolderName => _activeFolder?.Name ?? "Folder";
+    public ObservableCollection<LauncherItemViewModel>? ActiveFolderChildren => _activeFolder?.Children;
+
+    public string ActiveSpaceName
+    {
+        get => _activeSpaceName;
+        private set
+        {
+            if (_activeSpaceName != value)
+            {
+                _activeSpaceName = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(DiagnosticsSummary));
+            }
+        }
+    }
+
+    public int IndexedAppsCount =>
+        (_appIndexer.AllApps?.Count is > 0 ? _appIndexer.AllApps.Count : _appIndexer.SearchApps(string.Empty)?.Count) ?? 0;
+
+    public string DiagnosticsSummary =>
+        $"Space: {ActiveSpaceName}  |  Apps: {IndexedAppsCount}  |  Pages: {Pages.Count}  |  Tint: {_currentTintHex}";
+
     public int CurrentPageIndex
     {
         get => _currentPageIndex;
@@ -123,6 +230,10 @@ public sealed class LauncherViewModel : INotifyPropertyChanged
     }
 
     public ICommand ToggleEditModeCommand { get; }
+    public ICommand ToggleWidgetDrawerCommand { get; }
+    public ICommand ToggleSettingsCommand { get; }
+    public ICommand CloseFolderCommand { get; }
+    public ICommand QuitAppCommand { get; }
 
     public LauncherViewModel(
         IAppIndexer appIndexer,
@@ -130,7 +241,10 @@ public sealed class LauncherViewModel : INotifyPropertyChanged
         IClipboardMonitor clipboardMonitor,
         ICalculatorService calculatorService,
         IEmojiService emojiService,
-        ISpaceStore spaceStore)
+        ISpaceStore spaceStore,
+        IAppLauncherService? appLauncher = null,
+        IClipboardWriter? clipboardWriter = null,
+        WidgetCatalogViewModel? widgetCatalog = null)
     {
         _appIndexer = appIndexer ?? throw new ArgumentNullException(nameof(appIndexer));
         _fileSearchService = fileSearchService ?? throw new ArgumentNullException(nameof(fileSearchService));
@@ -138,15 +252,53 @@ public sealed class LauncherViewModel : INotifyPropertyChanged
         _calculatorService = calculatorService ?? throw new ArgumentNullException(nameof(calculatorService));
         _emojiService = emojiService ?? throw new ArgumentNullException(nameof(emojiService));
         _spaceStore = spaceStore ?? throw new ArgumentNullException(nameof(spaceStore));
+        _appLauncher = appLauncher;
+        _clipboardWriter = clipboardWriter;
+        WidgetCatalog = widgetCatalog;
 
         ToggleEditModeCommand = new RelayCommand(() => IsEditMode = !IsEditMode);
+        ToggleWidgetDrawerCommand = new RelayCommand(() => IsWidgetDrawerOpen = !IsWidgetDrawerOpen);
+        ToggleSettingsCommand = new RelayCommand(() => IsSettingsOpen = !IsSettingsOpen);
+        CloseFolderCommand = new RelayCommand(CloseFolder);
+        QuitAppCommand = new RelayCommand(() => QuitAppRequested?.Invoke(this, EventArgs.Empty));
+
         Wallpaper.AttachToLauncher(this);
         LoadClassicView();
     }
 
+    public void ApplySpace(SpaceModel space)
+    {
+        ArgumentNullException.ThrowIfNull(space);
+
+        ActiveSpaceName = string.IsNullOrWhiteSpace(space.Name) ? "Default Space" : space.Name;
+        ApplyTheme(space.Theme);
+        ApplyWallpaper(space.Wallpaper);
+    }
+
     public void ApplyTheme(ThemeSettings settings)
     {
+        ArgumentNullException.ThrowIfNull(settings);
+
+        _currentTintHex = settings.TintHex;
         _tintService.UpdateVisualState(ThemeVisualState, settings);
+        OnPropertyChanged(nameof(DiagnosticsSummary));
+    }
+
+    public void ApplyQuickThemeTint(string tintHex)
+    {
+        if (string.IsNullOrWhiteSpace(tintHex)) return;
+
+        var settings = new ThemeSettings
+        {
+            Style = ThemeVisualState.IsLiquidGlass ? "LiquidGlass" : "Flat",
+            Mode = ThemeVisualState.IsTinted ? "Tinted" : "Clear",
+            TintHex = tintHex,
+            Intensity = ThemeVisualState.TintOpacity,
+            TitleColor = "Auto"
+        };
+
+        ApplyTheme(settings);
+        _ = PersistThemeToActiveSpaceAsync(settings);
     }
 
     public void ApplyWallpaper(WallpaperSettings settings)
@@ -158,6 +310,7 @@ public sealed class LauncherViewModel : INotifyPropertyChanged
     {
         LauncherShown?.Invoke(this, EventArgs.Empty);
         Wallpaper.OnLauncherShown();
+        WidgetCatalog?.OnLauncherShown();
     }
 
     public void OnHidden()
@@ -165,9 +318,18 @@ public sealed class LauncherViewModel : INotifyPropertyChanged
         // Pause-on-Hide GPU Law: Immediately stop timers, render loops, and video decoding
         LauncherHidden?.Invoke(this, EventArgs.Empty);
         Wallpaper.OnLauncherHidden();
+        WidgetCatalog?.OnLauncherHidden();
         SearchQuery = string.Empty;
         SearchResults.Clear();
         IsEmojiMode = false;
+        CloseFolder();
+        IsSettingsOpen = false;
+    }
+
+    public void CloseFolder()
+    {
+        IsFolderOpen = false;
+        ActiveFolder = null;
     }
 
     public void LoadClassicView()
@@ -188,7 +350,15 @@ public sealed class LauncherViewModel : INotifyPropertyChanged
             Pages.Add(page);
         }
 
+        if (_currentPageIndex >= Pages.Count)
+        {
+            _currentPageIndex = 0;
+            OnPropertyChanged(nameof(CurrentPageIndex));
+        }
+
         UpdatePageIndicators();
+        OnPropertyChanged(nameof(IndexedAppsCount));
+        OnPropertyChanged(nameof(DiagnosticsSummary));
     }
 
     public void ToggleEmojiMode()
@@ -199,9 +369,15 @@ public sealed class LauncherViewModel : INotifyPropertyChanged
 
     public async Task ExecuteSearchAsync(string query)
     {
-        _searchCts?.Cancel();
-        _searchCts = new CancellationTokenSource();
-        var token = _searchCts.Token;
+        if (_disposed) return;
+
+        var previousCts = _searchCts;
+        previousCts?.Cancel();
+        previousCts?.Dispose();
+
+        var currentCts = new CancellationTokenSource();
+        _searchCts = currentCts;
+        var token = currentCts.Token;
 
         SearchResults.Clear();
         if (string.IsNullOrWhiteSpace(query))
@@ -215,12 +391,17 @@ public sealed class LauncherViewModel : INotifyPropertyChanged
             var emojis = _emojiService.SearchEmojis(query);
             foreach (var emoji in emojis)
             {
+                var capturedEmoji = emoji;
                 SearchResults.Add(new UnifiedSearchResultViewModel(
-                    emoji.Character,
-                    emoji.Name,
+                    capturedEmoji.Character,
+                    capturedEmoji.Name,
                     "Emoji",
                     "\uE76E",
-                    () => { DismissRequested?.Invoke(this, EventArgs.Empty); }));
+                    () =>
+                    {
+                        _clipboardWriter?.SetText(capturedEmoji.Character);
+                        DismissRequested?.Invoke(this, EventArgs.Empty);
+                    }));
             }
         }
         else
@@ -229,49 +410,82 @@ public sealed class LauncherViewModel : INotifyPropertyChanged
             var calcResult = _calculatorService.Evaluate(query);
             if (calcResult != null && calcResult.IsValid)
             {
+                var formatted = calcResult.FormattedResult;
                 SearchResults.Add(new UnifiedSearchResultViewModel(
-                    calcResult.FormattedResult,
+                    formatted,
                     $"Math Expression = {query}",
                     "Calculator",
                     "\uE1D0",
-                    () => { DismissRequested?.Invoke(this, EventArgs.Empty); }));
+                    () =>
+                    {
+                        _clipboardWriter?.SetText(formatted);
+                        DismissRequested?.Invoke(this, EventArgs.Empty);
+                    }));
             }
 
             // 2. Apps Search
             var apps = _appIndexer.SearchApps(query);
             foreach (var app in apps.Take(5))
             {
+                var capturedApp = app;
                 SearchResults.Add(new UnifiedSearchResultViewModel(
-                    app.DisplayName,
-                    app.ExecutablePath,
+                    capturedApp.DisplayName,
+                    capturedApp.ExecutablePath,
                     "Application",
                     "\uE71D",
-                    () => { DismissRequested?.Invoke(this, EventArgs.Empty); }));
+                    () =>
+                    {
+                        _ = _appLauncher?.LaunchAppAsync(capturedApp);
+                        DismissRequested?.Invoke(this, EventArgs.Empty);
+                    }));
             }
 
             // 3. Files Search
-            var files = await _fileSearchService.SearchFilesAsync(query, token);
+            IReadOnlyList<FileSearchResult> files;
+            try
+            {
+                files = await _fileSearchService.SearchFilesAsync(query, token);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            if (_disposed || token.IsCancellationRequested) return;
+
             foreach (var file in files.Take(5))
             {
+                var capturedFile = file;
                 SearchResults.Add(new UnifiedSearchResultViewModel(
-                    file.FileName,
-                    file.Path,
+                    capturedFile.FileName,
+                    capturedFile.Path,
                     "File",
                     "\uE8B7",
-                    () => { _fileSearchService.RevealInExplorer(file.Path); DismissRequested?.Invoke(this, EventArgs.Empty); }));
+                    () =>
+                    {
+                        _fileSearchService.OpenFile(capturedFile.Path);
+                        DismissRequested?.Invoke(this, EventArgs.Empty);
+                    }));
             }
 
             // 4. Clipboard History
             var clips = _clipboardMonitor.GetItems(ClipboardCategory.Recent);
-            var matchingClips = clips.Where(c => !string.IsNullOrEmpty(c.TextContent) && c.TextContent.Contains(query, StringComparison.OrdinalIgnoreCase)).Take(3);
+            var matchingClips = clips
+                .Where(c => !string.IsNullOrEmpty(c.TextContent) && c.TextContent.Contains(query, StringComparison.OrdinalIgnoreCase))
+                .Take(3);
             foreach (var clip in matchingClips)
             {
+                var capturedClipText = clip.TextContent ?? string.Empty;
                 SearchResults.Add(new UnifiedSearchResultViewModel(
-                    clip.TextContent ?? string.Empty,
+                    capturedClipText,
                     $"Copied {clip.CapturedAtUtc:HH:mm:ss}",
                     "Clipboard",
                     "\uE77F",
-                    () => { DismissRequested?.Invoke(this, EventArgs.Empty); }));
+                    () =>
+                    {
+                        _clipboardWriter?.SetText(capturedClipText);
+                        DismissRequested?.Invoke(this, EventArgs.Empty);
+                    }));
             }
         }
 
@@ -303,9 +517,41 @@ public sealed class LauncherViewModel : INotifyPropertyChanged
 
     public void ExecuteItem(LauncherItemViewModel item)
     {
-        if (item.Type == LauncherItemType.App)
+        ArgumentNullException.ThrowIfNull(item);
+
+        switch (item.Type)
         {
-            DismissRequested?.Invoke(this, EventArgs.Empty);
+            case LauncherItemType.App:
+            {
+                var app = ResolveIndexedApp(item.Id);
+                if (app != null)
+                {
+                    _ = _appLauncher?.LaunchAppAsync(app);
+                }
+
+                CloseFolder();
+                DismissRequested?.Invoke(this, EventArgs.Empty);
+                break;
+            }
+            case LauncherItemType.Folder:
+            {
+                if (item.FolderData != null)
+                {
+                    ActiveFolder = item.FolderData;
+                    IsFolderOpen = true;
+                }
+                break;
+            }
+            case LauncherItemType.EmbeddedFolder:
+            {
+                string? folderPath = item.FolderData?.AttachedFolderPath;
+                if (!string.IsNullOrWhiteSpace(folderPath))
+                {
+                    OpenFolderInExplorer(folderPath);
+                }
+                DismissRequested?.Invoke(this, EventArgs.Empty);
+                break;
+            }
         }
     }
 
@@ -330,6 +576,7 @@ public sealed class LauncherViewModel : INotifyPropertyChanged
         }
 
         _draggedItem = null;
+        _ = PersistLayoutToActiveSpaceAsync();
     }
 
     public void BatchCreateFolderFromSelection(string folderName)
@@ -346,6 +593,143 @@ public sealed class LauncherViewModel : INotifyPropertyChanged
 
         currentPage.Items.Add(new LauncherItemViewModel(folder.Id, folder.Name, "\uE8B7", LauncherItemType.Folder, folder));
         SelectedBatchItems.Clear();
+        _ = PersistLayoutToActiveSpaceAsync();
+    }
+
+    private AppItem? ResolveIndexedApp(string appId)
+    {
+        var allApps = _appIndexer.AllApps;
+        if (allApps == null || allApps.Count == 0)
+        {
+            allApps = _appIndexer.SearchApps(string.Empty);
+        }
+
+        return allApps?.FirstOrDefault(a => string.Equals(a.Id, appId, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void OpenFolderInExplorer(string folderPath)
+    {
+        if (_appLauncher != null && _appLauncher.LaunchTarget(folderPath))
+        {
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{folderPath}\"")
+            {
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+            // Ignore shell launch errors for missing paths
+        }
+    }
+
+    private async Task PersistLayoutToActiveSpaceAsync()
+    {
+        try
+        {
+            var activeSpace = await _spaceStore.GetActiveSpaceAsync().ConfigureAwait(false);
+            if (activeSpace == null)
+            {
+                return;
+            }
+
+            var contractPages = new List<LauncherPage>(Pages.Count);
+            var contractFolders = new List<LauncherFolder>();
+
+            foreach (var pageVm in Pages)
+            {
+                var page = new LauncherPage
+                {
+                    PageIndex = pageVm.PageNumber
+                };
+
+                for (int i = 0; i < pageVm.Items.Count; i++)
+                {
+                    var itemVm = pageVm.Items[i];
+                    page.Items.Add(MapItemToContract(itemVm, i));
+
+                    if (itemVm.FolderData != null)
+                    {
+                        contractFolders.Add(MapFolderToContract(itemVm.FolderData, itemVm.Type == LauncherItemType.EmbeddedFolder));
+                    }
+                }
+
+                contractPages.Add(page);
+            }
+
+            await SpaceLayoutSerializer.SaveLayoutAsync(_spaceStore, activeSpace, contractPages, contractFolders)
+                .ConfigureAwait(false);
+        }
+        catch
+        {
+            // Non-fatal persistence failure should not disrupt launcher UI interaction
+        }
+    }
+
+    private async Task PersistThemeToActiveSpaceAsync(ThemeSettings theme)
+    {
+        try
+        {
+            var activeSpace = await _spaceStore.GetActiveSpaceAsync().ConfigureAwait(false);
+            if (activeSpace == null) return;
+
+            activeSpace.Theme = theme;
+            await _spaceStore.SaveSpaceAsync(activeSpace).ConfigureAwait(false);
+        }
+        catch
+        {
+            // Ignore transient storage errors
+        }
+    }
+
+    private static LauncherItem MapItemToContract(LauncherItemViewModel itemVm, int index)
+    {
+        var contractType = itemVm.Type switch
+        {
+            LauncherItemType.App => LaunchMe.Contracts.Launcher.LauncherItemType.App,
+            LauncherItemType.Folder => LaunchMe.Contracts.Launcher.LauncherItemType.Folder,
+            LauncherItemType.EmbeddedFolder => LaunchMe.Contracts.Launcher.LauncherItemType.EmbeddedFolder,
+            LauncherItemType.Widget => LaunchMe.Contracts.Launcher.LauncherItemType.Widget,
+            LauncherItemType.Workflow => LaunchMe.Contracts.Launcher.LauncherItemType.Workflow,
+            _ => LaunchMe.Contracts.Launcher.LauncherItemType.App
+        };
+
+        return new LauncherItem
+        {
+            Id = itemVm.Id,
+            Title = itemVm.DisplayName,
+            ItemType = contractType,
+            GridRow = index / 6,
+            GridColumn = index % 6,
+            AppId = itemVm.Type == LauncherItemType.App ? itemVm.Id : null,
+            FolderId = itemVm.FolderData?.Id
+        };
+    }
+
+    private static LauncherFolder MapFolderToContract(LauncherFolderViewModel folderVm, bool isEmbedded)
+    {
+        var folder = new LauncherFolder
+        {
+            Id = folderVm.Id,
+            Title = folderVm.Name,
+            ColorHex = folderVm.CustomHexColor,
+            Emoji = folderVm.CustomEmoji,
+            GridRows = folderVm.Density.Rows,
+            GridColumns = folderVm.Density.Columns,
+            IsEmbeddedFolder = isEmbedded,
+            FolderPath = folderVm.AttachedFolderPath
+        };
+
+        for (int i = 0; i < folderVm.Children.Count; i++)
+        {
+            folder.Items.Add(MapItemToContract(folderVm.Children[i], i));
+        }
+
+        return folder;
     }
 
     private void UpdatePageIndicators()
@@ -359,4 +743,20 @@ public sealed class LauncherViewModel : INotifyPropertyChanged
 
     private void OnPropertyChanged([CallerMemberName] string? name = null) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+
+        if (_searchCts != null)
+        {
+            _searchCts.Cancel();
+            _searchCts.Dispose();
+            _searchCts = null;
+        }
+
+        Wallpaper.Dispose();
+        WidgetCatalog?.Dispose();
+    }
 }

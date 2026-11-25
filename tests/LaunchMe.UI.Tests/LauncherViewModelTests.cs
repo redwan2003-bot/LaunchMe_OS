@@ -1,9 +1,12 @@
 ﻿using FluentAssertions;
 using LaunchMe.Contracts.Clipboard;
 using LaunchMe.Contracts.Indexing;
+using LaunchMe.Contracts.Media;
 using LaunchMe.Contracts.Search;
 using LaunchMe.Contracts.Spaces;
 using LaunchMe.UI.ViewModels;
+using LaunchMe.UI.Widgets.Catalog;
+using Microsoft.UI.Xaml;
 using Moq;
 using Xunit;
 
@@ -17,8 +20,11 @@ public sealed class LauncherViewModelTests
     private readonly Mock<ICalculatorService> _calculatorMock = new();
     private readonly Mock<IEmojiService> _emojiMock = new();
     private readonly Mock<ISpaceStore> _spaceStoreMock = new();
+    private readonly Mock<IAppLauncherService> _appLauncherMock = new();
+    private readonly Mock<IClipboardWriter> _clipboardWriterMock = new();
+    private readonly Mock<IMediaSessionService> _mediaServiceMock = new();
 
-    private LauncherViewModel CreateViewModel()
+    private LauncherViewModel CreateViewModel(WidgetCatalogViewModel? widgetCatalog = null)
     {
         return new LauncherViewModel(
             _appIndexerMock.Object,
@@ -26,7 +32,10 @@ public sealed class LauncherViewModelTests
             _clipboardMock.Object,
             _calculatorMock.Object,
             _emojiMock.Object,
-            _spaceStoreMock.Object);
+            _spaceStoreMock.Object,
+            _appLauncherMock.Object,
+            _clipboardWriterMock.Object,
+            widgetCatalog);
     }
 
     [Fact]
@@ -47,7 +56,13 @@ public sealed class LauncherViewModelTests
         _appIndexerMock.Setup(x => x.SearchApps(string.Empty)).Returns(apps);
 
         // Act
-        var vm = CreateViewModel();
+        var vm = new LauncherViewModel(
+            _appIndexerMock.Object,
+            _fileSearchMock.Object,
+            _clipboardMock.Object,
+            _calculatorMock.Object,
+            _emojiMock.Object,
+            _spaceStoreMock.Object);
 
         // Assert
         vm.Pages.Should().HaveCount(2);
@@ -155,5 +170,208 @@ public sealed class LauncherViewModelTests
         var folderItem = page.Items[1];
         folderItem.FolderData.Should().NotBeNull();
         folderItem.FolderData!.Children.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void ExecuteItem_OnApp_CallsAppLauncher_AndRaisesDismissRequested()
+    {
+        // Arrange
+        var targetApp = new AppItem { Id = "notepad", Name = "Notepad", ExecutablePath = "C:\\Windows\\notepad.exe" };
+        _appIndexerMock.Setup(x => x.AllApps).Returns([targetApp]);
+        _appIndexerMock.Setup(x => x.SearchApps(string.Empty)).Returns([targetApp]);
+        _appLauncherMock.Setup(x => x.LaunchAppAsync(targetApp, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var vm = CreateViewModel();
+        bool dismissed = false;
+        vm.DismissRequested += (_, _) => dismissed = true;
+
+        // Act
+        vm.ExecuteItem(vm.Pages[0].Items[0]);
+
+        // Assert
+        _appLauncherMock.Verify(x => x.LaunchAppAsync(targetApp, It.IsAny<CancellationToken>()), Times.Once);
+        dismissed.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ExecuteItem_OnFolder_OpensAndClosesFolderModal()
+    {
+        // Arrange
+        var folder = new LauncherFolderViewModel("Dev Tools", FolderGridDensity.Grid4x6);
+        var folderItem = new LauncherItemViewModel(folder.Id, folder.Name, "\uE8B7", LauncherItemType.Folder, folder);
+        var vm = CreateViewModel();
+
+        // Act: Open
+        vm.ExecuteItem(folderItem);
+
+        // Assert: Opened
+        vm.IsFolderOpen.Should().BeTrue();
+        vm.FolderModalVisibility.Should().Be(Visibility.Visible);
+        vm.ActiveFolder.Should().BeSameAs(folder);
+
+        // Act: Close
+        vm.CloseFolderCommand.Execute(null);
+
+        // Assert: Closed
+        vm.IsFolderOpen.Should().BeFalse();
+        vm.FolderModalVisibility.Should().Be(Visibility.Collapsed);
+        vm.ActiveFolder.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task SearchResultActions_CopyToClipboard_LaunchApp_AndOpenFile()
+    {
+        // Arrange
+        var matchedApp = new AppItem { Id = "term", Name = "Terminal", ExecutablePath = "wt.exe" };
+        _calculatorMock.Setup(x => x.Evaluate("7*8")).Returns(new CalculationResult
+        {
+            Expression = "7*8",
+            FormattedResult = "56",
+            Result = 56,
+            IsValid = true
+        });
+        _appIndexerMock.Setup(x => x.SearchApps("7*8")).Returns([matchedApp]);
+        _fileSearchMock.Setup(x => x.SearchFilesAsync("7*8", It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new FileSearchResult { FileName = "7*8_notes.txt", Path = @"C:\docs\notes.txt" }]);
+        _clipboardMock.Setup(x => x.GetItems(ClipboardCategory.Recent))
+            .Returns([new ClipboardEntry { TextContent = "7*8=56", CapturedAtUtc = DateTime.UtcNow }]);
+
+        _emojiMock.Setup(x => x.SearchEmojis("fire"))
+            .Returns([new EmojiItem { Character = "🔥", Name = "Fire", Category = "Travel" }]);
+
+        var vm = CreateViewModel();
+
+        // Act: Unified search
+        await vm.ExecuteSearchAsync("7*8");
+        vm.SearchResults.Should().HaveCount(4);
+
+        // 1. Calculator copies formatted result
+        vm.ExecuteSearchResult(vm.SearchResults[0]);
+        _clipboardWriterMock.Verify(x => x.SetText("56"), Times.Once);
+
+        // 2. Application launches app
+        vm.ExecuteSearchResult(vm.SearchResults[1]);
+        _appLauncherMock.Verify(x => x.LaunchAppAsync(matchedApp, It.IsAny<CancellationToken>()), Times.Once);
+
+        // 3. File opens file
+        vm.ExecuteSearchResult(vm.SearchResults[2]);
+        _fileSearchMock.Verify(x => x.OpenFile(@"C:\docs\notes.txt"), Times.Once);
+
+        // 4. Clipboard copies text
+        vm.ExecuteSearchResult(vm.SearchResults[3]);
+        _clipboardWriterMock.Verify(x => x.SetText("7*8=56"), Times.Once);
+
+        // 5. Emoji copies glyph
+        vm.ToggleEmojiMode();
+        await vm.ExecuteSearchAsync("fire");
+        vm.SearchResults.Should().ContainSingle();
+        vm.ExecuteSearchResult(vm.SearchResults[0]);
+        _clipboardWriterMock.Verify(x => x.SetText("🔥"), Times.Once);
+    }
+
+    [Fact]
+    public void OnShownAndOnHidden_ForwardLifecycleToWidgetCatalog()
+    {
+        // Arrange
+        using var catalog = new WidgetCatalogViewModel(_mediaServiceMock.Object);
+        var vm = CreateViewModel(catalog);
+        vm.WidgetCatalog.Should().BeSameAs(catalog);
+
+        // Act & Assert: Hide
+        vm.OnHidden();
+        catalog.Clock.IsTimerRunning.Should().BeFalse();
+
+        // Act & Assert: Show
+        vm.OnShown();
+        catalog.Clock.IsTimerRunning.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Commands_ToggleDrawerSettings_AndRaiseQuitRequested()
+    {
+        // Arrange
+        var vm = CreateViewModel();
+        bool quitRequested = false;
+        vm.QuitAppRequested += (_, _) => quitRequested = true;
+
+        // Act & Assert
+        vm.IsWidgetDrawerOpen.Should().BeFalse();
+        vm.ToggleWidgetDrawerCommand.Execute(null);
+        vm.IsWidgetDrawerOpen.Should().BeTrue();
+        vm.WidgetDrawerVisibility.Should().Be(Visibility.Visible);
+
+        vm.IsSettingsOpen.Should().BeFalse();
+        vm.ToggleSettingsCommand.Execute(null);
+        vm.IsSettingsOpen.Should().BeTrue();
+        vm.SettingsOverlayVisibility.Should().Be(Visibility.Visible);
+        vm.DiagnosticsSummary.Should().Contain("Space:");
+
+        vm.QuitAppCommand.Execute(null);
+        quitRequested.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task SmartFolderCreation_PersistsLayoutToActiveSpace()
+    {
+        // Arrange
+        var activeSpace = new SpaceModel { SpaceId = "space-1", Name = "Work" };
+        _spaceStoreMock.Setup(x => x.GetActiveSpaceAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(activeSpace);
+        _spaceStoreMock.Setup(x => x.SaveSpaceAsync(activeSpace, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var apps = new List<AppItem>
+        {
+            new() { Id = "a1", Name = "App 1", ExecutablePath = "1.exe" },
+            new() { Id = "a2", Name = "App 2", ExecutablePath = "2.exe" }
+        };
+        _appIndexerMock.Setup(x => x.SearchApps(string.Empty)).Returns(apps);
+
+        var vm = CreateViewModel();
+        vm.SelectedBatchItems.Add(vm.Pages[0].Items[0]);
+        vm.SelectedBatchItems.Add(vm.Pages[0].Items[1]);
+
+        // Act
+        vm.BatchCreateFolderFromSelection("Tools");
+        await Task.Delay(100);
+
+        // Assert
+        _spaceStoreMock.Verify(x => x.SaveSpaceAsync(
+            It.Is<SpaceModel>(s => s.SpaceId == "space-1" && s.Launcher.Folders.Count == 1 && s.Launcher.Folders[0].Title == "Tools"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Dispose_DisposesWallpaper_WidgetCatalog_AndSearchCts_Idempotently()
+    {
+        // Arrange
+        _fileSearchMock
+            .Setup(x => x.SearchFilesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns(async (string _, CancellationToken ct) =>
+            {
+                await Task.Delay(50, ct);
+                return Array.Empty<FileSearchResult>();
+            });
+        _clipboardMock.Setup(x => x.GetItems(ClipboardCategory.Recent)).Returns([]);
+        _appIndexerMock.Setup(x => x.SearchApps(It.IsAny<string>())).Returns([]);
+
+        var catalog = new WidgetCatalogViewModel(_mediaServiceMock.Object);
+        var vm = CreateViewModel(catalog);
+        vm.ApplyWallpaper(new WallpaperSettings { Type = WallpaperType.LiveVideo, Asset = "loop.mp4" });
+        vm.Wallpaper.IsPlaying.Should().BeTrue();
+        catalog.Clock.IsTimerRunning.Should().BeTrue();
+
+        // Trigger overlapping searches to exercise previous CTS disposal
+        _ = vm.ExecuteSearchAsync("first");
+        await vm.ExecuteSearchAsync("second");
+
+        // Act: Dispose twice to verify idempotency
+        vm.Dispose();
+        vm.Dispose();
+
+        // Assert
+        vm.Wallpaper.IsPlaying.Should().BeFalse();
+        vm.Wallpaper.ActiveGpuEstimatePercent.Should().Be(0.0);
+        catalog.Clock.IsTimerRunning.Should().BeFalse();
     }
 }

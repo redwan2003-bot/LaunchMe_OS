@@ -13,7 +13,9 @@ public sealed class Win32HotkeyService : IDisposable
     private nint _hwnd = nint.Zero;
     private Win32Interop.WndProc? _wndProc;
     private int _nextId = 1;
-    private bool _disposed;
+    private int _disposed;
+
+    public bool IsPumpAlive => _pumpThread.IsAlive;
 
     public event EventHandler<TriggerEventArgs>? HotkeyTriggered;
 
@@ -83,12 +85,25 @@ public sealed class Win32HotkeyService : IDisposable
             return nint.Zero;
         }
 
+        if (msg == Win32Interop.WM_CLOSE)
+        {
+            Win32Interop.DestroyWindow(hWnd);
+            _hwnd = nint.Zero;
+            return nint.Zero;
+        }
+
+        if (msg == Win32Interop.WM_DESTROY)
+        {
+            Win32Interop.PostQuitMessage(0);
+            return nint.Zero;
+        }
+
         return Win32Interop.DefWindowProcW(hWnd, msg, wParam, lParam);
     }
 
     public bool Register(uint modifiers, uint virtualKey)
     {
-        if (_disposed || _hwnd == nint.Zero)
+        if (Volatile.Read(ref _disposed) != 0 || _hwnd == nint.Zero)
         {
             return false;
         }
@@ -113,7 +128,7 @@ public sealed class Win32HotkeyService : IDisposable
 
     public bool Unregister(uint modifiers, uint virtualKey)
     {
-        if (_disposed || _hwnd == nint.Zero)
+        if (Volatile.Read(ref _disposed) != 0 || _hwnd == nint.Zero)
         {
             return false;
         }
@@ -146,17 +161,21 @@ public sealed class Win32HotkeyService : IDisposable
 
     public void Dispose()
     {
-        if (_disposed)
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
         {
             return;
         }
 
-        _disposed = true;
-
-        if (_hwnd != nint.Zero)
+        nint hwnd = _hwnd;
+        if (hwnd != nint.Zero)
         {
             UnregisterAll();
-            Win32Interop.PostMessageW(_hwnd, Win32Interop.WM_CLOSE, nint.Zero, nint.Zero);
+            Win32Interop.PostMessageW(hwnd, Win32Interop.WM_CLOSE, nint.Zero, nint.Zero);
+        }
+
+        if (_pumpThread.IsAlive && Thread.CurrentThread != _pumpThread)
+        {
+            _pumpThread.Join(TimeSpan.FromSeconds(5));
         }
 
         _windowReadyEvent.Dispose();

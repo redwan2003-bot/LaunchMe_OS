@@ -38,4 +38,20 @@ public class HotkeyTests
         bool unregistered = service.Unregister(Win32Interop.MOD_ALT, 0x20);
         unregistered.Should().BeFalse();
     }
+
+    [Fact]
+    public void HotkeyService_Dispose_TerminatesMessagePumpThreadDeterministicallyAndIsIdempotent()
+    {
+        var service = new Win32HotkeyService();
+        service.IsPumpAlive.Should().BeTrue();
+
+        service.Dispose();
+
+        service.IsPumpAlive.Should().BeFalse();
+        service.Register(Win32Interop.MOD_ALT, 0x20).Should().BeFalse();
+        service.Unregister(Win32Interop.MOD_ALT, 0x20).Should().BeFalse();
+
+        Action secondDispose = () => service.Dispose();
+        secondDispose.Should().NotThrow();
+    }
 }

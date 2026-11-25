@@ -6,6 +6,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Windows.System;
 using LaunchMe.UI.ViewModels;
 
@@ -18,11 +19,21 @@ public sealed partial class LauncherWindow : Window
     private readonly nint _hwnd;
 
     public LauncherViewModel ViewModel { get; }
+    public bool IsLauncherVisible { get; private set; }
 
     public LauncherWindow(LauncherViewModel viewModel)
     {
         ViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         InitializeComponent();
+
+        try
+        {
+            SystemBackdrop = new DesktopAcrylicBackdrop();
+        }
+        catch
+        {
+            // DesktopAcrylicBackdrop may be unsupported on downlevel Windows builds
+        }
 
         _hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
         var windowId = Win32Interop.GetWindowIdFromWindow(_hwnd);
@@ -40,6 +51,7 @@ public sealed partial class LauncherWindow : Window
         PositionOnCursorMonitor();
 
         ViewModel.DismissRequested += (_, _) => Dismiss();
+        Closed += (_, _) => WallpaperSurface.Dispose();
     }
 
     private void ApplyToolWindowStyle()
@@ -57,6 +69,7 @@ public sealed partial class LauncherWindow : Window
     {
         PositionOnCursorMonitor();
         _appWindow.Show();
+        IsLauncherVisible = true;
         ViewModel.OnShown();
         SearchBox.Focus(FocusState.Programmatic);
     }
@@ -64,6 +77,7 @@ public sealed partial class LauncherWindow : Window
     public void Dismiss()
     {
         // Enforce Pause-on-Hide GPU Law: Immediately stop timers, render loops, and video decoding
+        IsLauncherVisible = false;
         ViewModel.OnHidden();
         _appWindow.Hide();
     }
@@ -89,11 +103,40 @@ public sealed partial class LauncherWindow : Window
         Dismiss();
     }
 
+    private void FolderScrim_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        ViewModel.CloseFolder();
+        e.Handled = true;
+    }
+
+    private void SettingsScrim_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        ViewModel.IsSettingsOpen = false;
+        e.Handled = true;
+    }
+
+    private void ModalCard_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        e.Handled = true;
+    }
+
     private void RootGrid_KeyDown(object sender, KeyRoutedEventArgs e)
     {
         if (e.Key == VirtualKey.Escape)
         {
-            Dismiss();
+            if (ViewModel.IsFolderOpen)
+            {
+                ViewModel.CloseFolder();
+            }
+            else if (ViewModel.IsSettingsOpen)
+            {
+                ViewModel.IsSettingsOpen = false;
+            }
+            else
+            {
+                Dismiss();
+            }
+
             e.Handled = true;
         }
     }
@@ -135,6 +178,22 @@ public sealed partial class LauncherWindow : Window
         if (e.ClickedItem is LauncherItemViewModel item)
         {
             ViewModel.ExecuteItem(item);
+        }
+    }
+
+    private void FolderGridView_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is LauncherItemViewModel item)
+        {
+            ViewModel.ExecuteItem(item);
+        }
+    }
+
+    private void QuickTintButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.Tag is string tintHex)
+        {
+            ViewModel.ApplyQuickThemeTint(tintHex);
         }
     }
 

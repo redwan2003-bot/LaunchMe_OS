@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="#build--test-status"><img src="https://img.shields.io/badge/build-passing-brightgreen?style=for-the-badge&logo=dotnet" alt="Build Status"/></a>
-  <a href="#test-coverage"><img src="https://img.shields.io/badge/tests-248%2F248%20passing-success?style=for-the-badge&logo=xunit" alt="Test Coverage"/></a>
+  <a href="#test-coverage"><img src="https://img.shields.io/badge/tests-306%2F306%20passing-success?style=for-the-badge&logo=xunit" alt="Test Coverage"/></a>
   <a href="#tech-stack"><img src="https://img.shields.io/badge/target-.NET%209%20%7C%20WinUI%203-blue?style=for-the-badge&logo=windows11" alt="Target Framework"/></a>
   <a href="#security-architecture--vulnerability-defenses"><img src="https://img.shields.io/badge/security-hardened%20%26%20verified-success?style=for-the-badge&logo=securityscorecard" alt="Security Verified"/></a>
   <a href="#architecture-guardrails"><img src="https://img.shields.io/badge/telemetry-strictly%20zero-critical?style=for-the-badge&logo=shield" alt="Zero Telemetry"/></a>
@@ -25,10 +25,10 @@
 **LaunchMe-Win** is an ultra-fast, local-first Windows 11 workspace manager crafted in **C# 13, .NET 9, WinUI 3, Win2D, and CsWin32**. It replicates the fluid ergonomics, design fidelity, and keyboard-centric workflows of LaunchMe v3.01.0 (macOS) while operating seamlessly with Windows native APIs.
 
 ### Key Pillars
-- **Zero-Friction Launcher:** Full-screen blurred overlay summoned instantaneously on whichever monitor currently holds the mouse cursor (`MonitorFromPoint`).
-- **Unified Search:** Real-time query dispatch combining Start Menu / MSIX applications, scoped local files, an inline scientific unit-converting calculator, Windows clipboard history, and a quick `TAB`-toggle emoji selector.
-- **Liquid Glass Visual Engine:** Custom acrylic tint compositing, specular refraction, and automatic WCAG 2.1 contrast-checked title colors.
-- **Hardware-Friendly ("Pause-on-Hide GPU Law"):** Render loops, video decoders, canvas shaders, and widget timers pause immediately when the launcher is dismissed to ensure 0% background GPU consumption.
+- **Zero-Friction Runnable Desktop Shell:** Self-contained WinUI 3 application (`Alt+Space` global hotkey, Hot Corners, and System Tray icon) summoned instantaneously on whichever monitor currently holds the mouse cursor (`MonitorFromPoint`).
+- **Unified Search & Direct Execution:** Real-time query dispatch combining Start Menu / MSIX applications (live launching), scoped local files (open / reveal / copy), inline unit-converting calculator (click-to-copy), Windows clipboard history, and a `TAB`-toggle emoji palette.
+- **Liquid Glass Visual Engine:** Real `DesktopAcrylicBackdrop` layered beneath custom tint compositing, specular refraction, and automatic WCAG 2.1 contrast-checked title colors.
+- **Hardware-Friendly ("Pause-on-Hide GPU Law"):** Render loops, video decoders, canvas shaders, and all 7 widget timers pause immediately when the launcher is dismissed to ensure 0% background GPU consumption.
 - **Strict Privacy:** Zero cloud telemetry or external network calls. All layout configurations, spaces, and clipboard history persist strictly in local SQLite and JSON.
 
 ---
@@ -37,55 +37,54 @@
 
 ```mermaid
 flowchart TD
-    subgraph UI_Layer ["Presentation Layer (LaunchMe.UI)"]
-        LW["LauncherWindow (WinUI 3 OverlappedPresenter + WS_EX_TOOLWINDOW)"]
-        VM["LauncherViewModel (MVVM CommunityToolkit)"]
-        Grid["Classic 24-Item Grid & Free Layout Mode"]
-        SearchUI["Unified Search & TAB Emoji Mode"]
+    subgraph UI_Layer ["Presentation & Composition Root (LaunchMe.UI)"]
+        AppHost["Program.cs & App.xaml.cs (Self-Contained WinUI 3 + DI Root)"]
+        LW["LauncherWindow (OverlappedPresenter + DesktopAcrylicBackdrop + WS_EX_TOOLWINDOW)"]
+        VM["LauncherViewModel (Apps, Folders, Settings, Diagnostics, IDisposable)"]
         GlassUI["LiquidGlassOverlayControl (Acrylic + Tint + Highlight)"]
-        WallUI["LiveWallpaperControl (Video / Dynamic / Gaussian Blur)"]
-        WidgetUI["7-Family Widget Catalog (Clock, Weather, Music, Stats, Pomodoro, Quotes, Cal)"]
+        WallUI["LiveWallpaperControl (Pause-on-Hide Video / Dynamic / Blur)"]
+        WidgetUI["7-Family Widget Catalog Drawer (Clock, Weather, Music, Stats, Pomodoro, Quotes, Cal)"]
+        Adapters["Win32SystemStatsAdapter & CoreWeatherAdapter"]
         NotchUI["Dynamic Notch HUD (Planned Phase 4)"]
         DockUI["SHAppBarMessage Multi-Display Dock (Planned Phase 4)"]
     end
 
     subgraph Contracts ["Frozen Contract Core (LaunchMe.Contracts)"]
         ISpace["ISpaceStore"]
-        IApp["IAppIndexer"]
+        IApp["IAppIndexer & IAppLauncherService"]
         ISearch["IFileSearchService"]
-        ICalc["ICalculatorService"]
-        IEmoji["IEmojiService"]
-        IClip["IClipboardMonitor"]
-        IGesture["IGestureAndTriggerService"]
+        ICalc["ICalculatorService & IEmojiService"]
+        IClip["IClipboardMonitor & IClipboardWriter"]
+        IGesture["IGestureAndTriggerService & ISystemTrayService"]
         IMedia["IMediaSessionService"]
         IDock["IDockShellService"]
         INotch["INotchWindowService"]
     end
 
     subgraph Core_Layer ["Core Engine (LaunchMe.Core)"]
-        Sqlite["SQLite Space Store (Spaces, .launchmetheme ZIP)"]
-        AppIdx["App Indexer (LNK + MSIX + 128px Cache)"]
-        FileIdx["File Search Service (Approved Scopes)"]
-        CalcEng["Inline Calculator (Tokens + Precedence + Units)"]
-        EmojiEng["Emoji Catalog & Search Index"]
-        ThemeEng["Theme Engine (ColorParser + WCAG Luminance + LiquidGlass)"]
-        WallEng["Wallpaper Service (Sun Calculator + Weather Mapper + Video Resolver)"]
-        WidgetCore["Widget Providers (Clock, Simulated Weather, Pomodoro FSM, Quotes, Stats)"]
-        Workflow["Workflows Runner & Script Automator"]
-        Uninstall["Clean Uninstall (Recycle Bin Stager)"]
+        Sqlite["SqliteSpaceStore & SpaceLayoutSerializer (SQLite + .launchmetheme ZIP)"]
+        AppIdx["AppIndexer & AppLauncherService (LNK + MSIX + 128px Cache)"]
+        FileIdx["FileSearchService (Approved Scopes + Clipboard Copy)"]
+        CalcEng["InlineCalculatorService & EmojiIndexService"]
+        ThemeEng["ThemeEngineService (ColorParser + WCAG Luminance + LiquidGlass)"]
+        WallEng["WallpaperService (NOAA Sun Calculator + Weather Mapper + Video Resolver)"]
+        WidgetCore["Widget Providers (Clock, SimulatedWeatherProvider, Pomodoro FSM, Quotes)"]
+        Workflow["WorkflowRunner & Clean Uninstall (Recycle Bin Stager)"]
     end
 
     subgraph Platform_Layer ["Native Interop (LaunchMe.Platform.Win32)"]
+        Tray["SystemTrayService (Shell_NotifyIconW + TrackPopupMenu)"]
         HotCorners["WH_MOUSE_LL Low-Level Mouse Hook (150ms Dwell)"]
-        Hotkeys["RegisterHotKey Message Pump"]
-        ClipMon["WinRT Clipboard API Listener & FIFO Store"]
-        Metrics["Win32 System Metrics (GetSystemTimes + GlobalMemoryStatusEx + GetIfTable2)"]
-        MediaCtl["GSMTC Media Session Transport Bridge (WinRT)"]
+        Hotkeys["Win32HotkeyService (RegisterHotKey + Clean WM_DESTROY Exit)"]
+        ClipMon["WinRTClipboardMonitor & Win32ClipboardWriter (CF_UNICODETEXT / CF_HDROP)"]
+        Metrics["Win32SystemMetricsService (GetSystemTimes + GlobalMemoryStatusEx + GetIfTable2)"]
+        MediaCtl["WinRTMediaSessionService (WinRT GSMTC Bridge)"]
         GameDetect["Fullscreen DirectX Game Detection (SHQueryUserNotificationState)"]
-        AppBar["Win32 SHAppBarMessage Interop"]
-        CaptureGuard["WDA_EXCLUDEFROMCAPTURE Notch Guard"]
+        AppBar["DockShellService (SHAppBarMessage) & NotchWindowService (WDA_EXCLUDEFROMCAPTURE)"]
     end
 
+    AppHost --> LW
+    AppHost --> Adapters
     UI_Layer --> Contracts
     Core_Layer -.->|Implements| Contracts
     Platform_Layer -.->|Implements| Contracts
@@ -93,10 +92,9 @@ flowchart TD
     VM --> IApp
     VM --> ISearch
     VM --> ICalc
-    VM --> IEmoji
     VM --> IClip
-    VM --> IGesture
-    VM --> IMedia
+    Adapters --> Metrics
+    Adapters --> WidgetCore
 ```
 
 ---
@@ -112,13 +110,13 @@ LaunchMe OS/
 │   └── PRD_LAUNCHME_WINDOWS.md
 ├── src/
 │   ├── LaunchMe.Contracts/         # Frozen interfaces & DTOs (Zero drift)
-│   ├── LaunchMe.Core/              # SQLite, App/File indexers, Themes, Wallpapers, Widgets
-│   ├── LaunchMe.Platform.Win32/    # CsWin32, WH_MOUSE_LL, Hotkeys, WinRT Clipboard, GSMTC, Metrics
-│   └── LaunchMe.UI/                # WinUI 3 Window, Liquid Glass, Live Wallpaper, 7 Widget Views
+│   ├── LaunchMe.Core/              # SQLite, App/File indexers & launcher, Themes, Wallpapers, Widgets
+│   ├── LaunchMe.Platform.Win32/    # CsWin32, WH_MOUSE_LL, Hotkeys, Tray, Win32 Clipboard, GSMTC, Metrics
+│   └── LaunchMe.UI/                # Self-contained WinUI 3 EXE, App DI Root, Acrylic, Widgets, Wallpaper
 └── tests/
-    ├── LaunchMe.Core.Tests/        # 132 Unit Tests (xUnit + FluentAssertions + Security)
-    ├── LaunchMe.Platform.Tests/    # 66 Unit Tests (Win32 parsers, GSMTC, metrics, dwell)
-    └── LaunchMe.UI.Tests/          # 50 Unit Tests (MVVM, GPU Pause-on-Hide, Widgets, Theming)
+    ├── LaunchMe.Core.Tests/        # 157 Unit Tests (xUnit + FluentAssertions + Security)
+    ├── LaunchMe.Platform.Tests/    # 88 Unit Tests (Win32 parsers, Tray, ClipboardWriter, GSMTC, Metrics)
+    └── LaunchMe.UI.Tests/          # 61 Unit Tests (MVVM, Adapters, GPU Pause-on-Hide, Widgets, Theming)
 ```
 
 ---
@@ -127,45 +125,30 @@ LaunchMe OS/
 
 | Phase | Description | Status | Test Suites | Verification Gate |
 | :---: | :--- | :---: | :---: | :---: |
-| **Phase 0** | **Contract Freeze & Scaffolding**<br>Solution structure, `Directory.Build.props`, `<TreatWarningsAsErrors>`, frozen interfaces |  **Completed** | Verified | Zero Warnings |
-| **Phase 1** | **Core Grid, Search, Indexers, Clipboard & Triggers**<br>WinUI 3 OverlappedPresenter, SQLite Spaces, Start Menu/MSIX indexer, Scoped Search, Inline Calc, WinRT Clipboard, `WH_MOUSE_LL` Hot Corners (150ms dwell), Hotkeys |  **Completed** | **72 / 72 Passing** | **PASS** (`qa-verifier-auditor`) |
-| **Phase 2** | **Theming, Liquid Glass, Live Wallpapers & Core Widgets**<br>Liquid Glass acrylic & tint engine, Pause-on-Hide live video wallpapers, 7 widget families, GSMTC media bridge, native Win32 hardware metrics, DirectX fullscreen game detection |  **Completed** | **243 / 243 Passing** | **PASS** (`qa-verifier-auditor`) |
-| **Phase 3** | **Spaces & Workflows Engine**<br>Time/trigger Space switcher, `.launchmetheme` ZIP packager, Clean Uninstall with Recycle Bin recovery |  **Planned** | Pending | Mandatory Gate |
-| **Phase 4** | **Dynamic Notch, Multi-Display Dock & Gestures**<br>`SHAppBarMessage` Dock, Dynamic Notch HUD (`WDA_EXCLUDEFROMCAPTURE`), GSMTC Music Player, HID touchpad pinch gestures |  **Planned** | Pending | Mandatory Gate |
+| **Phase 0** | **Contract Freeze & Scaffolding**<br>Solution structure, `Directory.Build.props`, `<TreatWarningsAsErrors>`, frozen interfaces | **Completed** | Verified | Zero Warnings |
+| **Phase 1** | **Core Grid, Search, Indexers, Clipboard & Triggers**<br>WinUI 3 OverlappedPresenter, SQLite Spaces, Start Menu/MSIX indexer, Scoped Search, Inline Calc, WinRT Clipboard, `WH_MOUSE_LL` Hot Corners (150ms dwell), Hotkeys | **Completed** | **72 / 72 Passing** | **PASS** (`qa-verifier-auditor`) |
+| **Phase 2** | **Theming, Liquid Glass, Live Wallpapers & Core Widgets**<br>Liquid Glass acrylic & tint engine, Pause-on-Hide live video wallpapers, 7 widget families, GSMTC media bridge, native Win32 hardware metrics, DirectX fullscreen game detection | **Completed** | **248 / 248 Passing** | **PASS** (`qa-verifier-auditor` + Security Audit) |
+| **Phase 2.5** | **Desktop Integration & Runnable App Bootstrapping**<br>Self-contained WinUI 3 `App.xaml` DI root, `SystemTrayService`, `AppLauncherService`, `Win32ClipboardWriter`, `SpaceLayoutSerializer`, `DesktopAcrylicBackdrop`, live Widget Catalog drawer, Folder & Settings/Diagnostics UI, deterministic `IDisposable` cleanup | **Completed** | **306 / 306 Passing** | **PASS** (Static Lifecycle Gate + `-warnaserror` + `--smoke-test`) |
+| **Phase 3** | **Spaces Scheduler, Workflows UI, `.launchmetheme` Shell Association & Remaining Widgets**<br>Time/day Space scheduler daemon, double-click `.launchmetheme` installer, Pixel Art/Photo/Shape Photo/GIF widget families | **Planned** | Pending | Mandatory Gate |
+| **Phase 4** | **Dynamic Notch, Multi-Display Dock, Music Player & HID Gestures**<br>`SHAppBarMessage` Dock UI, Dynamic Notch HUD (`WDA_EXCLUDEFROMCAPTURE`) + Pocket/Share, Full-Screen Music Player, Raw Input HID touchpad pinch gestures | **Planned** | Pending | Mandatory Gate |
 
 ---
 
-## Verified Phase 1 & Phase 2 Feature Capabilities
+## Verified Phase 1–2.5 Feature Capabilities
 
-### 1. Liquid Glass & Theming Engine
-- **Flexible Color Parser:** Zero-allocation hexadecimal color parser supporting `#RGB`, `#RGBA`, `#RRGGBB`, and `#AARRGGBB` notations.
-- **WCAG 2.1 Contrast & Luminance:** Computes relative luminance ($L = 0.2126 R_{lin} + 0.7152 G_{lin} + 0.0722 B_{lin}$) and contrast ratio ($CR \in [1, 21]$) to resolve Auto title colors (white vs. dark text) for optimal readability.
-- **Acrylic Backdrop & Refraction:** Layered WinUI 3 control compositing acrylic blur base, edge highlight, and tint overlays with configurable intensity.
+### 1. Runnable Self-Contained WinUI 3 Shell & System Tray
+- **Instant Desktop Boot (`Program.cs` & `App.xaml.cs`):** Self-contained Windows App SDK 1.6 runtime (no external MSIX framework installation required) wiring SQLite, `AppIndexer`, `AppLauncherService`, `Win32SystemMetricsService`, `WinRTMediaSessionService`, `GestureAndTriggerService` (`Alt+Space` + Top-Left Hot Corner), and `SystemTrayService`.
+- **System Tray Notification Icon (`Shell_NotifyIconW`):** Dedicated hidden Win32 message pump providing tray click-to-toggle and right-click context menu (`Show Launcher`, `Settings`, `Exit LaunchMe`) with deterministic `NIM_DELETE` teardown.
+- **Direct Launch & Clipboard Actions:** Clicking indexed apps launches Win32 shortcuts, EXEs, or packaged MSIX apps (`PackageManager`); clicking Calculator, Emoji, or Clipboard search hits copies values cleanly via `Win32ClipboardWriter` (`CF_UNICODETEXT` / `CF_HDROP`).
 
-### 2. Pause-on-Hide Live Wallpapers
-- **Solar Equation Calculator:** Computes solar declination, equation of time, solar noon, sunrise, sunset, elevation, and azimuth with 16-slice time-of-day dynamic wallpaper progression.
-- **Weather Condition Mapper:** Normalizes 25+ weather condition strings into canonical day/night wallpaper candidates.
-- **Hardware-Friendly ("Pause-on-Hide GPU Law"):** Integrates `MediaPlayerElement` for video wallpapers (`.mp4`, `.mov`, `.avi`, `.mkv`, `.webm`); halts video decoding and canvas rendering immediately upon `LauncherHidden` to ensure 0.0% background GPU load.
+### 2. Liquid Glass & Theming Engine
+- **Windows 11 Acrylic Backdrop:** Applies `DesktopAcrylicBackdrop` beneath layered specular highlight and custom tint controls.
+- **WCAG 2.1 Contrast & Luminance:** Zero-allocation hex parser (`#RGB`, `#RGBA`, `#RRGGBB`, `#AARRGGBB`) and relative luminance calculation ($L = 0.2126 R_{lin} + 0.7152 G_{lin} + 0.0722 B_{lin}$) for Auto title color selection.
 
-### 3. Interactive 7-Family Widget Catalog
-- **Clock Widget:** 12h/24h digital formatting and analog hand angle trigonometry; tick timer pauses when hidden.
-- **Weather Widget:** Metric/Imperial temperature toggle (°C / °F), condition glyph mapping, 4-day forecast strip.
-- **Music Widget (mini GSMTC):** Real-time track title, artist, album art streaming, progress interpolation, and interactive playback controls (Play/Pause, Next, Prev, Seek).
-- **System Stats Widget:** Real-time CPU, RAM, and Network meters with Green/Amber/Red health alert thresholds.
-- **Pomodoro Widget:** State machine for 25m work / 5m break / 15m long break cycles, audio cue notifications, and wall-clock catch-up.
-- **Affirmations Widget:** Daily rotating inspiration and focus quotes with custom quote staging.
-- **Calendar Widget:** 6x7 42-day calendar matrix with month navigation and today indicator.
-
-### 4. Native Win32 Metrics & Media Bridge
-- **Hardware Performance Counters:** CPU utilization via `GetSystemTimes` differential calculation, memory status via `GlobalMemoryStatusEx`, and network interface throughput via `GetIfTable2`.
-- **GSMTC Media Bridge:** WinRT `GlobalSystemMediaTransportControlsSessionManager` integration for Universal Windows media synchronization.
-- **Fullscreen DirectX Game Detection:** Evaluates `SHQueryUserNotificationState(QUNS_RUNNING_D_3D_FULL_SCREEN)` and DWM frame bounds (`DWMWA_EXTENDED_FRAME_BOUNDS`) to prevent unintended invocations during fullscreen 3D gameplay.
-
-### 5. Multi-Engine Unified Search & Hotkeys
-- **Applications & Scoped Files:** Start Menu / MSIX applications query + scoped directory search.
-- **Inline Calculator & Emojis:** Mathematical expression evaluation and `TAB`-toggle emoji palette.
-- **Clipboard Monitor:** 500-slot FIFO store with content classification (`Text`, `Link`, `FilePath`, `ColorCode`, `CodeSnippet`).
-- **Low-Level Mouse Hook (`WH_MOUSE_LL`):** 150ms dwell corner triggers and global `RegisterHotKey` message pump with deterministic `IDisposable` unhooking.
+### 3. Pause-on-Hide Live Wallpapers & Interactive 7-Family Widget Catalog
+- **Solar Equation & Weather Wallpapers:** NOAA solar elevation/azimuth 16-slice progression and condition asset mapping; `MediaPlayerElement` immediately pauses video decoding on `LauncherHidden` (`0.0%` idle GPU).
+- **Hosted Widget Drawer (`WidgetCatalogView`):** Integrates Clock, Weather (`CoreWeatherAdapter`), GSMTC Music, System Stats (`Win32SystemStatsAdapter` reading live `Win32SystemMetricsService`), Pomodoro, Affirmations, and Calendar — all suspending timers on hide.
+- **Smart Folder Modal & Settings/Diagnostics Overlay:** Interactive folder popup overlay and Diagnostics panel reporting hook health, active Space status, quick theme tints, and safe app exit.
 
 ---
 
@@ -176,27 +159,36 @@ LaunchMe OS/
 | **Dependency CVEs** | Strict package curation and automated audits. | Zero known vulnerable packages identified by `dotnet list package --vulnerable`. |
 | **ZipSlip Path Traversal** | Extraction path validation against base canonical prefix. | `SqliteSpaceStore.ImportThemeAsync` validates `Path.GetFullPath(targetPath).StartsWith(assetsDir)` and rejects any entry with `..` sequences. |
 | **Accidental / Traversal Deletion** | Target validation and root folder protection in clean uninstall. | `AppIndexer.CleanUninstallAsync` strictly requires targets to be verified subfolders of `%LocalAppData%` / `%AppData%`, disallowing `..`, empty paths, or root deletions. |
-| **Workflow Command Injection** | URL scheme whitelisting for `OpenUrl` actions. | `WorkflowRunner` enforces `Uri.UriSchemeHttp` or `Uri.UriSchemeHttps`, prohibiting arbitrary shell execution or malicious protocol handlers (`file://`, `javascript:`). |
+| **Workflow Command Injection** | URL scheme whitelisting for `OpenUrl` and `LaunchTarget` actions. | `WorkflowRunner` and `AppLauncherService` restrict URL launches strictly to `http://` or `https://` schemes, prohibiting malicious protocol handlers. |
 | **Explorer Argument Breakout** | Stripping double quotes from paths in `RevealInExplorer`. | `FileSearchService.RevealInExplorer` strips quotes from the resolved path prior to spawning `explorer.exe /select,"path"`. |
 | **Expression Evaluation DoS** | Input length limits and max recursion depth tracking. | `InlineCalculatorService` rejects expressions exceeding 256 characters and bounds recursive descent to a depth of 32 to prevent StackOverflow crashes. |
 | **Memory Bloat & Exhaustion** | Clipboard payload truncation for massive text entries. | `WinRTClipboardMonitor` caps text payloads to 100,000 characters prior to storage. |
 
 ---
 
-## Building and Testing
+## Building, Running, and Testing
 
 ### Prerequisites
 - Windows 11 (Build 22621 / 22H2 or higher)
 - [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) (or .NET 10 with RollForward)
-- Windows App SDK 1.6+ components
 
 ### Build the Solution
-All projects are configured with `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>`:
+All projects enforce `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>`:
 ```powershell
 dotnet build LaunchMeWin.sln -warnaserror
 ```
 
-### Run the Full Test Suite
+### Run Headless Integration Smoke Test
+```powershell
+& "src\LaunchMe.UI\bin\x64\Debug\net9.0-windows10.0.22621.0\LaunchMe.UI.exe" --smoke-test
+```
+
+### Launch the Desktop Application
+```powershell
+dotnet run --project src\LaunchMe.UI\LaunchMe.UI.csproj
+```
+
+### Run the Full Test Suite (306 Tests)
 ```powershell
 dotnet test LaunchMeWin.sln --no-build
 ```
@@ -205,24 +197,22 @@ dotnet test LaunchMeWin.sln --no-build
 
 ## Daily Update Log
 
+### 2026-11-25
+- **Phase 2.5 Integration Sprint Completed (Multi-Agent Swarm):**
+  - **Self-Contained WinUI 3 Entrypoint (`LaunchMe.UI`):** Implemented `Program.cs`, `App.xaml`, and `App.xaml.cs` with `<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>`, composing the full DI service graph (`Alt+Space` global hotkey, Hot Corners, tray icon, background app scanning, and `--smoke-test` headless runner).
+  - **Core Execution & Persistence (`LaunchMe.Core`):** Added `AppLauncherService` (launching Win32 shortcuts, executables, and MSIX packages via `PackageManager`), implemented `FileSearchService.CopyFileToClipboardAsync`, and added `SpaceLayoutSerializer` for persistent layouts and folders.
+  - **Native Tray & Clipboard Writer (`LaunchMe.Platform.Win32`):** Implemented `SystemTrayService` (`Shell_NotifyIconW` + `TrackPopupMenu`) and thread-safe `Win32ClipboardWriter` (`CF_UNICODETEXT` + `CF_HDROP`).
+  - **UI Wiring & Telemetry Adapters:** Wired `Win32SystemStatsAdapter`, `CoreWeatherAdapter`, `DesktopAcrylicBackdrop`, live `WidgetCatalogView` drawer, Smart Folder modal, Settings & Diagnostics overlay, and direct app/search click execution into `LauncherWindow` & `LauncherViewModel`.
+- **QA Audit & Lifecycle Hardening:**
+  - Upgraded `Win32HotkeyService` to cleanly handle `WM_CLOSE` -> `DestroyWindow` and `WM_DESTROY` -> `PostQuitMessage(0)` with deterministic pump thread join on `Dispose()`.
+  - Implemented `IDisposable` across `LauncherViewModel` and `LauncherWindow.Closed` (`WallpaperSurface.Dispose()`, `WidgetCatalog.Dispose()`, and `_searchCts` cleanup).
+  - **Verification:** `dotnet build LaunchMeWin.sln -warnaserror` (`0 Warnings, 0 Errors`), **306 / 306 unit tests passing** (`157` Core + `88` Platform + `61` UI), zero stubs in `src/`, and `LaunchMe.UI.exe --smoke-test` -> `SMOKE_TEST_OK` (exit code `0`).
+
 ### 2026-11-24
 - **Scaffold & Contract Freeze (Phase 0):** Solution initialization, `.sln` and project configurations with `net9.0-windows10.0.22621.0`. All DTOs and contracts frozen in `LaunchMe.Contracts`.
-- **Phase 1 Implementation Completed:**
-  - Implemented `LaunchMe.Platform.Win32` (`WH_MOUSE_LL` hot corners, hotkeys, WinRT clipboard monitor, `SHAppBarMessage` dock scaffolding, `WDA_EXCLUDEFROMCAPTURE` notch window service).
-  - Implemented `LaunchMe.Core` (SQLite space storage, app indexer, scoped file search, inline calculator, emoji catalog, workflow runner, recycle bin clean uninstaller).
-  - Implemented `LaunchMe.UI` (WinUI 3 overlay window, `OverlappedPresenter`, cursor monitor positioning, MVVM unified search, GPU Pause-on-Hide integration).
-- **Phase 2 Implementation Completed (Multi-Agent Swarm):**
-  - Implemented Liquid Glass acrylic backdrop & custom tint engine with WCAG 2.1 contrast calculations.
-  - Implemented Pause-on-Hide Live Wallpaper component with dynamic Sun NOAA calculations and video decoding suspension.
-  - Implemented 7-family interactive Widget Catalog (Clock, Weather, GSMTC Music, System Stats, Pomodoro, Quotes, Calendar).
-  - Implemented native Win32 performance counters (`GetSystemTimes`, `GlobalMemoryStatusEx`, `GetIfTable2`), GSMTC media transport bridge, and DirectX fullscreen game detection.
-- **QA Verification Gate Sign-Off:**
-  - Independent auditor `qa-verifier-auditor` passed all 5 gates.
-  - **248 / 248 unit tests passing** with 0 compiler warnings.
-- **Security Vulnerability Hardening & Regression Suite:**
-  - Audited dependencies (0 vulnerable packages via `dotnet list package --vulnerable`).
-  - Added ZipSlip path traversal defense, LocalAppData accidental deletion guards, URL scheme validation, explorer argument sanitization, calculator recursion depth bounds, and clipboard memory caps.
-  - Added dedicated security unit test suite (`SecurityVulnerabilityTests.cs`).
+- **Phase 1 Implementation Completed:** Implemented SQLite space storage, Start Menu/MSIX app indexer, scoped file search, inline calculator, emoji catalog, workflow runner, `WH_MOUSE_LL` hot corners, hotkeys, WinRT clipboard monitor, and initial WinUI 3 launcher window (`72 / 72` tests passing).
+- **Phase 2 Implementation Completed (Multi-Agent Swarm):** Implemented Liquid Glass tint engine, Pause-on-Hide Live Wallpaper control, 7-family interactive Widget Catalog, native Win32 hardware counters, GSMTC media transport bridge, and DirectX fullscreen game detection (`243 / 243` tests passing).
+- **Security Vulnerability Hardening:** Audited NuGet dependencies (`0` CVEs), hardened ZipSlip, `CleanUninstallAsync` directory guards, workflow URL scheme validation, explorer argument sanitization, calculator recursion/length bounds, and clipboard truncation (`248 / 248` tests passing).
 - **GitHub Repository Sync:** Synchronized with [redwan2003-bot/LaunchMe_OS](https://github.com/redwan2003-bot/LaunchMe_OS.git).
 
 ---

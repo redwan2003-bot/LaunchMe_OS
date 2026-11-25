@@ -15,6 +15,29 @@ public static class Win32Interop
     public const int WM_HOTKEY = 0x0312;
     public const int WM_DESTROY = 0x0002;
     public const int WM_CLOSE = 0x0010;
+    public const uint WM_APP = 0x8000;
+    public const uint WM_LBUTTONUP = 0x0202;
+    public const uint WM_LBUTTONDBLCLK = 0x0203;
+    public const uint WM_RBUTTONUP = 0x0205;
+    public const uint WS_POPUP = 0x80000000;
+
+    // Clipboard & Global Memory
+    public const uint CF_UNICODETEXT = 13;
+    public const uint CF_HDROP = 15;
+    public const uint GMEM_MOVEABLE = 0x0002;
+
+    // System Tray & Menus
+    public const uint NIM_ADD = 0x00000000;
+    public const uint NIM_MODIFY = 0x00000001;
+    public const uint NIM_DELETE = 0x00000002;
+    public const uint NIF_MESSAGE = 0x00000001;
+    public const uint NIF_ICON = 0x00000002;
+    public const uint NIF_TIP = 0x00000004;
+    public const int IDI_APPLICATION = 32512;
+    public const uint MF_STRING = 0x00000000;
+    public const uint MF_SEPARATOR = 0x00000800;
+    public const uint TPM_RIGHTBUTTON = 0x0002;
+    public const uint TPM_RETURNCMD = 0x0100;
 
     // Hotkey Modifiers
     public const uint MOD_ALT = 0x0001;
@@ -223,6 +246,44 @@ public static class Win32Interop
         public ulong OutQLen;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DROPFILES
+    {
+        public uint pFiles;
+        public POINT pt;
+        public int fNC;
+        public int fWide;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    public struct NOTIFYICONDATAW
+    {
+        public uint cbSize;
+        public nint hWnd;
+        public uint uID;
+        public uint uFlags;
+        public uint uCallbackMessage;
+        public nint hIcon;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+        public string? szTip;
+
+        public uint dwState;
+        public uint dwStateMask;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+        public string? szInfo;
+
+        public uint uTimeoutOrVersion;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
+        public string? szInfoTitle;
+
+        public uint dwInfoFlags;
+        public Guid guidItem;
+        public nint hBalloonIcon;
+    }
+
     public enum QUERY_USER_NOTIFICATION_STATE
     {
         QUNS_NOT_PRESENT = 1,
@@ -368,4 +429,66 @@ public static class Win32Interop
 
     [DllImport("user32.dll")]
     public static extern nint GetDesktopWindow();
+
+    [DllImport("user32.dll")]
+    public static extern void PostQuitMessage(int nExitCode);
+
+    // Clipboard & Global Memory
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool OpenClipboard(nint hWndNewOwner);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool CloseClipboard();
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool EmptyClipboard();
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern nint SetClipboardData(uint uFormat, nint hMem);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern nint GlobalAlloc(uint uFlags, nuint dwBytes);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern nint GlobalLock(nint hMem);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GlobalUnlock(nint hMem);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern nint GlobalFree(nint hMem);
+
+    // System Tray & Menus
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool Shell_NotifyIconW(uint dwMessage, ref NOTIFYICONDATAW lpData);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    public static extern nint LoadIconW(nint hInstance, nint lpIconName);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern nint CreatePopupMenu();
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool AppendMenuW(nint hMenu, uint uFlags, nuint uIDNewItem, string? lpNewItem);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern int TrackPopupMenu(nint hMenu, uint uFlags, int x, int y, int nReserved, nint hWnd, nint prcRect);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool DestroyMenu(nint hMenu);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool SetForegroundWindow(nint hWnd);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GetCursorPos(out POINT lpPoint);
 }

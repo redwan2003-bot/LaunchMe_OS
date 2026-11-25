@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using LaunchMe.Contracts.Clipboard;
 using LaunchMe.Contracts.Search;
 using Microsoft.VisualBasic.FileIO;
 
@@ -6,8 +7,14 @@ namespace LaunchMe.Core.Files;
 
 public sealed class FileSearchService : IFileSearchService
 {
+    private readonly IClipboardWriter? _clipboardWriter;
     private readonly HashSet<string> _approvedScopes = new(StringComparer.OrdinalIgnoreCase);
     private readonly object _lock = new();
+
+    public FileSearchService(IClipboardWriter? clipboardWriter = null)
+    {
+        _clipboardWriter = clipboardWriter;
+    }
 
     public IReadOnlyList<string> ApprovedFolderScopes
     {
@@ -151,6 +158,12 @@ public sealed class FileSearchService : IFileSearchService
     public Task CopyFileToClipboardAsync(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        var fullPath = Path.GetFullPath(path);
+        if ((File.Exists(fullPath) || Directory.Exists(fullPath)) && _clipboardWriter != null)
+        {
+            _clipboardWriter.SetFiles([fullPath]);
+        }
+
         return Task.CompletedTask;
     }
 
