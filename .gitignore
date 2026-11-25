@@ -27,3 +27,9 @@ $RECYCLE.BIN/
  
 # Analysis Repositories
 _analysis/
+
+# Release and Build distribution binaries (upload to GitHub Releases)
+dist/LaunchMe-Win-x64/
+dist/*.zip
+dist/installer/*.exe
+dist/mobile/*.apk
