@@ -51,6 +51,10 @@ public partial class App : Application
     private LaunchMe.UI.Tiling.FocusBorderService? _focusBorderService;
     private LaunchMe.UI.Tiling.TiledDropPreviewService? _dropPreviewService;
     private LaunchMe.Platform.Win32.Tiling.Win32WindowTracker? _windowTracker;
+    private LaunchMe.Core.Agent.AgentApprovalService? _agentApprovalService;
+    private LaunchMe.Core.Agent.AgentHookServer? _agentHookServer;
+    private LaunchMe.Core.Agent.MochiController? _mochiController;
+    private LaunchMe.Core.Agent.DiffParserService? _diffParserService;
     private bool _shuttingDown;
 
     public App()
@@ -112,7 +116,21 @@ public partial class App : Application
         var dockSpaceService = new LaunchMe.Core.Dock.DockSpaceService();
         var ambientSoundService = new LaunchMe.Core.Dock.AmbientSoundService();
 
-        _notchViewModel = new NotchViewModel(notchWindowService, pocketService, _mediaSession, _clipboardMonitor);
+        // Phase 6 Mochi Character & AI Agent Cockpit
+        _agentApprovalService = new LaunchMe.Core.Agent.AgentApprovalService();
+        _diffParserService = new LaunchMe.Core.Agent.DiffParserService();
+        _mochiController = new LaunchMe.Core.Agent.MochiController();
+        _agentHookServer = new LaunchMe.Core.Agent.AgentHookServer(_agentApprovalService);
+        _agentHookServer.Start();
+
+        _notchViewModel = new NotchViewModel(
+            notchWindowService,
+            pocketService,
+            _mediaSession,
+            _clipboardMonitor,
+            _mochiController,
+            _agentApprovalService,
+            _diffParserService);
         _dockViewModel = new DockViewModel(dockShellService, dockSpaceService, _systemMetrics, ambientSoundService, appLauncher);
         _musicPlayerViewModel = new MusicPlayerViewModel(_mediaSession);
 
@@ -300,6 +318,10 @@ public partial class App : Application
 
         _windowTracker?.Dispose();
         _windowTracker = null;
+
+        _agentHookServer?.Stop();
+        _agentHookServer?.Dispose();
+        _agentHookServer = null;
 
         if (_triggerService != null)
         {

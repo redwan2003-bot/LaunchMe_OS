@@ -348,6 +348,46 @@ public static class Program
                 throw new InvalidOperationException("Smoke test failed: TiledDropPreviewService Pause-on-Hide violated.");
             }
 
+            // Phase 6 Smoke Validations: Mochi Character & Agent Approval Cockpit
+            var smokeApprovalService = new LaunchMe.Core.Agent.AgentApprovalService();
+            var smokeDiffParser = new LaunchMe.Core.Agent.DiffParserService();
+            var smokeMochi = new LaunchMe.Core.Agent.MochiController();
+
+            smokeMochi.Poke();
+            if (smokeMochi.CurrentMood != LaunchMe.Contracts.Agent.MochiMood.Poked)
+            {
+                throw new InvalidOperationException("Smoke test failed: MochiController Poke failed.");
+            }
+
+            var smokeApprovalReq = new LaunchMe.Contracts.Agent.AgentApprovalRequest(
+                "smoke-req-1",
+                "Claude Code",
+                "Bash",
+                "echo smoke",
+                "+smoke\n-old",
+                LaunchMe.Contracts.Agent.ApprovalRiskLevel.Safe,
+                null,
+                DateTime.UtcNow);
+
+            var smokeTask = smokeApprovalService.RequestApprovalAsync(smokeApprovalReq);
+            if (smokeApprovalService.GetPendingRequests().Count != 1)
+            {
+                throw new InvalidOperationException("Smoke test failed: AgentApprovalService failed to queue request.");
+            }
+
+            smokeApprovalService.SubmitDecisionAsync("smoke-req-1", LaunchMe.Contracts.Agent.ApprovalAction.Allowed).GetAwaiter().GetResult();
+            var smokeDecision = smokeTask.GetAwaiter().GetResult();
+            if (smokeDecision.Action != LaunchMe.Contracts.Agent.ApprovalAction.Allowed)
+            {
+                throw new InvalidOperationException("Smoke test failed: AgentApprovalService failed to resolve decision.");
+            }
+
+            var smokeDiff = smokeDiffParser.Parse("+line1\n-line2");
+            if (smokeDiff.Files.Count == 0)
+            {
+                throw new InvalidOperationException("Smoke test failed: DiffParserService failed to parse diff.");
+            }
+
             Console.WriteLine("SMOKE_TEST_OK");
         }
         finally

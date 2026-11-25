@@ -35,7 +35,7 @@
                                    FontSize="11" Foreground="#E2E8F0" FontWeight="SemiBold" VerticalAlignment="Center" />
                     </StackPanel>
 
-                    <!-- Center Pill: Now Playing & Timer -->
+                    <!-- Center Pill: Now Playing, Mochi & Timer -->
                     <Button Grid.Column="1"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
@@ -44,9 +44,10 @@
                             Padding="8,2"
                             Command="{x:Bind ViewModel.ToggleExpandCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <FontIcon Glyph="&#xE8D6;" FontSize="12" Foreground="#F472B6" />
+                            <TextBlock Text="{x:Bind ViewModel.Mochi.MoodEmoji, Mode=OneWay}"
+                                       FontSize="11" Foreground="#FB7185" FontWeight="Bold" />
                             <TextBlock Text="{x:Bind ViewModel.NowPlayingTitle, Mode=OneWay}"
-                                       FontSize="11" Foreground="White" FontWeight="Bold" MaxWidth="160" TextTrimming="CharacterEllipsis" />
+                                       FontSize="11" Foreground="White" FontWeight="Bold" MaxWidth="140" TextTrimming="CharacterEllipsis" />
                             <TextBlock Text="•" FontSize="10" Foreground="#64748B" />
                             <TextBlock Text="{x:Bind ViewModel.TimerDisplay, Mode=OneWay}"
                                        FontSize="11" Foreground="#FBBF24" FontWeight="SemiBold" />
@@ -70,27 +71,47 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <!-- Pomodoro Controls -->
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12" Margin="0,4,0,8">
+                    <!-- Pomodoro Controls & Mochi Mood -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10" Margin="0,4,0,8">
+                        <Button Content="Poke Mochi" FontSize="11" Padding="8,4" Command="{x:Bind ViewModel.Mochi.PokeCommand}" />
                         <Button Content="Start 25m" FontSize="11" Padding="8,4" Command="{x:Bind ViewModel.StartTimerCommand}" />
                         <Button Content="Pause" FontSize="11" Padding="8,4" Command="{x:Bind ViewModel.PauseTimerCommand}" />
                         <Button Content="Reset" FontSize="11" Padding="8,4" Command="{x:Bind ViewModel.ResetTimerCommand}" />
                     </StackPanel>
 
-                    <!-- Pocket Shelf & Nearby Share Drop Zone -->
+                    <!-- Pocket Shelf & AI Agent Approval Zone -->
                     <Grid Grid.Row="1" Margin="4,0" Background="#331E293B" CornerRadius="8" Padding="8">
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
-                        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Left" Spacing="6" Margin="0,0,0,4">
+                        <!-- Agent Approval Required Banner -->
+                        <Grid Grid.Row="0" Margin="0,0,0,6" Background="#33F59E0B" CornerRadius="6" Padding="6"
+                              Visibility="{x:Bind ViewModel.Approvals.ApprovalCardVisibility, Mode=OneWay}">
+                            <StackPanel Spacing="4">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE7BA;" FontSize="11" Foreground="#F59E0B" />
+                                    <TextBlock Text="Agent Permission Approval" FontSize="10" FontWeight="Bold" Foreground="#F59E0B" />
+                                </StackPanel>
+                                <TextBlock Text="{x:Bind ViewModel.Approvals.ActiveRequest.CommandOrAction, Mode=OneWay}"
+                                           FontSize="10" Foreground="#E2E8F0" TextWrapping="Wrap" MaxHeight="40" />
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Button Content="Allow" FontSize="9" Padding="6,2" Background="#16A34A" Foreground="White" Command="{x:Bind ViewModel.Approvals.ApproveCommand}" />
+                                    <Button Content="Deny" FontSize="9" Padding="6,2" Background="#DC2626" Foreground="White" Command="{x:Bind ViewModel.Approvals.DenyCommand}" />
+                                    <Button Content="Always Allow" FontSize="9" Padding="6,2" Command="{x:Bind ViewModel.Approvals.RememberRuleCommand}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" Spacing="6" Margin="0,0,0,4">
                             <FontIcon Glyph="&#xE8B7;" FontSize="11" Foreground="#A78BFA" />
                             <TextBlock Text="Pocket Shelf &amp; Share" FontSize="11" FontWeight="SemiBold" Foreground="#CBD5E1" />
                         </StackPanel>
 
                         <!-- Pocket Items List -->
-                        <ListView Grid.Row="1"
+                        <ListView Grid.Row="2"
                                   ItemsSource="{x:Bind ViewModel.PocketItems, Mode=OneWay}"
                                   SelectionMode="None">
                             <ListView.ItemTemplate>

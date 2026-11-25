@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="#build--test-status"><img src="https://img.shields.io/badge/build-passing-brightgreen?style=for-the-badge&logo=dotnet" alt="Build Status"/></a>
-  <a href="#test-coverage"><img src="https://img.shields.io/badge/tests-420%2F420%20passing-success?style=for-the-badge&logo=xunit" alt="Test Coverage"/></a>
+  <a href="#test-coverage"><img src="https://img.shields.io/badge/tests-436%2F436%20passing-success?style=for-the-badge&logo=xunit" alt="Test Coverage"/></a>
   <a href="#tech-stack"><img src="https://img.shields.io/badge/target-.NET%209%20%7C%20WinUI%203-blue?style=for-the-badge&logo=windows11" alt="Target Framework"/></a>
   <a href="#security-architecture--vulnerability-defenses"><img src="https://img.shields.io/badge/security-hardened%20%26%20verified-success?style=for-the-badge&logo=securityscorecard" alt="Security Verified"/></a>
   <a href="#architecture-guardrails"><img src="https://img.shields.io/badge/telemetry-strictly%20zero-critical?style=for-the-badge&logo=shield" alt="Zero Telemetry"/></a>
@@ -59,9 +59,11 @@ flowchart TD
         IApp["IAppIndexer & IAppLauncherService"]
         IClip["IClipboardMonitor & IClipboardWriter"]
         ITiling["ITilingEngine & IWindowRuleService & IFocusBorderService & ITiledDropPreviewService"]
+        IAgent["IAgentApprovalService & IMochiController & IDiffParserService"]
     end
 
     subgraph Core_Layer ["Core Engine (LaunchMe.Core)"]
+        AgentCore["AgentApprovalService, AgentHookServer, DiffParserService & MochiController"]
         TilingCore["BSPTree, DwindleLayout, SlotMemory, WindowRuleService & TilingEngine"]
         Sqlite["SqliteSpaceStore, SpaceSchedulerService & SpaceLayoutSerializer"]
         Pocket["PocketService (Local JSON Shelf + File Validation)"]
@@ -114,13 +116,13 @@ LaunchMe OS/
 │   └── PRD_LAUNCHME_WINDOWS.md
 ├── src/
 │   ├── LaunchMe.Contracts/         # Frozen interfaces & DTOs (Zero drift)
-│   ├── LaunchMe.Core/              # BSP Tree, DwindleLayout, SlotMemory, WindowRules, SQLite, Themes, Wallpapers
+│   ├── LaunchMe.Core/              # Agent Approvals, Mochi, DiffParser, BSP Tiling, SQLite, Themes, Wallpapers
 │   ├── LaunchMe.Platform.Win32/    # WinEvent Hooks, DeferWindowPos, Raw Input, AppBar, Notch exclusion, GSMTC, Hotkeys
-│   └── LaunchMe.UI/                # WinUI 3 EXE, Dynamic Notch, Dock, Music Player, Launcher, Focus Border, 11 Widgets
+│   └── LaunchMe.UI/                # WinUI 3 EXE, Dynamic Notch (Mochi + Approvals), Dock, Music Player, Launcher, 11 Widgets
 └── tests/
-    ├── LaunchMe.Core.Tests/        # 205 Unit Tests (BSPTree, Dwindle, SlotMemory, WindowRules, Pocket, Spaces)
+    ├── LaunchMe.Core.Tests/        # 215 Unit Tests (Agent Approvals, Mochi, DiffParser, BSPTree, Dwindle, Spaces)
     ├── LaunchMe.Platform.Tests/    # 117 Unit Tests (Tiling Dispatcher, Window Tracker, Touchpad, AppBar, GSMTC)
-    └── LaunchMe.UI.Tests/          # 98 Unit Tests (FocusBorder, DropPreview, NotchVM, DockVM, MusicPlayerVM, Widgets)
+    └── LaunchMe.UI.Tests/          # 104 Unit Tests (MochiVM, ApprovalNotificationVM, FocusBorder, NotchVM, DockVM)
 ```
 
 ---
@@ -214,7 +216,7 @@ dotnet build LaunchMeWin.sln -warnaserror
 dotnet run --project src\LaunchMe.UI\LaunchMe.UI.csproj
 ```
 
-### Run the Full Test Suite (420 Tests)
+### Run the Full Test Suite (436 Tests)
 ```powershell
 dotnet test LaunchMeWin.sln --no-build
 ```
@@ -224,6 +226,12 @@ dotnet test LaunchMeWin.sln --no-build
 ## Daily Update Log
 
 ### 2026-11-25
+- **Phase 6 Mochi Notch Character & AI Agent Cockpit Milestone Completed (from Coucou):**
+  - **Mochi Emotional Engine (`MochiController.cs` / `MochiCharacterViewModel.cs`):** Interactive notch companion with animated emotional states (`Idle`, `Listening`, `Thinking`, `Poked`, `Dizzy`, `Sleeping`, `Dancing`, `Alert`), poke mechanics, and physics-driven pupil tracking responding to cursor coordinates.
+  - **Agent Approval Service & Hook Server (`AgentApprovalService.cs` / `AgentHookServer.cs`):** Local HTTP loopback IPC server listening on port `49152` for CLI agent events (Claude Code, Antigravity, local agents) with thread-safe asynchronous completion queues and auto-approval regex rule persistence.
+  - **Unified Git Diff Engine (`DiffParserService.cs`):** High-fidelity parser colorizing additions, deletions, chunk headers, and context lines for inline notch file reviews.
+  - **Interactive Notch Cockpit Integration (`NotchWindow.xaml` / `ApprovalNotificationViewModel.cs`):** Notch center pill hosts live Mochi mood indicator and pending approval alert banner; expanded drawer provides Allow, Deny, and Always Allow controls without context switching away from active tasks.
+  - **Full Quality Audit & Smoke Test:** All projects compiled cleanly under `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>` (**0 Warnings, 0 Errors**), full test suite passing at **436 / 436 unit tests** (Core: 215, Platform: 117, UI: 104), zero stubs, zero CVEs, and live smoke test passing (`SMOKE_TEST_OK`).
 - **Phase 5 HyprWin Dynamic Tiling Milestone Completed (Coucou & HyprMac Integration):**
   - **Dwindle Spiral Tiling Engine (`BSPTree.cs` / `BSPNode.cs` / `DwindleLayout.cs`):** Mathematical binary space partitioning tree recursively partitioning the screen area along the longest dimension of the active window with golden-ratio split clamping (`[0.15, 0.85]`).
   - **Slot Memory (`SlotMemory.cs`):** Persistent layout restoration remembering partner window, side, axis, and ratio so minimized, hidden, or space-switched windows slide seamlessly back into their original slot upon unminimizing.

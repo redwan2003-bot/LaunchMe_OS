@@ -2,9 +2,11 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using LaunchMe.Contracts.Agent;
 using LaunchMe.Contracts.Clipboard;
 using LaunchMe.Contracts.Media;
 using LaunchMe.Contracts.Notch;
+using LaunchMe.UI.Agent;
 
 namespace LaunchMe.UI.ViewModels;
 
@@ -124,6 +126,9 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<PocketItem> PocketItems { get; } = [];
     public ObservableCollection<ClipboardEntry> RecentClipboardCards { get; } = [];
 
+    public MochiCharacterViewModel Mochi { get; }
+    public ApprovalNotificationViewModel Approvals { get; }
+
     public ICommand ToggleExpandCommand { get; }
     public ICommand StartTimerCommand { get; }
     public ICommand PauseTimerCommand { get; }
@@ -135,12 +140,28 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
         INotchWindowService? notchWindowService = null,
         IPocketService? pocketService = null,
         IMediaSessionService? mediaService = null,
-        IClipboardMonitor? clipboardMonitor = null)
+        IClipboardMonitor? clipboardMonitor = null,
+        IMochiController? mochiController = null,
+        IAgentApprovalService? approvalService = null,
+        IDiffParserService? diffParser = null)
     {
         _notchWindowService = notchWindowService;
         _pocketService = pocketService;
         _mediaService = mediaService;
         _clipboardMonitor = clipboardMonitor;
+
+        Mochi = new MochiCharacterViewModel(mochiController ?? new LaunchMe.Core.Agent.MochiController());
+        Approvals = new ApprovalNotificationViewModel(
+            approvalService ?? new LaunchMe.Core.Agent.AgentApprovalService(),
+            diffParser ?? new LaunchMe.Core.Agent.DiffParserService());
+
+        Approvals.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ApprovalNotificationViewModel.HasPendingApproval) && Approvals.HasPendingApproval)
+            {
+                Mochi.SetMood(MochiMood.Alert);
+            }
+        };
 
         ToggleExpandCommand = new RelayCommand(ToggleExpand);
         StartTimerCommand = new RelayCommand(() => StartTimer(25));
