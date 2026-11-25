@@ -11,5 +11,10 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <RollForward>LatestMajor</RollForward>
     <WindowsAppSDKBootstrapInitialize>false</WindowsAppSDKBootstrapInitialize>
+    <!-- Resource & Performance Optimizations -->
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <TieredCompilation>true</TieredCompilation>
+    <TieredCompilationQuickJit>true</TieredCompilationQuickJit>
+    <TieredCompilationQuickJitForLoops>true</TieredCompilationQuickJitForLoops>
   </PropertyGroup>
 </Project>

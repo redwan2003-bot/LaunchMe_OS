@@ -45,7 +45,7 @@ public class ApprovalNotificationViewModelTests
     }
 
     [Fact]
-    public void ApproveCommand_ResolvesRequest_And_HidesCard()
+    public async Task ApproveCommand_ResolvesRequest_And_HidesCard()
     {
         var approvalService = new AgentApprovalService();
         var diffParser = new DiffParserService();
@@ -65,7 +65,8 @@ public class ApprovalNotificationViewModelTests
 
         vm.ApproveCommand.Execute(null);
 
-        task.IsCompletedSuccessfully.Should().BeTrue();
+        var decision = await task;
+        decision.Action.Should().Be(ApprovalAction.Allowed);
         vm.HasPendingApproval.Should().BeFalse();
         vm.ApprovalCardVisibility.Should().Be(Microsoft.UI.Xaml.Visibility.Collapsed);
     }

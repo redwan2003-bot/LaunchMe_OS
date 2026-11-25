@@ -55,6 +55,11 @@ public partial class App : Application
     private LaunchMe.Core.Agent.AgentHookServer? _agentHookServer;
     private LaunchMe.Core.Agent.MochiController? _mochiController;
     private LaunchMe.Core.Agent.DiffParserService? _diffParserService;
+    private LaunchMe.Platform.Win32.Voice.Win32KeystrokeInjector? _keystrokeInjector;
+    private LaunchMe.Core.Voice.FlowDictationService? _flowDictationService;
+    private LaunchMe.UI.Voice.FlowPillViewModel? _flowPillViewModel;
+    private LaunchMe.Core.Sync.PhoneLinkService? _phoneLinkService;
+    private LaunchMe.UI.Sync.PhoneLinkViewModel? _phoneLinkViewModel;
     private bool _shuttingDown;
 
     public App()
@@ -122,6 +127,15 @@ public partial class App : Application
         _mochiController = new LaunchMe.Core.Agent.MochiController();
         _agentHookServer = new LaunchMe.Core.Agent.AgentHookServer(_agentApprovalService);
         _agentHookServer.Start();
+
+        // Phase 7 Flow Voice Dictation & Audio Waveform Pill
+        _keystrokeInjector = new LaunchMe.Platform.Win32.Voice.Win32KeystrokeInjector(clipboardWriter);
+        _flowDictationService = new LaunchMe.Core.Voice.FlowDictationService(_keystrokeInjector);
+        _flowPillViewModel = new LaunchMe.UI.Voice.FlowPillViewModel(_flowDictationService);
+
+        // Phase 8 Cross-Device Phone Link & Remote Relay
+        _phoneLinkService = new LaunchMe.Core.Sync.PhoneLinkService(_agentApprovalService);
+        _phoneLinkViewModel = new LaunchMe.UI.Sync.PhoneLinkViewModel(_phoneLinkService);
 
         _notchViewModel = new NotchViewModel(
             notchWindowService,
@@ -322,6 +336,15 @@ public partial class App : Application
         _agentHookServer?.Stop();
         _agentHookServer?.Dispose();
         _agentHookServer = null;
+
+        _flowPillViewModel?.Dispose();
+        _flowPillViewModel = null;
+
+        _flowDictationService?.Dispose();
+        _flowDictationService = null;
+
+        _phoneLinkService?.Dispose();
+        _phoneLinkService = null;
 
         if (_triggerService != null)
         {

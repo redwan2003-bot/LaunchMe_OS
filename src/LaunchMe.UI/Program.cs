@@ -388,6 +388,52 @@ public static class Program
                 throw new InvalidOperationException("Smoke test failed: DiffParserService failed to parse diff.");
             }
 
+            // Phase 7 Smoke Validations: Flow Voice Dictation & Audio Pill
+            var smokeInjector = new LaunchMe.Platform.Win32.Voice.Win32KeystrokeInjector();
+            var smokeDictation = new LaunchMe.Core.Voice.FlowDictationService(smokeInjector);
+            using var smokePillVm = new LaunchMe.UI.Voice.FlowPillViewModel(smokeDictation);
+
+            smokeDictation.StartDictation();
+            if (!smokePillVm.IsListening || smokePillVm.PillVisibility != Microsoft.UI.Xaml.Visibility.Visible)
+            {
+                throw new InvalidOperationException("Smoke test failed: FlowPill failed to activate.");
+            }
+
+            smokeDictation.FeedAudioLevels(new float[9]);
+            smokeDictation.FeedSpeechHypothesis("um hello world", isFinal: true);
+            if (smokePillVm.LastTranscript != "Hello world")
+            {
+                throw new InvalidOperationException("Smoke test failed: FlowDictation transcript cleanup failed.");
+            }
+
+            smokeDictation.StopDictation();
+            if (smokePillVm.IsListening || smokePillVm.PillVisibility != Microsoft.UI.Xaml.Visibility.Collapsed)
+            {
+                throw new InvalidOperationException("Smoke test failed: FlowPill Pause-on-Hide violated.");
+            }
+
+            // Phase 8 Smoke Validations: Cross-Device Phone Link & Crypto
+            using var smokePhoneLink = new LaunchMe.Core.Sync.PhoneLinkService();
+            var smokePhoneLinkVm = new LaunchMe.UI.Sync.PhoneLinkViewModel(smokePhoneLink);
+
+            string smokePin = smokePhoneLink.StartPairingSessionAsync("SmokeDevice").GetAwaiter().GetResult();
+            if (smokePin.Length != 6)
+            {
+                throw new InvalidOperationException("Smoke test failed: PhoneLink PIN generation failed.");
+            }
+
+            bool smokePairSuccess = smokePhoneLink.CompletePairingAsync(smokePin, "dev-smoke-1", "SmokePhone", "Android").GetAwaiter().GetResult();
+            if (!smokePairSuccess || smokePhoneLink.GetPairedDevices().Count != 1)
+            {
+                throw new InvalidOperationException("Smoke test failed: PhoneLink pairing failed.");
+            }
+
+            smokePhoneLink.UnpairDevice("dev-smoke-1");
+            if (smokePhoneLink.GetPairedDevices().Count != 0)
+            {
+                throw new InvalidOperationException("Smoke test failed: PhoneLink unpair failed.");
+            }
+
             Console.WriteLine("SMOKE_TEST_OK");
         }
         finally
