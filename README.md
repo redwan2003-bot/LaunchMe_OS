@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="#build--test-status"><img src="https://img.shields.io/badge/build-passing-brightgreen?style=for-the-badge&logo=dotnet" alt="Build Status"/></a>
-  <a href="#test-coverage"><img src="https://img.shields.io/badge/tests-393%2F393%20passing-success?style=for-the-badge&logo=xunit" alt="Test Coverage"/></a>
+  <a href="#test-coverage"><img src="https://img.shields.io/badge/tests-420%2F420%20passing-success?style=for-the-badge&logo=xunit" alt="Test Coverage"/></a>
   <a href="#tech-stack"><img src="https://img.shields.io/badge/target-.NET%209%20%7C%20WinUI%203-blue?style=for-the-badge&logo=windows11" alt="Target Framework"/></a>
   <a href="#security-architecture--vulnerability-defenses"><img src="https://img.shields.io/badge/security-hardened%20%26%20verified-success?style=for-the-badge&logo=securityscorecard" alt="Security Verified"/></a>
   <a href="#architecture-guardrails"><img src="https://img.shields.io/badge/telemetry-strictly%20zero-critical?style=for-the-badge&logo=shield" alt="Zero Telemetry"/></a>
@@ -22,13 +22,14 @@
 
 ## Overview
 
-**LaunchMe-Win** is an ultra-fast, local-first Windows 11 workspace manager crafted in **C# 13, .NET 9, WinUI 3, Win2D, and CsWin32**. It replicates the fluid ergonomics, design fidelity, and keyboard-centric workflows of LaunchMe v3.01.0 (macOS) across four synchronized native surfaces: the **Full-Screen Launcher**, the **Dynamic Notch HUD**, the **Multi-Display Dock**, and the **Full-Screen Music Player**.
+**LaunchMe-Win** is an ultra-fast, local-first Windows 11 workspace manager crafted in **C# 13, .NET 9, WinUI 3, Win2D, and CsWin32**. It combines the fluid ergonomics, design fidelity, and keyboard-centric workflows of LaunchMe v3.01.0 (macOS) with the power of Hyprland dynamic tiling window management (**HyprWin**) across five synchronized native surfaces: the **Full-Screen Launcher**, the **Dynamic Notch HUD**, the **Multi-Display Dock**, the **Full-Screen Music Player**, and the **HyprWin Dynamic Tiling Engine**.
 
-### The Four UI Surfaces
+### The Five Core Surfaces & Engines
 1. **Full-Screen Launcher Grid:** Self-contained WinUI 3 application summoned via `Alt+Space`, configurable Hot Corners (`WH_MOUSE_LL` 150ms dwell), or 3/4/5-finger Precision Touchpad pinch. Hosts Classic View & Free Layout grids, Unified Search, Categories, Folders, and live Acrylic Liquid Glass.
 2. **Dynamic Notch (`NotchWindow.xaml`):** Top-center status HUD excluded from screen capture (`WDA_EXCLUDEFROMCAPTURE`) and automatically hidden during 3D fullscreen games (`SHQueryUserNotificationState`). Features live weather, now-playing music, battery, focus status, Pomodoro countdown, and an expandable drawer with **Pocket** temporary file shelf and Windows Nearby Share drop zones.
 3. **Multi-Display Dock (`DockWindow.xaml`):** Desktop dock with Win32 `SHAppBarMessage` work-area reservation or floating mode, per-monitor Dock Spaces, live System Stats mini-gauge, Ambient Sound soundscape generator (`Rain`, `OceanWaves`, `Forest`, `WhiteNoise`, `CafeStream`), and Wallpaper Engine concentric ring styling.
 4. **Full-Screen Music Player (`MusicPlayerWindow.xaml`):** Immersive media interface integrating Windows GSMTC with 4 visualizer modes: *Vinyl* (rotating record + grooves), *FullScreenArt* (blurred animated cover art), *Particles*, and *GlowingBeats*, strictly adhering to the Pause-on-Hide GPU Law.
+5. **HyprWin Dynamic Tiling Engine:** Automatic Binary Space Partitioning (BSP) window manager featuring Hyprland's **Dwindle spiral layout**, **Slot Memory** (minimized/hidden windows seamlessly snap back to their exact split upon unminimizing), atomic Win32 `DeferWindowPos` multi-window batching, live Win2D focus glow borders, acrylic ghost drop previews, and regex window rules.
 
 ---
 
@@ -57,9 +58,11 @@ flowchart TD
         ISearch["IFileSearchService & ICalculatorService & IEmojiService"]
         IApp["IAppIndexer & IAppLauncherService"]
         IClip["IClipboardMonitor & IClipboardWriter"]
+        ITiling["ITilingEngine & IWindowRuleService & IFocusBorderService & ITiledDropPreviewService"]
     end
 
     subgraph Core_Layer ["Core Engine (LaunchMe.Core)"]
+        TilingCore["BSPTree, DwindleLayout, SlotMemory, WindowRuleService & TilingEngine"]
         Sqlite["SqliteSpaceStore, SpaceSchedulerService & SpaceLayoutSerializer"]
         Pocket["PocketService (Local JSON Shelf + File Validation)"]
         DockSpace["DockSpaceService (Per-Display Active Space Cycling)"]
@@ -72,6 +75,7 @@ flowchart TD
     end
 
     subgraph Platform_Layer ["Native Interop (LaunchMe.Platform.Win32)"]
+        TilingWin["Win32WindowTracker (SetWinEventHook) & Win32TilingDispatcher (DeferWindowPos)"]
         Touchpad["Win32TouchpadService & TouchpadGestureParser (HID Digitizer 3/4/5-Finger Pinch/Spread)"]
         AppBar["DockShellService (SHAppBarMessage ABM_NEW / SETPOS + Multi-Monitor Enum)"]
         NotchWin["NotchWindowService (WDA_EXCLUDEFROMCAPTURE + DirectX Fullscreen Check)"]
@@ -110,13 +114,13 @@ LaunchMe OS/
 │   └── PRD_LAUNCHME_WINDOWS.md
 ├── src/
 │   ├── LaunchMe.Contracts/         # Frozen interfaces & DTOs (Zero drift)
-│   ├── LaunchMe.Core/              # SQLite, Pocket, DockSpaces, AmbientSound, RingProcessor, Themes, Wallpapers
-│   ├── LaunchMe.Platform.Win32/    # Touchpad Raw Input, AppBar, Notch exclusion, GSMTC, Hotkeys, Hooks, Metrics
-│   └── LaunchMe.UI/                # WinUI 3 EXE, Dynamic Notch, Dock, Music Player, Launcher, 11 Widgets
+│   ├── LaunchMe.Core/              # BSP Tree, DwindleLayout, SlotMemory, WindowRules, SQLite, Themes, Wallpapers
+│   ├── LaunchMe.Platform.Win32/    # WinEvent Hooks, DeferWindowPos, Raw Input, AppBar, Notch exclusion, GSMTC, Hotkeys
+│   └── LaunchMe.UI/                # WinUI 3 EXE, Dynamic Notch, Dock, Music Player, Launcher, Focus Border, 11 Widgets
 └── tests/
-    ├── LaunchMe.Core.Tests/        # 192 Unit Tests (Pocket, DockSpaces, AmbientSound, Rings, Spaces, Security)
-    ├── LaunchMe.Platform.Tests/    # 111 Unit Tests (Touchpad Pinch/Spread, AppBar, GSMTC, Hotkeys, Metrics)
-    └── LaunchMe.UI.Tests/          # 90 Unit Tests (NotchVM, DockVM, MusicPlayerVM, LauncherVM, 11 Widgets)
+    ├── LaunchMe.Core.Tests/        # 205 Unit Tests (BSPTree, Dwindle, SlotMemory, WindowRules, Pocket, Spaces)
+    ├── LaunchMe.Platform.Tests/    # 117 Unit Tests (Tiling Dispatcher, Window Tracker, Touchpad, AppBar, GSMTC)
+    └── LaunchMe.UI.Tests/          # 98 Unit Tests (FocusBorder, DropPreview, NotchVM, DockVM, MusicPlayerVM, Widgets)
 ```
 
 ---
@@ -210,7 +214,7 @@ dotnet build LaunchMeWin.sln -warnaserror
 dotnet run --project src\LaunchMe.UI\LaunchMe.UI.csproj
 ```
 
-### Run the Full Test Suite (393 Tests)
+### Run the Full Test Suite (420 Tests)
 ```powershell
 dotnet test LaunchMeWin.sln --no-build
 ```
@@ -220,6 +224,14 @@ dotnet test LaunchMeWin.sln --no-build
 ## Daily Update Log
 
 ### 2026-11-25
+- **Phase 5 HyprWin Dynamic Tiling Milestone Completed (Coucou & HyprMac Integration):**
+  - **Dwindle Spiral Tiling Engine (`BSPTree.cs` / `BSPNode.cs` / `DwindleLayout.cs`):** Mathematical binary space partitioning tree recursively partitioning the screen area along the longest dimension of the active window with golden-ratio split clamping (`[0.15, 0.85]`).
+  - **Slot Memory (`SlotMemory.cs`):** Persistent layout restoration remembering partner window, side, axis, and ratio so minimized, hidden, or space-switched windows slide seamlessly back into their original slot upon unminimizing.
+  - **Window Rules Engine (`WindowRuleService.cs`):** Process name and window title regex matching for automatic floating exceptions (Calculator, Settings, 1Password, Save/Open dialogs) and workspace affinity routing.
+  - **Win32 Lifecycle Tracker (`Win32WindowTracker.cs`):** Low-level `SetWinEventHook` monitoring `EVENT_OBJECT_CREATE`, `EVENT_OBJECT_DESTROY`, `EVENT_OBJECT_SHOW`, `EVENT_OBJECT_HIDE`, and `EVENT_SYSTEM_FOREGROUND`, filtering out cloaked background UWP apps (`DwmGetWindowAttribute(DWMWA_CLOAKED)`), tooltips, and taskbar popups.
+  - **Atomic Multi-Window Dispatcher (`Win32TilingDispatcher.cs`):** Batches window moves via Win32 `BeginDeferWindowPos`, `DeferWindowPos`, and `EndDeferWindowPos` in a single V-Sync frame with zero visual tearing or stutter.
+  - **UI Focus Adornments (`FocusBorderService.cs` / `TiledDropPreviewService.cs`):** Active window glow border and semi-transparent acrylic drag-and-tile ghost preview adhering strictly to the Pause-on-Hide GPU Law.
+  - **Full Test Suite & Smoke Verification:** All projects compiled cleanly under `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>` (**0 Warnings, 0 Errors**), full test suite passing at **420 / 420 unit tests** (Core: 205, Platform: 117, UI: 98), zero stubs, zero CVEs, and live smoke test passing (`SMOKE_TEST_OK`).
 - **Phase 4 Parity Milestone Completed (The Final Parity Phase):**
   - **Dynamic Notch (`NotchWindow.xaml` / `NotchViewModel.cs` / `NotchWindowService.cs`):** Top-center HUD pill, screen capture exclusion (`WDA_EXCLUDEFROMCAPTURE`), DirectX fullscreen game auto-hide (`SHQueryUserNotificationState`), Pomodoro countdown timer, and Pocket multi-file drop shelf (`PocketService.cs`).
   - **Multi-Display Dock (`DockWindow.xaml` / `DockViewModel.cs` / `DockShellService.cs` / `DockSpaceService.cs`):** Win32 `SHAppBarMessage` work-area reservation and floating mode toggle, multi-monitor Dock Spaces navigation, System Stats mini-gauge, Ambient Sound soundscape generator (`Rain`, `Waves`, `Forest`, `WhiteNoise`, `CafeStream`), and Wallpaper Engine ring styling (`RingImageProcessor.cs`).

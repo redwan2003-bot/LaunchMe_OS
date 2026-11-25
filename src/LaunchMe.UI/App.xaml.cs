@@ -45,6 +45,12 @@ public partial class App : Application
     private DockViewModel? _dockViewModel;
     private MusicPlayerViewModel? _musicPlayerViewModel;
     private IAppIndexer? _appIndexer;
+    private LaunchMe.Core.Tiling.TilingEngine? _tilingEngine;
+    private LaunchMe.Core.Tiling.WindowRuleService? _windowRuleService;
+    private LaunchMe.Platform.Win32.Tiling.Win32TilingDispatcher? _tilingDispatcher;
+    private LaunchMe.UI.Tiling.FocusBorderService? _focusBorderService;
+    private LaunchMe.UI.Tiling.TiledDropPreviewService? _dropPreviewService;
+    private LaunchMe.Platform.Win32.Tiling.Win32WindowTracker? _windowTracker;
     private bool _shuttingDown;
 
     public App()
@@ -109,6 +115,19 @@ public partial class App : Application
         _notchViewModel = new NotchViewModel(notchWindowService, pocketService, _mediaSession, _clipboardMonitor);
         _dockViewModel = new DockViewModel(dockShellService, dockSpaceService, _systemMetrics, ambientSoundService, appLauncher);
         _musicPlayerViewModel = new MusicPlayerViewModel(_mediaSession);
+
+        // Phase 5 HyprWin Dynamic Tiling Engine
+        _tilingEngine = new LaunchMe.Core.Tiling.TilingEngine();
+        _windowRuleService = new LaunchMe.Core.Tiling.WindowRuleService();
+        _tilingDispatcher = new LaunchMe.Platform.Win32.Tiling.Win32TilingDispatcher();
+        _focusBorderService = new LaunchMe.UI.Tiling.FocusBorderService();
+        _dropPreviewService = new LaunchMe.UI.Tiling.TiledDropPreviewService();
+        _windowTracker = new LaunchMe.Platform.Win32.Tiling.Win32WindowTracker(
+            _tilingEngine,
+            _windowRuleService,
+            _tilingDispatcher,
+            _focusBorderService);
+        _windowTracker.Start();
 
         // Global Hotkey (Alt+Space: modifiers = 1, vk = 0x20) + Hot Corners + Precision Touchpad Pinch
         _triggerService = new GestureAndTriggerService();
@@ -278,6 +297,9 @@ public partial class App : Application
 
         _musicPlayerViewModel?.Dispose();
         _musicPlayerViewModel = null;
+
+        _windowTracker?.Dispose();
+        _windowTracker = null;
 
         if (_triggerService != null)
         {

@@ -312,6 +312,42 @@ public static class Program
 
             gestureTrigger.EnableTouchpadPinch(3, true);
 
+            // Phase 5 Smoke Validations: HyprWin Dynamic Tiling Engine & Pause-on-Hide
+            var smokeTiling = new LaunchMe.Core.Tiling.TilingEngine();
+            var smokeRules = new LaunchMe.Core.Tiling.WindowRuleService();
+            var smokeDispatcher = new LaunchMe.Platform.Win32.Tiling.Win32TilingDispatcher();
+            var smokeBorder = new LaunchMe.UI.Tiling.FocusBorderService();
+            var smokePreview = new LaunchMe.UI.Tiling.TiledDropPreviewService();
+
+            smokeTiling.RegisterWindow(1001, "code", "Visual Studio Code", new LaunchMe.Contracts.Tiling.WindowRect(0, 0, 800, 600), 1);
+            var smokeLayout = smokeTiling.ComputeLayout("primary", new LaunchMe.Contracts.Tiling.WindowRect(0, 0, 1920, 1080), 1);
+            if (smokeLayout.Count != 1)
+            {
+                throw new InvalidOperationException("Smoke test failed: TilingEngine failed to compute layout.");
+            }
+
+            smokeBorder.AttachToWindow(1001, smokeLayout[0].TargetRect);
+            if (!smokeBorder.IsVisible)
+            {
+                throw new InvalidOperationException("Smoke test failed: FocusBorderService failed to attach.");
+            }
+            smokeBorder.HideBorder();
+            if (smokeBorder.IsVisible)
+            {
+                throw new InvalidOperationException("Smoke test failed: FocusBorderService Pause-on-Hide violated.");
+            }
+
+            smokePreview.ShowPreview(new LaunchMe.Contracts.Tiling.WindowRect(10, 10, 500, 500));
+            if (!smokePreview.IsVisible)
+            {
+                throw new InvalidOperationException("Smoke test failed: TiledDropPreviewService failed to show.");
+            }
+            smokePreview.HidePreview();
+            if (smokePreview.IsVisible)
+            {
+                throw new InvalidOperationException("Smoke test failed: TiledDropPreviewService Pause-on-Hide violated.");
+            }
+
             Console.WriteLine("SMOKE_TEST_OK");
         }
         finally
