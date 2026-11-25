@@ -17,6 +17,8 @@ public sealed record LiquidGlassResolution
     public required bool IsLiquidGlass { get; init; }
     public required bool IsTinted { get; init; }
     public required bool IsFlat { get; init; }
+    public double SpecularIntensity { get; init; } = 0.85;
+    public bool EnableGrain { get; init; } = true;
 }
 
 /// <summary>
@@ -24,8 +26,21 @@ public sealed record LiquidGlassResolution
 /// </summary>
 public static class LiquidGlassTintResolver
 {
+    public const double DefaultIntensity = 0.65;
+    public const double DefaultSpecularIntensity = 0.85;
+
     private static readonly ColorRgba ClearGlassBase = new(255, 255, 255, 30);
     private static readonly ColorRgba FlatClearBase = new(30, 30, 30, 220);
+
+    /// <summary>
+    /// Clamps <see cref="ThemeSettings.SpecularIntensity"/> to [0.0, 1.0], falling back to 0.85 if NaN.
+    /// </summary>
+    public static double ClampSpecularIntensity(double specularIntensity)
+    {
+        return double.IsNaN(specularIntensity)
+            ? DefaultSpecularIntensity
+            : Math.Clamp(specularIntensity, 0.0, 1.0);
+    }
 
     public static LiquidGlassResolution Resolve(ThemeSettings settings)
     {
@@ -33,7 +48,10 @@ public static class LiquidGlassTintResolver
 
         var isLiquidGlass = !settings.Style.Equals("Flat", StringComparison.OrdinalIgnoreCase);
         var isTinted = settings.Mode.Equals("Tinted", StringComparison.OrdinalIgnoreCase);
-        var clampedIntensity = Math.Clamp(settings.Intensity, 0.0, 1.0);
+        var clampedIntensity = double.IsNaN(settings.Intensity)
+            ? DefaultIntensity
+            : Math.Clamp(settings.Intensity, 0.0, 1.0);
+        var clampedSpecular = ClampSpecularIntensity(settings.SpecularIntensity);
 
         ColorRgba baseColor;
         if (isTinted)
@@ -73,7 +91,7 @@ public static class LiquidGlassTintResolver
             }
 
             // Liquid glass features specular edge highlight and gaussian blur
-            var borderAlpha = Math.Clamp(clampedIntensity * 0.40 + 0.10, 0.10, 0.50);
+            var borderAlpha = Math.Clamp(clampedIntensity * 0.40 + 0.10, 0.10, 0.50) * clampedSpecular;
             borderHighlight = new ColorRgba(255, 255, 255, (byte)Math.Round(borderAlpha * 255.0));
             innerShadow = new ColorRgba(0, 0, 0, (byte)Math.Round(clampedIntensity * 50.0));
             blurRadius = Math.Round(20.0 + clampedIntensity * 40.0, 1); // 20px - 60px blur
@@ -114,7 +132,9 @@ public static class LiquidGlassTintResolver
             RefractionIndex = refractionIndex,
             IsLiquidGlass = isLiquidGlass,
             IsTinted = isTinted,
-            IsFlat = !isLiquidGlass
+            IsFlat = !isLiquidGlass,
+            SpecularIntensity = clampedSpecular,
+            EnableGrain = settings.EnableGrain
         };
     }
 }

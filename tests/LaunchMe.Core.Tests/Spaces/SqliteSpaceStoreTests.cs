@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using LaunchMe.Contracts.Spaces;
 using LaunchMe.Core.Spaces;
+using LaunchMe.Core.Themes;
 using Xunit;
 
 namespace LaunchMe.Core.Tests.Spaces;
@@ -67,11 +68,41 @@ public sealed class SqliteSpaceStoreTests : IDisposable
             imported.Should().NotBeNull();
             imported.Name.Should().Be("Default Space");
             imported.SpaceId.Should().NotBe("default-space"); // gets fresh ID
+            imported.Theme.SpecularIntensity.Should().Be(0.85);
+            imported.Theme.EnableGrain.Should().BeTrue();
         }
         finally
         {
             if (File.Exists(exportZip)) File.Delete(exportZip);
         }
+    }
+
+    [Fact]
+    public async Task SaveSpace_And_ThemeEngineService_ClampSpecularIntensityAndPreserveEnableGrain()
+    {
+        var space = new SpaceModel
+        {
+            SpaceId = "luxury-space",
+            Name = "Editorial Luxury",
+            Theme = new ThemeSettings
+            {
+                SpecularIntensity = 2.4,
+                EnableGrain = false
+            }
+        };
+
+        await _store.SaveSpaceAsync(space);
+        await _store.SwitchSpaceAsync("luxury-space");
+
+        var loaded = await _store.GetActiveSpaceAsync();
+        loaded.Should().NotBeNull();
+        loaded!.Theme.SpecularIntensity.Should().Be(1.0);
+        loaded.Theme.EnableGrain.Should().BeFalse();
+
+        var themeEngine = new ThemeEngineService();
+        var resolved = themeEngine.ResolveTheme(new ThemeSettings { SpecularIntensity = -0.5 });
+        resolved.SpecularIntensity.Should().Be(0.0);
+        resolved.EnableGrain.Should().BeTrue();
     }
 
     public void Dispose()

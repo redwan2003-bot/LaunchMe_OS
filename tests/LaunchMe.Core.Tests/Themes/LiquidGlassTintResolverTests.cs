@@ -90,4 +90,26 @@ public sealed class LiquidGlassTintResolverTests
         resNegative.BlurRadius.Should().Be(20.0); // min blur
         resOver.BlurRadius.Should().Be(60.0);     // max blur
     }
+
+    [Fact]
+    public void Resolve_ClampsSpecularIntensityAndPreservesEnableGrain()
+    {
+        var defaultSettings = new ThemeSettings();
+        var zeroSpecular = new ThemeSettings { SpecularIntensity = -0.25, EnableGrain = false };
+        var overSpecular = new ThemeSettings { SpecularIntensity = 3.0 };
+
+        var resDefault = LiquidGlassTintResolver.Resolve(defaultSettings);
+        var resZero = LiquidGlassTintResolver.Resolve(zeroSpecular);
+        var resOver = LiquidGlassTintResolver.Resolve(overSpecular);
+
+        resDefault.SpecularIntensity.Should().Be(0.85);
+        resDefault.EnableGrain.Should().BeTrue();
+
+        resZero.SpecularIntensity.Should().Be(0.0);
+        resZero.EnableGrain.Should().BeFalse();
+        resZero.BorderHighlight.A.Should().Be(0);
+
+        resOver.SpecularIntensity.Should().Be(1.0);
+        resOver.EnableGrain.Should().BeTrue();
+    }
 }

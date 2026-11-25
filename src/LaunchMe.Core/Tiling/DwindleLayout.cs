@@ -3,7 +3,7 @@ using LaunchMe.Contracts.Tiling;
 namespace LaunchMe.Core.Tiling;
 
 /// <summary>
-/// Implements Hyprland's Dwindle spiral layout algorithm.
+/// Implements Squish's Dwindle spiral layout algorithm.
 /// </summary>
 public static class DwindleLayout
 {
