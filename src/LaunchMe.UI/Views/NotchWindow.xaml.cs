@@ -230,6 +230,27 @@ public sealed partial class NotchWindow : Window
         }
     }
 
+    private void DrawerWidgetSize_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is string id)
+        {
+            ViewModel.ToggleDrawerWidgetSize(id);
+        }
+    }
+
+    private void DrawerWidgetMoveUp_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is string id)
+        {
+            var widget = ViewModel.DrawerWidgets.FirstOrDefault(w => w.Id == id);
+            if (widget != null)
+            {
+                int idx = ViewModel.DrawerWidgets.IndexOf(widget);
+                if (idx > 0) ViewModel.MoveDrawerWidget(idx, idx - 1);
+            }
+        }
+    }
+
     private void ApplyToolWindowStyle()
     {
         const int GWL_EXSTYLE = -20;

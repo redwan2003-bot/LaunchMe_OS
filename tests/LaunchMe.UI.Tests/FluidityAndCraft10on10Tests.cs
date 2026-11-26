@@ -122,4 +122,28 @@ public sealed class FluidityAndCraft10on10Tests
         LaunchMe.UI.Services.ShowcaseCaptureService.IsShowcaseMode(["--capture-showcase"]).Should().BeTrue();
         LaunchMe.UI.Services.ShowcaseCaptureService.IsShowcaseMode(["--smoke-test"]).Should().BeFalse();
     }
+
+    [Fact]
+    public void App_DispatchDockToolBarAction_HandlesAllActionsAndBluetoothWatcherDisposesCleanly()
+    {
+        using var notch = new NotchViewModel();
+        var launched = new List<string>();
+        bool locked = false;
+
+        App.DispatchDockToolBarAction("focus", notch).Should().BeTrue();
+        notch.FocusModeActive.Should().BeTrue();
+
+        App.DispatchDockToolBarAction("screenshot", notch, t => launched.Add(t)).Should().BeTrue();
+        App.DispatchDockToolBarAction("terminal", notch, t => launched.Add(t)).Should().BeTrue();
+        App.DispatchDockToolBarAction("lock", notch, lockAction: () => locked = true).Should().BeTrue();
+        App.DispatchDockToolBarAction("unknown", notch).Should().BeFalse();
+
+        launched.Should().BeEquivalentTo(["ms-screenclip:", "wt.exe"]);
+        locked.Should().BeTrue();
+
+        using var bt = new LaunchMe.UI.Services.BluetoothWatcherService();
+        bt.Start();
+        bt.Dispose();
+        bt.IsRunning.Should().BeFalse();
+    }
 }

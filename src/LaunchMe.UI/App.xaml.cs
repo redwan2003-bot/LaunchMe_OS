@@ -60,6 +60,7 @@ public partial class App : Application
     private LaunchMe.UI.Voice.FlowPillViewModel? _flowPillViewModel;
     private LaunchMe.Core.Sync.LeashService? _leashService;
     private LaunchMe.UI.Sync.LeashViewModel? _leashViewModel;
+    private BluetoothWatcherService? _bluetoothWatcher;
     private bool _shuttingDown;
 
     public App()
@@ -148,6 +149,25 @@ public partial class App : Application
         _dockViewModel = new DockViewModel(dockShellService, dockSpaceService, _systemMetrics, ambientSoundService, appLauncher);
         _musicPlayerViewModel = new MusicPlayerViewModel(_mediaSession);
 
+        _dockViewModel.ToolBarActionTriggered += (_, action) =>
+            DispatchDockToolBarAction(action.ActionKey, _notchViewModel);
+
+        _musicPlayerViewModel.MusicArtWallpaperSyncRequested += (_, track) =>
+        {
+            _dispatcherQueue?.TryEnqueue(() =>
+            {
+                _launcherViewModel?.ApplyQuickThemeTint(_musicPlayerViewModel.AuraPrimaryHex);
+                _launcherViewModel?.ApplyWallpaper(new WallpaperSettings { Type = WallpaperType.MusicArt, Asset = track.Title });
+            });
+        };
+
+        _bluetoothWatcher = new BluetoothWatcherService();
+        _bluetoothWatcher.DeviceConnected += (_, name) =>
+        {
+            _dispatcherQueue?.TryEnqueue(() => _notchViewModel?.ShowBluetoothToast(name));
+        };
+        _bluetoothWatcher.Start();
+
         // Squish Dynamic Tiling Engine
         _tilingEngine = new LaunchMe.Core.Tiling.SquishEngine();
         _windowRuleService = new LaunchMe.Core.Tiling.WindowRuleService();
@@ -198,6 +218,51 @@ public partial class App : Application
             _ = RunShowcaseCaptureAndExitAsync();
         }
     }
+
+    public static bool DispatchDockToolBarAction(
+        string actionKey,
+        NotchViewModel? notch,
+        Action<string>? shellLauncher = null,
+        Action? lockAction = null)
+    {
+        switch (actionKey)
+        {
+            case "focus":
+                notch?.ToggleFocusMode();
+                return true;
+            case "screenshot":
+                LaunchOrInvoke("ms-screenclip:", shellLauncher);
+                return true;
+            case "terminal":
+                LaunchOrInvoke("wt.exe", shellLauncher);
+                return true;
+            case "lock":
+                if (lockAction != null) lockAction();
+                else try { LockWorkStation(); } catch { }
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static void LaunchOrInvoke(string target, Action<string>? customLauncher)
+    {
+        if (customLauncher != null)
+        {
+            customLauncher(target);
+            return;
+        }
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(target) { UseShellExecute = true });
+        }
+        catch
+        {
+        }
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool LockWorkStation();
 
     private async Task RunShowcaseCaptureAndExitAsync()
     {
@@ -362,6 +427,8 @@ public partial class App : Application
         _pookieHookServer?.Stop();
         _pookieHookServer?.Dispose();
         _pookieHookServer = null;
+        _bluetoothWatcher?.Dispose();
+        _bluetoothWatcher = null;
 
         _flowPillViewModel?.Dispose();
         _flowPillViewModel = null;

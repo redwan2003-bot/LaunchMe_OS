@@ -411,6 +411,26 @@
                                         <Slider Width="240" HorizontalAlignment="Right" Minimum="280" Maximum="540" StepFrequency="10"
                                                 Value="{x:Bind ViewModel.ExpandedHeightPx, Mode=TwoWay}" />
                                     </Grid>
+                                    <TextBlock Text="DRAWER WIDGETS (ORDER &amp; SIZE)" Style="{StaticResource EditorialMicroEyebrowStyle}" Foreground="#FFA855F7" Margin="0,6,0,0" />
+                                    <ItemsControl ItemsSource="{x:Bind ViewModel.DrawerWidgets, Mode=OneWay}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:NotchDrawerWidget">
+                                                <Grid Padding="6,3" Margin="0,2" CornerRadius="8" Background="#14FFFFFF">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{x:Bind Title}" FontSize="10.5" Foreground="#FFF8FAFC" VerticalAlignment="Center" />
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                                                        <Button Content="{x:Bind Size, Mode=OneWay}" Tag="{x:Bind Id}" FontSize="9" Padding="6,2" CornerRadius="6"
+                                                                Background="#24A855F7" Foreground="#FFE9D5FF" Click="DrawerWidgetSize_Click" />
+                                                        <Button Content="↑" Tag="{x:Bind Id}" FontSize="9" Padding="5,2" CornerRadius="6"
+                                                                Background="#1AFFFFFF" Foreground="#FFE2E8F0" Click="DrawerWidgetMoveUp_Click" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                 </StackPanel>
                             </ScrollViewer>
                         </Border>

@@ -66,4 +66,12 @@ public sealed partial class LiquidGlassOverlayControl : UserControl
         ArgumentNullException.ThrowIfNull(settings);
         TintService.UpdateVisualState(VisualState, settings);
     }
+
+    /// <summary>
+    /// Updates the Win2D compositor refraction tint from a sampled wallpaper/accent color.
+    /// </summary>
+    public Windows.UI.Color ApplyWallpaperRefraction(Windows.UI.Color sampledColor)
+    {
+        return _compositor.ComputeWallpaperRefractionTint(sampledColor);
+    }
 }
