@@ -196,7 +196,10 @@
                                                             BorderBrush="{StaticResource SpecularInnerRimBrush}"
                                                             BorderThickness="0.5"
                                                             UseLayoutRounding="False">
-                                                        <Image Source="{x:Bind IconImageSource, Mode=OneWay}" Width="44" Height="44" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        <Grid>
+                                                            <FontIcon Glyph="&#xE71D;" FontSize="24" Foreground="#88F8FAFC" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                            <Image Source="{x:Bind IconBitmapSource, Mode=OneWay}" Width="44" Height="44" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Grid>
                                                     </Border>
                                                 </Border>
                                                 <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}"
@@ -430,7 +433,10 @@
                                                 BorderBrush="{StaticResource SpecularGlassChamferBrush}"
                                                 BorderThickness="0.5"
                                                 UseLayoutRounding="False">
-                                            <Image Source="{x:Bind IconImageSource, Mode=OneWay}" Width="38" Height="38" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <Grid>
+                                                <FontIcon Glyph="&#xE71D;" FontSize="20" Foreground="#88F8FAFC" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                <Image Source="{x:Bind IconBitmapSource, Mode=OneWay}" Width="38" Height="38" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Grid>
                                         </Border>
                                         <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}"
                                                    Foreground="#FFF8FAFC"

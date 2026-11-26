@@ -66,6 +66,16 @@ public partial class App : Application
     public App()
     {
         InitializeComponent();
+        UnhandledException += (_, e) =>
+        {
+            try
+            {
+                File.WriteAllText(
+                    Path.Combine(Path.GetTempPath(), "launchme_ui_crash.log"),
+                    $"[{DateTime.UtcNow:O}] {e.Message}\n{e.Exception}");
+            }
+            catch { }
+        };
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)

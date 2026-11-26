@@ -50,11 +50,33 @@ public sealed class LauncherItemViewModel : INotifyPropertyChanged
     private bool _isTitleVisible = true;
     private bool _isEditModeActive;
     private string _dominantGlowHex;
+    private Microsoft.UI.Xaml.Media.ImageSource? _iconBitmapSource;
+    private bool _iconBitmapResolved;
 
     public string Id { get; }
     public string IconImageSource { get; }
     public LauncherItemType Type { get; }
     public LauncherFolderViewModel? FolderData { get; }
+
+    public Microsoft.UI.Xaml.Media.ImageSource? IconBitmapSource
+    {
+        get
+        {
+            if (_iconBitmapResolved) return _iconBitmapSource;
+            _iconBitmapResolved = true;
+            if (!string.IsNullOrWhiteSpace(IconImageSource) && File.Exists(IconImageSource))
+            {
+                try
+                {
+                    _iconBitmapSource = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(Path.GetFullPath(IconImageSource)));
+                }
+                catch
+                {
+                }
+            }
+            return _iconBitmapSource;
+        }
+    }
 
     public string DominantGlowHex
     {
