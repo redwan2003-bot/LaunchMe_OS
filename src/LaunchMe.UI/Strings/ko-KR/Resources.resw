@@ -1,95 +1,95 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- Microsoft ResX Schema — this file is auto-generated. Translate values only. -->
+  <!-- Microsoft ResX Schema — LaunchMe-Win Localization (ko-KR) -->
   <data name="AppName" xml:space="preserve">
     <value>LaunchMe</value>
   </data>
   <data name="LauncherTitle" xml:space="preserve">
-    <value>Launcher</value>
+    <value>런처</value>
   </data>
   <data name="DockTitle" xml:space="preserve">
-    <value>Dock</value>
+    <value>독</value>
   </data>
   <data name="MusicPlayerTitle" xml:space="preserve">
-    <value>Player</value>
+    <value>플레이어</value>
   </data>
   <data name="SearchPlaceholder" xml:space="preserve">
-    <value>Search apps, files, and more…</value>
+    <value>앱, 파일 등 검색…</value>
   </data>
   <data name="WidgetClock" xml:space="preserve">
-    <value>Clock</value>
+    <value>시계</value>
   </data>
   <data name="WidgetWeather" xml:space="preserve">
-    <value>Weather</value>
+    <value>날씨</value>
   </data>
   <data name="WidgetCalendar" xml:space="preserve">
-    <value>Calendar</value>
+    <value>캘린더</value>
   </data>
   <data name="WidgetMusic" xml:space="preserve">
-    <value>Music</value>
+    <value>음악</value>
   </data>
   <data name="WidgetPomodoro" xml:space="preserve">
-    <value>Focus Timer</value>
+    <value>집중 타이머</value>
   </data>
   <data name="WidgetPhoto" xml:space="preserve">
-    <value>Photo</value>
+    <value>사진</value>
   </data>
   <data name="WidgetAffirmation" xml:space="preserve">
-    <value>Affirmation</value>
+    <value>확언</value>
   </data>
   <data name="WidgetSystemStats" xml:space="preserve">
-    <value>System Stats</value>
+    <value>시스템 상태</value>
   </data>
   <data name="WidgetPixelArt" xml:space="preserve">
-    <value>Pixel Art</value>
+    <value>픽셀 아트</value>
   </data>
   <data name="WidgetShapePhoto" xml:space="preserve">
-    <value>Shape Photo</value>
+    <value>모양 사진</value>
   </data>
   <data name="WidgetGif" xml:space="preserve">
     <value>GIF</value>
   </data>
   <data name="SpaceDefault" xml:space="preserve">
-    <value>Default Space</value>
+    <value>기본 스페이스</value>
   </data>
   <data name="SpaceNewName" xml:space="preserve">
-    <value>New Space</value>
+    <value>새 스페이스</value>
   </data>
   <data name="WorkflowTitle" xml:space="preserve">
-    <value>Workflows</value>
+    <value>워크플로</value>
   </data>
   <data name="WorkflowNew" xml:space="preserve">
-    <value>New Workflow</value>
+    <value>새 워크플로</value>
   </data>
   <data name="WorkflowRun" xml:space="preserve">
-    <value>Run</value>
+    <value>실행</value>
   </data>
   <data name="AgentApproveTitle" xml:space="preserve">
-    <value>Agent Request</value>
+    <value>에이전트 요청</value>
   </data>
   <data name="AgentApprove" xml:space="preserve">
-    <value>Allow</value>
+    <value>허용</value>
   </data>
   <data name="AgentDeny" xml:space="preserve">
-    <value>Deny</value>
+    <value>거부</value>
   </data>
   <data name="SettingsTitle" xml:space="preserve">
-    <value>Settings</value>
+    <value>설정</value>
   </data>
   <data name="SettingsGeneral" xml:space="preserve">
-    <value>General</value>
+    <value>일반</value>
   </data>
   <data name="SettingsAppearance" xml:space="preserve">
-    <value>Appearance</value>
+    <value>모양</value>
   </data>
   <data name="SettingsNotifications" xml:space="preserve">
-    <value>Notifications</value>
+    <value>알림</value>
   </data>
   <data name="PhoneLinkTitle" xml:space="preserve">
-    <value>Phone Link</value>
+    <value>휴대폰과 연결</value>
   </data>
   <data name="PhoneLinkPair" xml:space="preserve">
-    <value>Pair New Device</value>
+    <value>새 기기 페어링</value>
   </data>
   <data name="PhoneLinkPairPin" xml:space="preserve">
     <value>PIN: {0}</value>
@@ -98,15 +98,39 @@
     <value>HyprWin</value>
   </data>
   <data name="HyprWinLayout" xml:space="preserve">
-    <value>Layout</value>
+    <value>레이아웃</value>
   </data>
   <data name="CloseButton" xml:space="preserve">
-    <value>Close</value>
+    <value>닫기</value>
   </data>
   <data name="OkButton" xml:space="preserve">
-    <value>OK</value>
+    <value>확인</value>
   </data>
   <data name="CancelButton" xml:space="preserve">
-    <value>Cancel</value>
+    <value>취소</value>
+  </data>
+  <data name="NotchClipboard" xml:space="preserve">
+    <value>클립보드</value>
+  </data>
+  <data name="NotchPocket" xml:space="preserve">
+    <value>포켓 선반</value>
+  </data>
+  <data name="NotchNearbyShare" xml:space="preserve">
+    <value>근거리 공유</value>
+  </data>
+  <data name="NotchFocusMode" xml:space="preserve">
+    <value>집중 모드</value>
+  </data>
+  <data name="MusicModeVinyl" xml:space="preserve">
+    <value>바이닐</value>
+  </data>
+  <data name="MusicModeFullArt" xml:space="preserve">
+    <value>전체 화면 앨범 아트</value>
+  </data>
+  <data name="MusicModeParticles" xml:space="preserve">
+    <value>파티클</value>
+  </data>
+  <data name="MusicModeGlowingBeats" xml:space="preserve">
+    <value>글로우 비트</value>
   </data>
 </root>

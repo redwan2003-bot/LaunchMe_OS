@@ -1,95 +1,95 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- Microsoft ResX Schema — this file is auto-generated. Translate values only. -->
+  <!-- Microsoft ResX Schema — LaunchMe-Win Localization (da-DK) -->
   <data name="AppName" xml:space="preserve">
     <value>LaunchMe</value>
   </data>
   <data name="LauncherTitle" xml:space="preserve">
-    <value>Launcher</value>
+    <value>Starter</value>
   </data>
   <data name="DockTitle" xml:space="preserve">
     <value>Dock</value>
   </data>
   <data name="MusicPlayerTitle" xml:space="preserve">
-    <value>Player</value>
+    <value>Afspiller</value>
   </data>
   <data name="SearchPlaceholder" xml:space="preserve">
-    <value>Search apps, files, and more…</value>
+    <value>Søg efter apps, filer og mere…</value>
   </data>
   <data name="WidgetClock" xml:space="preserve">
-    <value>Clock</value>
+    <value>Ur</value>
   </data>
   <data name="WidgetWeather" xml:space="preserve">
-    <value>Weather</value>
+    <value>Vejr</value>
   </data>
   <data name="WidgetCalendar" xml:space="preserve">
-    <value>Calendar</value>
+    <value>Kalender</value>
   </data>
   <data name="WidgetMusic" xml:space="preserve">
-    <value>Music</value>
+    <value>Musik</value>
   </data>
   <data name="WidgetPomodoro" xml:space="preserve">
-    <value>Focus Timer</value>
+    <value>Fokustimer</value>
   </data>
   <data name="WidgetPhoto" xml:space="preserve">
-    <value>Photo</value>
+    <value>Foto</value>
   </data>
   <data name="WidgetAffirmation" xml:space="preserve">
-    <value>Affirmation</value>
+    <value>Bekræftelse</value>
   </data>
   <data name="WidgetSystemStats" xml:space="preserve">
-    <value>System Stats</value>
+    <value>Systemstatistik</value>
   </data>
   <data name="WidgetPixelArt" xml:space="preserve">
-    <value>Pixel Art</value>
+    <value>Pixelkunst</value>
   </data>
   <data name="WidgetShapePhoto" xml:space="preserve">
-    <value>Shape Photo</value>
+    <value>Formfoto</value>
   </data>
   <data name="WidgetGif" xml:space="preserve">
     <value>GIF</value>
   </data>
   <data name="SpaceDefault" xml:space="preserve">
-    <value>Default Space</value>
+    <value>Standardrum</value>
   </data>
   <data name="SpaceNewName" xml:space="preserve">
-    <value>New Space</value>
+    <value>Nyt rum</value>
   </data>
   <data name="WorkflowTitle" xml:space="preserve">
-    <value>Workflows</value>
+    <value>Arbejdsgange</value>
   </data>
   <data name="WorkflowNew" xml:space="preserve">
-    <value>New Workflow</value>
+    <value>Ny arbejdsgang</value>
   </data>
   <data name="WorkflowRun" xml:space="preserve">
-    <value>Run</value>
+    <value>Kør</value>
   </data>
   <data name="AgentApproveTitle" xml:space="preserve">
-    <value>Agent Request</value>
+    <value>Agentanmodning</value>
   </data>
   <data name="AgentApprove" xml:space="preserve">
-    <value>Allow</value>
+    <value>Tillad</value>
   </data>
   <data name="AgentDeny" xml:space="preserve">
-    <value>Deny</value>
+    <value>Afvis</value>
   </data>
   <data name="SettingsTitle" xml:space="preserve">
-    <value>Settings</value>
+    <value>Indstillinger</value>
   </data>
   <data name="SettingsGeneral" xml:space="preserve">
-    <value>General</value>
+    <value>Generelt</value>
   </data>
   <data name="SettingsAppearance" xml:space="preserve">
-    <value>Appearance</value>
+    <value>Udseende</value>
   </data>
   <data name="SettingsNotifications" xml:space="preserve">
-    <value>Notifications</value>
+    <value>Notifikationer</value>
   </data>
   <data name="PhoneLinkTitle" xml:space="preserve">
-    <value>Phone Link</value>
+    <value>Telefonlink</value>
   </data>
   <data name="PhoneLinkPair" xml:space="preserve">
-    <value>Pair New Device</value>
+    <value>Par ny enhed</value>
   </data>
   <data name="PhoneLinkPairPin" xml:space="preserve">
     <value>PIN: {0}</value>
@@ -101,12 +101,36 @@
     <value>Layout</value>
   </data>
   <data name="CloseButton" xml:space="preserve">
-    <value>Close</value>
+    <value>Luk</value>
   </data>
   <data name="OkButton" xml:space="preserve">
     <value>OK</value>
   </data>
   <data name="CancelButton" xml:space="preserve">
-    <value>Cancel</value>
+    <value>Annuller</value>
+  </data>
+  <data name="NotchClipboard" xml:space="preserve">
+    <value>Udklipsholder</value>
+  </data>
+  <data name="NotchPocket" xml:space="preserve">
+    <value>Pocket-hylde</value>
+  </data>
+  <data name="NotchNearbyShare" xml:space="preserve">
+    <value>Del i nærheden</value>
+  </data>
+  <data name="NotchFocusMode" xml:space="preserve">
+    <value>Fokustilstand</value>
+  </data>
+  <data name="MusicModeVinyl" xml:space="preserve">
+    <value>Vinyl</value>
+  </data>
+  <data name="MusicModeFullArt" xml:space="preserve">
+    <value>Fuldskærmscover</value>
+  </data>
+  <data name="MusicModeParticles" xml:space="preserve">
+    <value>Partikler</value>
+  </data>
+  <data name="MusicModeGlowingBeats" xml:space="preserve">
+    <value>Glødende Beats</value>
   </data>
 </root>

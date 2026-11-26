@@ -1,10 +1,14 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Graphics;
+using Windows.Storage;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using LaunchMe.Contracts.Clipboard;
 using LaunchMe.UI.ViewModels;
 
 namespace LaunchMe.UI.Views;
@@ -15,6 +19,7 @@ public sealed partial class NotchWindow : Window
     private readonly OverlappedPresenter _presenter;
     private readonly nint _hwnd;
     private readonly SnootSpringController _springController = new();
+    private IReadOnlyList<string> _pendingShareFiles = [];
 
     public NotchViewModel ViewModel { get; }
     public SnootSpringController SpringController => _springController;
@@ -26,6 +31,7 @@ public sealed partial class NotchWindow : Window
 
         _springController.Attach(NotchContainer);
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
+        ViewModel.NearbyShareRequested += OnNearbyShareRequested;
 
         try
         {
@@ -56,6 +62,7 @@ public sealed partial class NotchWindow : Window
         Closed += (_, _) =>
         {
             ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            ViewModel.NearbyShareRequested -= OnNearbyShareRequested;
             _springController.Detach();
             ViewModel.Dispose();
         };
@@ -76,6 +83,10 @@ public sealed partial class NotchWindow : Window
 
             PositionTopCenter();
         }
+        else if (e.PropertyName is nameof(NotchViewModel.WidthPx) or nameof(NotchViewModel.HeightPx))
+        {
+            PositionTopCenter();
+        }
         else if (e.PropertyName == nameof(NotchViewModel.IsHiddenByFullscreenGame))
         {
             if (ViewModel.IsHiddenByFullscreenGame)
@@ -88,6 +99,134 @@ public sealed partial class NotchWindow : Window
                 _appWindow.Show();
                 PositionTopCenter();
             }
+        }
+    }
+
+    private void NotchContainer_DragOver(object sender, DragEventArgs e)
+    {
+        if (e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            e.AcceptedOperation = DataPackageOperation.Copy;
+            ViewModel.BeginFileDragOver();
+        }
+    }
+
+    private void NotchContainer_DragLeave(object sender, DragEventArgs e)
+    {
+        ViewModel.EndFileDragOver();
+    }
+
+    private async void NotchContainer_Drop(object sender, DragEventArgs e)
+    {
+        var paths = await ExtractDroppedFilePathsAsync(e);
+        if (paths.Count > 0)
+        {
+            ViewModel.DropFilesToPocket(paths);
+        }
+        else
+        {
+            ViewModel.EndFileDragOver();
+        }
+    }
+
+    private async void PocketDropZone_Drop(object sender, DragEventArgs e)
+    {
+        e.Handled = true;
+        var paths = await ExtractDroppedFilePathsAsync(e);
+        ViewModel.DropFilesToPocket(paths);
+    }
+
+    private async void NearbyShareDropZone_Drop(object sender, DragEventArgs e)
+    {
+        e.Handled = true;
+        var paths = await ExtractDroppedFilePathsAsync(e);
+        ViewModel.DropFilesToNearbyShare(paths);
+    }
+
+    private static async Task<IReadOnlyList<string>> ExtractDroppedFilePathsAsync(DragEventArgs e)
+    {
+        if (!e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            return [];
+        }
+
+        var items = await e.DataView.GetStorageItemsAsync();
+        return items.OfType<StorageFile>().Select(f => f.Path).Where(p => !string.IsNullOrWhiteSpace(p)).ToList();
+    }
+
+    private void NearbyShareButton_Click(object sender, RoutedEventArgs e)
+    {
+        var files = ViewModel.PocketItems.Select(p => p.FilePath).ToList();
+        ViewModel.DropFilesToNearbyShare(files);
+    }
+
+    private void OnNearbyShareRequested(object? sender, IReadOnlyList<string> filePaths)
+    {
+        _pendingShareFiles = filePaths;
+        try
+        {
+            var dtm = DataTransferManagerInterop.GetForWindow(_hwnd);
+            dtm.DataRequested -= OnShareDataRequested;
+            dtm.DataRequested += OnShareDataRequested;
+            DataTransferManagerInterop.ShowShareUIForWindow(_hwnd);
+        }
+        catch
+        {
+            // Headless or unsupported environments ignore native Share UI invocation
+        }
+    }
+
+    private async void OnShareDataRequested(DataTransferManager sender, DataRequestedEventArgs args)
+    {
+        var deferral = args.Request.GetDeferral();
+        try
+        {
+            args.Request.Data.Properties.Title = "LaunchMe Nearby Share";
+            var storageItems = new List<IStorageItem>();
+            foreach (var path in _pendingShareFiles)
+            {
+                if (File.Exists(path))
+                {
+                    storageItems.Add(await StorageFile.GetFileFromPathAsync(path));
+                }
+            }
+
+            if (storageItems.Count > 0)
+            {
+                args.Request.Data.SetStorageItems(storageItems);
+            }
+            else
+            {
+                args.Request.Data.SetText("Shared via LaunchMe Snoot HUD");
+            }
+        }
+        finally
+        {
+            deferral.Complete();
+        }
+    }
+
+    private void ClipboardCategoryChip_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is string tag && Enum.TryParse<ClipboardCategory>(tag, out var cat))
+        {
+            ViewModel.SelectClipboardCategory(cat == ClipboardCategory.Recent ? null : cat);
+        }
+    }
+
+    private void ClipboardFavoriteButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is string id)
+        {
+            ViewModel.ToggleFavoriteClipboardEntry(id);
+        }
+    }
+
+    private void ClipboardCopyButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is ClipboardEntry entry)
+        {
+            ViewModel.CopyClipboardEntry(entry);
         }
     }
 

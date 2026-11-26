@@ -7,8 +7,16 @@ using LaunchMe.Contracts.Clipboard;
 using LaunchMe.Contracts.Media;
 using LaunchMe.Contracts.Notch;
 using LaunchMe.UI.Agent;
+using Microsoft.UI.Xaml;
 
 namespace LaunchMe.UI.ViewModels;
+
+public enum NotchDrawerTab
+{
+    Pocket,
+    Clipboard,
+    Settings
+}
 
 public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
 {
@@ -16,8 +24,13 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
     private readonly IPocketService? _pocketService;
     private readonly IMediaSessionService? _mediaService;
     private readonly IClipboardMonitor? _clipboardMonitor;
+    private readonly IClipboardWriter? _clipboardWriter;
 
     private bool _isExpanded;
+    private double _compactWidthPx = 380;
+    private double _compactHeightPx = 36;
+    private double _expandedWidthPx = 560;
+    private double _expandedHeightPx = 360;
     private double _widthPx = 380;
     private double _heightPx = 36;
     private string _weatherSummary = "22°C Clear";
@@ -30,13 +43,19 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
     private bool _isTimerRunning;
     private int _timerRemainingSeconds = 25 * 60;
     private bool _isHiddenByFullscreenGame;
+    private bool _isFileDragOver;
+    private NotchDrawerTab _activeTab = NotchDrawerTab.Pocket;
+    private ClipboardCategory? _selectedClipboardCategory;
     private bool _disposed;
 
+    private readonly List<ClipboardEntry> _allClipboardHistory = [];
     private readonly PeriodicTimer _timerTick;
     private readonly CancellationTokenSource _cts = new();
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public event EventHandler? DismissRequested;
+    public event EventHandler<IReadOnlyList<string>>? NearbyShareRequested;
+    public event EventHandler<bool>? FocusModeChanged;
 
     public bool IsExpanded
     {
@@ -46,16 +65,75 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
             if (_isExpanded != value)
             {
                 _isExpanded = value;
-                WidthPx = value ? 560 : 380;
-                HeightPx = value ? 360 : 36;
+                SyncActiveDimensions();
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(ExpandedDrawerVisibility));
             }
         }
     }
 
-    public Microsoft.UI.Xaml.Visibility ExpandedDrawerVisibility =>
-        _isExpanded ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
+    public Visibility ExpandedDrawerVisibility =>
+        _isExpanded ? Visibility.Visible : Visibility.Collapsed;
+
+    public double CompactWidthPx
+    {
+        get => _compactWidthPx;
+        set
+        {
+            double clamped = Math.Clamp(value, 280, 540);
+            if (Math.Abs(_compactWidthPx - clamped) > 0.1)
+            {
+                _compactWidthPx = clamped;
+                OnPropertyChanged();
+                if (!_isExpanded) SyncActiveDimensions();
+            }
+        }
+    }
+
+    public double CompactHeightPx
+    {
+        get => _compactHeightPx;
+        set
+        {
+            double clamped = Math.Clamp(value, 28, 56);
+            if (Math.Abs(_compactHeightPx - clamped) > 0.1)
+            {
+                _compactHeightPx = clamped;
+                OnPropertyChanged();
+                if (!_isExpanded) SyncActiveDimensions();
+            }
+        }
+    }
+
+    public double ExpandedWidthPx
+    {
+        get => _expandedWidthPx;
+        set
+        {
+            double clamped = Math.Clamp(value, 440, 760);
+            if (Math.Abs(_expandedWidthPx - clamped) > 0.1)
+            {
+                _expandedWidthPx = clamped;
+                OnPropertyChanged();
+                if (_isExpanded) SyncActiveDimensions();
+            }
+        }
+    }
+
+    public double ExpandedHeightPx
+    {
+        get => _expandedHeightPx;
+        set
+        {
+            double clamped = Math.Clamp(value, 280, 540);
+            if (Math.Abs(_expandedHeightPx - clamped) > 0.1)
+            {
+                _expandedHeightPx = clamped;
+                OnPropertyChanged();
+                if (_isExpanded) SyncActiveDimensions();
+            }
+        }
+    }
 
     public double WidthPx
     {
@@ -102,8 +180,23 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
     public bool FocusModeActive
     {
         get => _focusModeActive;
-        set { if (_focusModeActive != value) { _focusModeActive = value; OnPropertyChanged(); } }
+        set
+        {
+            if (_focusModeActive != value)
+            {
+                _focusModeActive = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(FocusModeVisibility));
+                OnPropertyChanged(nameof(FocusModeBadgeText));
+                FocusModeChanged?.Invoke(this, value);
+            }
+        }
     }
+
+    public Visibility FocusModeVisibility =>
+        _focusModeActive ? Visibility.Visible : Visibility.Collapsed;
+
+    public string FocusModeBadgeText => _focusModeActive ? "FOCUS" : "OFF";
 
     public string TimerDisplay
     {
@@ -123,8 +216,65 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
         set { if (_isHiddenByFullscreenGame != value) { _isHiddenByFullscreenGame = value; OnPropertyChanged(); } }
     }
 
+    public bool IsFileDragOver
+    {
+        get => _isFileDragOver;
+        set
+        {
+            if (_isFileDragOver != value)
+            {
+                _isFileDragOver = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(DropZoneVisibility));
+            }
+        }
+    }
+
+    public Visibility DropZoneVisibility =>
+        _isFileDragOver ? Visibility.Visible : Visibility.Collapsed;
+
+    public NotchDrawerTab ActiveTab
+    {
+        get => _activeTab;
+        set
+        {
+            if (_activeTab != value)
+            {
+                _activeTab = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(PocketTabVisibility));
+                OnPropertyChanged(nameof(ClipboardTabVisibility));
+                OnPropertyChanged(nameof(SettingsTabVisibility));
+            }
+        }
+    }
+
+    public Visibility PocketTabVisibility =>
+        _activeTab == NotchDrawerTab.Pocket ? Visibility.Visible : Visibility.Collapsed;
+
+    public Visibility ClipboardTabVisibility =>
+        _activeTab == NotchDrawerTab.Clipboard ? Visibility.Visible : Visibility.Collapsed;
+
+    public Visibility SettingsTabVisibility =>
+        _activeTab == NotchDrawerTab.Settings ? Visibility.Visible : Visibility.Collapsed;
+
+    public ClipboardCategory? SelectedClipboardCategory
+    {
+        get => _selectedClipboardCategory;
+        set
+        {
+            if (_selectedClipboardCategory != value)
+            {
+                _selectedClipboardCategory = value;
+                OnPropertyChanged();
+                RebuildFilteredClipboardCards();
+            }
+        }
+    }
+
     public ObservableCollection<PocketItem> PocketItems { get; } = [];
     public ObservableCollection<ClipboardEntry> RecentClipboardCards { get; } = [];
+    public ObservableCollection<ClipboardEntry> FilteredClipboardCards { get; } = [];
 
     public BlobboCharacterViewModel Blobbo { get; }
     public ApprovalNotificationViewModel Approvals { get; }
@@ -135,6 +285,12 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
     public ICommand ResetTimerCommand { get; }
     public ICommand ClearPocketCommand { get; }
     public ICommand DismissCommand { get; }
+    public ICommand ToggleFocusModeCommand { get; }
+    public ICommand SelectPocketTabCommand { get; }
+    public ICommand SelectClipboardTabCommand { get; }
+    public ICommand SelectSettingsTabCommand { get; }
+    public ICommand ResetDimensionsCommand { get; }
+    public ICommand ClearClipboardCommand { get; }
 
     public NotchViewModel(
         INotchWindowService? notchWindowService = null,
@@ -143,12 +299,14 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
         IClipboardMonitor? clipboardMonitor = null,
         IBlobboController? blobboController = null,
         IAgentApprovalService? approvalService = null,
-        IDiffParserService? diffParser = null)
+        IDiffParserService? diffParser = null,
+        IClipboardWriter? clipboardWriter = null)
     {
         _notchWindowService = notchWindowService;
         _pocketService = pocketService;
         _mediaService = mediaService;
         _clipboardMonitor = clipboardMonitor;
+        _clipboardWriter = clipboardWriter;
 
         Blobbo = new BlobboCharacterViewModel(blobboController ?? new LaunchMe.Core.Agent.BlobboController());
         Approvals = new ApprovalNotificationViewModel(
@@ -169,6 +327,12 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
         ResetTimerCommand = new RelayCommand(ResetTimer);
         ClearPocketCommand = new RelayCommand(ClearPocket);
         DismissCommand = new RelayCommand(() => DismissRequested?.Invoke(this, EventArgs.Empty));
+        ToggleFocusModeCommand = new RelayCommand(ToggleFocusMode);
+        SelectPocketTabCommand = new RelayCommand(() => ActiveTab = NotchDrawerTab.Pocket);
+        SelectClipboardTabCommand = new RelayCommand(() => ActiveTab = NotchDrawerTab.Clipboard);
+        SelectSettingsTabCommand = new RelayCommand(() => ActiveTab = NotchDrawerTab.Settings);
+        ResetDimensionsCommand = new RelayCommand(ResetDimensions);
+        ClearClipboardCommand = new RelayCommand(ClearClipboardHistory);
 
         if (_pocketService != null)
         {
@@ -190,9 +354,33 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
         _ = RunPeriodicLoopAsync(_cts.Token);
     }
 
+    private void SyncActiveDimensions()
+    {
+        WidthPx = _isExpanded ? _expandedWidthPx : _compactWidthPx;
+        HeightPx = _isExpanded ? _expandedHeightPx : _compactHeightPx;
+    }
+
+    public void ResetDimensions()
+    {
+        _compactWidthPx = 380;
+        _compactHeightPx = 36;
+        _expandedWidthPx = 560;
+        _expandedHeightPx = 360;
+        OnPropertyChanged(nameof(CompactWidthPx));
+        OnPropertyChanged(nameof(CompactHeightPx));
+        OnPropertyChanged(nameof(ExpandedWidthPx));
+        OnPropertyChanged(nameof(ExpandedHeightPx));
+        SyncActiveDimensions();
+    }
+
     public void ToggleExpand()
     {
         IsExpanded = !IsExpanded;
+    }
+
+    public void ToggleFocusMode()
+    {
+        FocusModeActive = !FocusModeActive;
     }
 
     public void StartTimer(int minutes = 25)
@@ -229,6 +417,77 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
     public void ClearPocket()
     {
         _pocketService?.Clear();
+    }
+
+    public void BeginFileDragOver()
+    {
+        IsFileDragOver = true;
+        if (!IsExpanded)
+        {
+            IsExpanded = true;
+        }
+    }
+
+    public void EndFileDragOver()
+    {
+        IsFileDragOver = false;
+    }
+
+    public void DropFilesToPocket(IEnumerable<string> filePaths)
+    {
+        foreach (var path in filePaths)
+        {
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                AddPocketFile(path);
+            }
+        }
+        IsFileDragOver = false;
+        ActiveTab = NotchDrawerTab.Pocket;
+    }
+
+    public void DropFilesToNearbyShare(IEnumerable<string> filePaths)
+    {
+        var list = filePaths.Where(p => !string.IsNullOrWhiteSpace(p)).ToList();
+        IsFileDragOver = false;
+        if (list.Count > 0)
+        {
+            NearbyShareRequested?.Invoke(this, list);
+        }
+    }
+
+    public void AddClipboardEntry(ClipboardEntry entry)
+    {
+        OnClipboardChanged(this, entry);
+    }
+
+    public void SelectClipboardCategory(ClipboardCategory? category)
+    {
+        SelectedClipboardCategory = category;
+    }
+
+    public void ToggleFavoriteClipboardEntry(string id)
+    {
+        var entry = _allClipboardHistory.FirstOrDefault(e => e.Id == id);
+        if (entry == null) return;
+        entry.IsPinned = !entry.IsPinned;
+        RebuildFilteredClipboardCards();
+    }
+
+    public void CopyClipboardEntry(ClipboardEntry entry)
+    {
+        if (entry == null) return;
+        if (!string.IsNullOrEmpty(entry.TextContent))
+        {
+            _clipboardWriter?.SetText(entry.TextContent);
+        }
+    }
+
+    public void ClearClipboardHistory()
+    {
+        _allClipboardHistory.Clear();
+        RecentClipboardCards.Clear();
+        FilteredClipboardCards.Clear();
     }
 
     public void CheckFullscreenGame()
@@ -275,10 +534,34 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
 
     private void OnClipboardChanged(object? sender, ClipboardEntry entry)
     {
+        _allClipboardHistory.Insert(0, entry);
+        if (_allClipboardHistory.Count > 24)
+        {
+            _allClipboardHistory.RemoveAt(_allClipboardHistory.Count - 1);
+        }
+
         RecentClipboardCards.Insert(0, entry);
         if (RecentClipboardCards.Count > 10)
         {
             RecentClipboardCards.RemoveAt(RecentClipboardCards.Count - 1);
+        }
+
+        RebuildFilteredClipboardCards();
+    }
+
+    private void RebuildFilteredClipboardCards()
+    {
+        FilteredClipboardCards.Clear();
+        IEnumerable<ClipboardEntry> source = _selectedClipboardCategory switch
+        {
+            null or ClipboardCategory.Recent => _allClipboardHistory,
+            ClipboardCategory.Favorites => _allClipboardHistory.Where(e => e.IsPinned || e.Category == ClipboardCategory.Favorites),
+            var cat => _allClipboardHistory.Where(e => e.Category == cat)
+        };
+
+        foreach (var item in source.Take(12))
+        {
+            FilteredClipboardCards.Add(item);
         }
     }
 
@@ -290,7 +573,6 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
             {
                 if (_disposed) break;
 
-                // 1. Tick Countdown
                 if (IsTimerRunning && _timerRemainingSeconds > 0)
                 {
                     _timerRemainingSeconds--;
@@ -301,7 +583,6 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
                     }
                 }
 
-                // 2. Periodic Game check
                 CheckFullscreenGame();
             }
         }

@@ -44,6 +44,17 @@ public sealed partial class MusicPlayerWindow : Window
 
         MaximizeToFullscreen();
 
+        Activated += (_, args) =>
+        {
+            if (args.WindowActivationState == WindowActivationState.Deactivated)
+            {
+                ViewModel.OnHidden();
+            }
+            else
+            {
+                ViewModel.OnShown();
+            }
+        };
         ViewModel.DismissRequested += (_, _) => Close();
         Closed += (_, _) => ViewModel.Dispose();
     }

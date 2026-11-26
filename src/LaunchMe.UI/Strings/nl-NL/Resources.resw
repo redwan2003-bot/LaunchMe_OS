@@ -1,112 +1,136 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- Microsoft ResX Schema — this file is auto-generated. Translate values only. -->
+  <!-- Microsoft ResX Schema — LaunchMe-Win Localization (nl-NL) -->
   <data name="AppName" xml:space="preserve">
     <value>LaunchMe</value>
   </data>
   <data name="LauncherTitle" xml:space="preserve">
-    <value>Launcher</value>
+    <value>Starter</value>
   </data>
   <data name="DockTitle" xml:space="preserve">
     <value>Dock</value>
   </data>
   <data name="MusicPlayerTitle" xml:space="preserve">
-    <value>Player</value>
+    <value>Speler</value>
   </data>
   <data name="SearchPlaceholder" xml:space="preserve">
-    <value>Search apps, files, and more…</value>
+    <value>Zoek apps, bestanden en meer…</value>
   </data>
   <data name="WidgetClock" xml:space="preserve">
-    <value>Clock</value>
+    <value>Klok</value>
   </data>
   <data name="WidgetWeather" xml:space="preserve">
-    <value>Weather</value>
+    <value>Weer</value>
   </data>
   <data name="WidgetCalendar" xml:space="preserve">
-    <value>Calendar</value>
+    <value>Kalender</value>
   </data>
   <data name="WidgetMusic" xml:space="preserve">
-    <value>Music</value>
+    <value>Muziek</value>
   </data>
   <data name="WidgetPomodoro" xml:space="preserve">
-    <value>Focus Timer</value>
+    <value>Focustimer</value>
   </data>
   <data name="WidgetPhoto" xml:space="preserve">
-    <value>Photo</value>
+    <value>Foto</value>
   </data>
   <data name="WidgetAffirmation" xml:space="preserve">
-    <value>Affirmation</value>
+    <value>Affirmatie</value>
   </data>
   <data name="WidgetSystemStats" xml:space="preserve">
-    <value>System Stats</value>
+    <value>Systeemstatistieken</value>
   </data>
   <data name="WidgetPixelArt" xml:space="preserve">
-    <value>Pixel Art</value>
+    <value>Pixelkunst</value>
   </data>
   <data name="WidgetShapePhoto" xml:space="preserve">
-    <value>Shape Photo</value>
+    <value>Vormfoto</value>
   </data>
   <data name="WidgetGif" xml:space="preserve">
     <value>GIF</value>
   </data>
   <data name="SpaceDefault" xml:space="preserve">
-    <value>Default Space</value>
+    <value>Standaardruimte</value>
   </data>
   <data name="SpaceNewName" xml:space="preserve">
-    <value>New Space</value>
+    <value>Nieuwe ruimte</value>
   </data>
   <data name="WorkflowTitle" xml:space="preserve">
-    <value>Workflows</value>
+    <value>Werkstromen</value>
   </data>
   <data name="WorkflowNew" xml:space="preserve">
-    <value>New Workflow</value>
+    <value>Nieuwe werkstroom</value>
   </data>
   <data name="WorkflowRun" xml:space="preserve">
-    <value>Run</value>
+    <value>Uitvoeren</value>
   </data>
   <data name="AgentApproveTitle" xml:space="preserve">
-    <value>Agent Request</value>
+    <value>Agentverzoek</value>
   </data>
   <data name="AgentApprove" xml:space="preserve">
-    <value>Allow</value>
+    <value>Toestaan</value>
   </data>
   <data name="AgentDeny" xml:space="preserve">
-    <value>Deny</value>
+    <value>Weigeren</value>
   </data>
   <data name="SettingsTitle" xml:space="preserve">
-    <value>Settings</value>
+    <value>Instellingen</value>
   </data>
   <data name="SettingsGeneral" xml:space="preserve">
-    <value>General</value>
+    <value>Algemeen</value>
   </data>
   <data name="SettingsAppearance" xml:space="preserve">
-    <value>Appearance</value>
+    <value>Weergave</value>
   </data>
   <data name="SettingsNotifications" xml:space="preserve">
-    <value>Notifications</value>
+    <value>Meldingen</value>
   </data>
   <data name="PhoneLinkTitle" xml:space="preserve">
-    <value>Phone Link</value>
+    <value>Telefoonkoppeling</value>
   </data>
   <data name="PhoneLinkPair" xml:space="preserve">
-    <value>Pair New Device</value>
+    <value>Nieuw apparaat koppelen</value>
   </data>
   <data name="PhoneLinkPairPin" xml:space="preserve">
-    <value>PIN: {0}</value>
+    <value>Pincode: {0}</value>
   </data>
   <data name="HyprWinTitle" xml:space="preserve">
     <value>HyprWin</value>
   </data>
   <data name="HyprWinLayout" xml:space="preserve">
-    <value>Layout</value>
+    <value>Indeling</value>
   </data>
   <data name="CloseButton" xml:space="preserve">
-    <value>Close</value>
+    <value>Sluiten</value>
   </data>
   <data name="OkButton" xml:space="preserve">
     <value>OK</value>
   </data>
   <data name="CancelButton" xml:space="preserve">
-    <value>Cancel</value>
+    <value>Annuleren</value>
+  </data>
+  <data name="NotchClipboard" xml:space="preserve">
+    <value>Klembord</value>
+  </data>
+  <data name="NotchPocket" xml:space="preserve">
+    <value>Pocket-plank</value>
+  </data>
+  <data name="NotchNearbyShare" xml:space="preserve">
+    <value>Dichtbij delen</value>
+  </data>
+  <data name="NotchFocusMode" xml:space="preserve">
+    <value>Focusmodus</value>
+  </data>
+  <data name="MusicModeVinyl" xml:space="preserve">
+    <value>Vinyl</value>
+  </data>
+  <data name="MusicModeFullArt" xml:space="preserve">
+    <value>Volledig Schermhoes</value>
+  </data>
+  <data name="MusicModeParticles" xml:space="preserve">
+    <value>Deeltjes</value>
+  </data>
+  <data name="MusicModeGlowingBeats" xml:space="preserve">
+    <value>Gloeiende Beats</value>
   </data>
 </root>

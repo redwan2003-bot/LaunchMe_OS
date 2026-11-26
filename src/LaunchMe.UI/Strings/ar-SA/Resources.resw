@@ -1,112 +1,136 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- Microsoft ResX Schema — this file is auto-generated. Translate values only. -->
+  <!-- Microsoft ResX Schema — LaunchMe-Win Localization (ar-SA) -->
   <data name="AppName" xml:space="preserve">
     <value>LaunchMe</value>
   </data>
   <data name="LauncherTitle" xml:space="preserve">
-    <value>Launcher</value>
+    <value>المُشغّل</value>
   </data>
   <data name="DockTitle" xml:space="preserve">
-    <value>Dock</value>
+    <value>الشريط السفلي</value>
   </data>
   <data name="MusicPlayerTitle" xml:space="preserve">
-    <value>Player</value>
+    <value>المشغّل</value>
   </data>
   <data name="SearchPlaceholder" xml:space="preserve">
-    <value>Search apps, files, and more…</value>
+    <value>ابحث عن التطبيقات والملفات والمزيد…</value>
   </data>
   <data name="WidgetClock" xml:space="preserve">
-    <value>Clock</value>
+    <value>الساعة</value>
   </data>
   <data name="WidgetWeather" xml:space="preserve">
-    <value>Weather</value>
+    <value>الطقس</value>
   </data>
   <data name="WidgetCalendar" xml:space="preserve">
-    <value>Calendar</value>
+    <value>التقويم</value>
   </data>
   <data name="WidgetMusic" xml:space="preserve">
-    <value>Music</value>
+    <value>الموسيقى</value>
   </data>
   <data name="WidgetPomodoro" xml:space="preserve">
-    <value>Focus Timer</value>
+    <value>مؤقت التركيز</value>
   </data>
   <data name="WidgetPhoto" xml:space="preserve">
-    <value>Photo</value>
+    <value>صورة</value>
   </data>
   <data name="WidgetAffirmation" xml:space="preserve">
-    <value>Affirmation</value>
+    <value>تأكيد يومي</value>
   </data>
   <data name="WidgetSystemStats" xml:space="preserve">
-    <value>System Stats</value>
+    <value>حالة النظام</value>
   </data>
   <data name="WidgetPixelArt" xml:space="preserve">
-    <value>Pixel Art</value>
+    <value>فن البكسل</value>
   </data>
   <data name="WidgetShapePhoto" xml:space="preserve">
-    <value>Shape Photo</value>
+    <value>صورة مُشكّلة</value>
   </data>
   <data name="WidgetGif" xml:space="preserve">
     <value>GIF</value>
   </data>
   <data name="SpaceDefault" xml:space="preserve">
-    <value>Default Space</value>
+    <value>المساحة الافتراضية</value>
   </data>
   <data name="SpaceNewName" xml:space="preserve">
-    <value>New Space</value>
+    <value>مساحة جديدة</value>
   </data>
   <data name="WorkflowTitle" xml:space="preserve">
-    <value>Workflows</value>
+    <value>سير العمل</value>
   </data>
   <data name="WorkflowNew" xml:space="preserve">
-    <value>New Workflow</value>
+    <value>سير عمل جديد</value>
   </data>
   <data name="WorkflowRun" xml:space="preserve">
-    <value>Run</value>
+    <value>تشغيل</value>
   </data>
   <data name="AgentApproveTitle" xml:space="preserve">
-    <value>Agent Request</value>
+    <value>طلب الوكيل</value>
   </data>
   <data name="AgentApprove" xml:space="preserve">
-    <value>Allow</value>
+    <value>سماح</value>
   </data>
   <data name="AgentDeny" xml:space="preserve">
-    <value>Deny</value>
+    <value>رفض</value>
   </data>
   <data name="SettingsTitle" xml:space="preserve">
-    <value>Settings</value>
+    <value>الإعدادات</value>
   </data>
   <data name="SettingsGeneral" xml:space="preserve">
-    <value>General</value>
+    <value>عام</value>
   </data>
   <data name="SettingsAppearance" xml:space="preserve">
-    <value>Appearance</value>
+    <value>المظهر</value>
   </data>
   <data name="SettingsNotifications" xml:space="preserve">
-    <value>Notifications</value>
+    <value>الإشعارات</value>
   </data>
   <data name="PhoneLinkTitle" xml:space="preserve">
-    <value>Phone Link</value>
+    <value>ربط الهاتف</value>
   </data>
   <data name="PhoneLinkPair" xml:space="preserve">
-    <value>Pair New Device</value>
+    <value>إقران جهاز جديد</value>
   </data>
   <data name="PhoneLinkPairPin" xml:space="preserve">
-    <value>PIN: {0}</value>
+    <value>الرمز: {0}</value>
   </data>
   <data name="HyprWinTitle" xml:space="preserve">
     <value>HyprWin</value>
   </data>
   <data name="HyprWinLayout" xml:space="preserve">
-    <value>Layout</value>
+    <value>التخطيط</value>
   </data>
   <data name="CloseButton" xml:space="preserve">
-    <value>Close</value>
+    <value>إغلاق</value>
   </data>
   <data name="OkButton" xml:space="preserve">
-    <value>OK</value>
+    <value>موافق</value>
   </data>
   <data name="CancelButton" xml:space="preserve">
-    <value>Cancel</value>
+    <value>إلغاء</value>
+  </data>
+  <data name="NotchClipboard" xml:space="preserve">
+    <value>الحافظة</value>
+  </data>
+  <data name="NotchPocket" xml:space="preserve">
+    <value>رف Pocket</value>
+  </data>
+  <data name="NotchNearbyShare" xml:space="preserve">
+    <value>المشاركة القريبة</value>
+  </data>
+  <data name="NotchFocusMode" xml:space="preserve">
+    <value>وضع التركيز</value>
+  </data>
+  <data name="MusicModeVinyl" xml:space="preserve">
+    <value>أسطوانة فينيل</value>
+  </data>
+  <data name="MusicModeFullArt" xml:space="preserve">
+    <value>غلاف ملء الشاشة</value>
+  </data>
+  <data name="MusicModeParticles" xml:space="preserve">
+    <value>جزيئات</value>
+  </data>
+  <data name="MusicModeGlowingBeats" xml:space="preserve">
+    <value>إيقاعات متوهجة</value>
   </data>
 </root>

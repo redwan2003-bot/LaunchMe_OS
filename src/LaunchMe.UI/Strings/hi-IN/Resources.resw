@@ -1,112 +1,136 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- Microsoft ResX Schema — this file is auto-generated. Translate values only. -->
+  <!-- Microsoft ResX Schema — LaunchMe-Win Localization (hi-IN) -->
   <data name="AppName" xml:space="preserve">
     <value>LaunchMe</value>
   </data>
   <data name="LauncherTitle" xml:space="preserve">
-    <value>Launcher</value>
+    <value>लॉन्चर</value>
   </data>
   <data name="DockTitle" xml:space="preserve">
-    <value>Dock</value>
+    <value>डॉक</value>
   </data>
   <data name="MusicPlayerTitle" xml:space="preserve">
-    <value>Player</value>
+    <value>प्लेयर</value>
   </data>
   <data name="SearchPlaceholder" xml:space="preserve">
-    <value>Search apps, files, and more…</value>
+    <value>ऐप्स, फ़ाइलें और अधिक खोजें…</value>
   </data>
   <data name="WidgetClock" xml:space="preserve">
-    <value>Clock</value>
+    <value>घड़ी</value>
   </data>
   <data name="WidgetWeather" xml:space="preserve">
-    <value>Weather</value>
+    <value>मौसम</value>
   </data>
   <data name="WidgetCalendar" xml:space="preserve">
-    <value>Calendar</value>
+    <value>कैलेंडर</value>
   </data>
   <data name="WidgetMusic" xml:space="preserve">
-    <value>Music</value>
+    <value>संगीत</value>
   </data>
   <data name="WidgetPomodoro" xml:space="preserve">
-    <value>Focus Timer</value>
+    <value>फ़ोकस टाइमर</value>
   </data>
   <data name="WidgetPhoto" xml:space="preserve">
-    <value>Photo</value>
+    <value>फ़ोटो</value>
   </data>
   <data name="WidgetAffirmation" xml:space="preserve">
-    <value>Affirmation</value>
+    <value>सकारात्मक विचार</value>
   </data>
   <data name="WidgetSystemStats" xml:space="preserve">
-    <value>System Stats</value>
+    <value>सिस्टम आँकड़े</value>
   </data>
   <data name="WidgetPixelArt" xml:space="preserve">
-    <value>Pixel Art</value>
+    <value>पिक्सेल आर्ट</value>
   </data>
   <data name="WidgetShapePhoto" xml:space="preserve">
-    <value>Shape Photo</value>
+    <value>आकार फ़ोटो</value>
   </data>
   <data name="WidgetGif" xml:space="preserve">
     <value>GIF</value>
   </data>
   <data name="SpaceDefault" xml:space="preserve">
-    <value>Default Space</value>
+    <value>डिफ़ॉल्ट स्पेस</value>
   </data>
   <data name="SpaceNewName" xml:space="preserve">
-    <value>New Space</value>
+    <value>नया स्पेस</value>
   </data>
   <data name="WorkflowTitle" xml:space="preserve">
-    <value>Workflows</value>
+    <value>वर्कफ़्लो</value>
   </data>
   <data name="WorkflowNew" xml:space="preserve">
-    <value>New Workflow</value>
+    <value>नया वर्कफ़्लो</value>
   </data>
   <data name="WorkflowRun" xml:space="preserve">
-    <value>Run</value>
+    <value>चलाएँ</value>
   </data>
   <data name="AgentApproveTitle" xml:space="preserve">
-    <value>Agent Request</value>
+    <value>एजेंट अनुरोध</value>
   </data>
   <data name="AgentApprove" xml:space="preserve">
-    <value>Allow</value>
+    <value>अनुमति दें</value>
   </data>
   <data name="AgentDeny" xml:space="preserve">
-    <value>Deny</value>
+    <value>अस्वीकार करें</value>
   </data>
   <data name="SettingsTitle" xml:space="preserve">
-    <value>Settings</value>
+    <value>सेटिंग्स</value>
   </data>
   <data name="SettingsGeneral" xml:space="preserve">
-    <value>General</value>
+    <value>सामान्य</value>
   </data>
   <data name="SettingsAppearance" xml:space="preserve">
-    <value>Appearance</value>
+    <value>दिखावट</value>
   </data>
   <data name="SettingsNotifications" xml:space="preserve">
-    <value>Notifications</value>
+    <value>सूचनाएँ</value>
   </data>
   <data name="PhoneLinkTitle" xml:space="preserve">
-    <value>Phone Link</value>
+    <value>फ़ोन लिंक</value>
   </data>
   <data name="PhoneLinkPair" xml:space="preserve">
-    <value>Pair New Device</value>
+    <value>नया डिवाइस पेयर करें</value>
   </data>
   <data name="PhoneLinkPairPin" xml:space="preserve">
-    <value>PIN: {0}</value>
+    <value>पिन: {0}</value>
   </data>
   <data name="HyprWinTitle" xml:space="preserve">
     <value>HyprWin</value>
   </data>
   <data name="HyprWinLayout" xml:space="preserve">
-    <value>Layout</value>
+    <value>लेआउट</value>
   </data>
   <data name="CloseButton" xml:space="preserve">
-    <value>Close</value>
+    <value>बंद करें</value>
   </data>
   <data name="OkButton" xml:space="preserve">
-    <value>OK</value>
+    <value>ठीक है</value>
   </data>
   <data name="CancelButton" xml:space="preserve">
-    <value>Cancel</value>
+    <value>रद्द करें</value>
+  </data>
+  <data name="NotchClipboard" xml:space="preserve">
+    <value>क्लिपबोर्ड</value>
+  </data>
+  <data name="NotchPocket" xml:space="preserve">
+    <value>पॉकेट शेल्फ़</value>
+  </data>
+  <data name="NotchNearbyShare" xml:space="preserve">
+    <value>नियरबाय शेयर</value>
+  </data>
+  <data name="NotchFocusMode" xml:space="preserve">
+    <value>फ़ोकस मोड</value>
+  </data>
+  <data name="MusicModeVinyl" xml:space="preserve">
+    <value>विनाइल</value>
+  </data>
+  <data name="MusicModeFullArt" xml:space="preserve">
+    <value>फ़ुल स्क्रीन आर्ट</value>
+  </data>
+  <data name="MusicModeParticles" xml:space="preserve">
+    <value>कण प्रभाव</value>
+  </data>
+  <data name="MusicModeGlowingBeats" xml:space="preserve">
+    <value>चमकती बीट्स</value>
   </data>
 </root>

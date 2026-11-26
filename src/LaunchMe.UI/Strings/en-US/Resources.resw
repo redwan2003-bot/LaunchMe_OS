@@ -1,6 +1,6 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- Microsoft ResX Schema — this file is auto-generated. Translate values only. -->
+  <!-- Microsoft ResX Schema — LaunchMe-Win Localization (en-US) -->
   <data name="AppName" xml:space="preserve">
     <value>LaunchMe</value>
   </data>
@@ -108,5 +108,29 @@
   </data>
   <data name="CancelButton" xml:space="preserve">
     <value>Cancel</value>
+  </data>
+  <data name="NotchClipboard" xml:space="preserve">
+    <value>Clipboard</value>
+  </data>
+  <data name="NotchPocket" xml:space="preserve">
+    <value>Pocket Shelf</value>
+  </data>
+  <data name="NotchNearbyShare" xml:space="preserve">
+    <value>Nearby Share</value>
+  </data>
+  <data name="NotchFocusMode" xml:space="preserve">
+    <value>Focus Mode</value>
+  </data>
+  <data name="MusicModeVinyl" xml:space="preserve">
+    <value>Vinyl</value>
+  </data>
+  <data name="MusicModeFullArt" xml:space="preserve">
+    <value>Full Screen Art</value>
+  </data>
+  <data name="MusicModeParticles" xml:space="preserve">
+    <value>Particles</value>
+  </data>
+  <data name="MusicModeGlowingBeats" xml:space="preserve">
+    <value>Glowing Beats</value>
   </data>
 </root>
