@@ -78,8 +78,19 @@
                         </StackPanel>
                     </Button>
 
-                    <!-- Right Status: Focus Badge + Battery & Live Ring -->
+                    <!-- Right Status: Bluetooth Toast + Focus Badge + Battery & Live Ring -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <Border Background="#2400F0FF"
+                                BorderBrush="#FF00F0FF"
+                                BorderThickness="0.5"
+                                CornerRadius="8"
+                                Padding="6,1"
+                                Visibility="{x:Bind ViewModel.BluetoothToastVisibility, Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <FontIcon Glyph="&#xE702;" FontSize="9" Foreground="#FF00F0FF" />
+                                <TextBlock Text="{x:Bind ViewModel.BluetoothToastText, Mode=OneWay}" FontSize="9" FontWeight="SemiBold" Foreground="#FFE2E8F0" />
+                            </StackPanel>
+                        </Border>
                         <Border Background="#2EA855F7"
                                 BorderBrush="#FFA855F7"
                                 BorderThickness="0.5"

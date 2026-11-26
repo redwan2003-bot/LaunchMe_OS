@@ -7,72 +7,187 @@
     xmlns:local="using:LaunchMe.UI.Widgets.Weather"
     mc:Ignorable="d">
 
-    <Border Background="#20FFFFFF" 
-            BorderBrush="#33FFFFFF" 
-            BorderThickness="1" 
-            CornerRadius="16" 
-            Padding="16"
-            MinWidth="260"
-            MinHeight="140">
-        <StackPanel Spacing="12">
-            <!-- Header: Location & Condition Glyph -->
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Column="0">
-                    <TextBlock Text="{x:Bind ViewModel.Location, Mode=OneWay}" 
-                               FontSize="16" 
-                               FontWeight="SemiBold" 
-                               Foreground="White" />
-                    <TextBlock Text="{x:Bind ViewModel.ConditionText, Mode=OneWay}" 
-                               FontSize="12" 
-                               Foreground="#94A3B8" />
+    <UserControl.Resources>
+        <!-- 1. MINIMAL -->
+        <DataTemplate x:Key="WeatherMinimalTemplate">
+            <Border Background="#20FFFFFF" BorderBrush="#33FFFFFF" BorderThickness="1" CornerRadius="16" Padding="14" MinWidth="160">
+                <StackPanel HorizontalAlignment="Center" Spacing="4">
+                    <TextBlock Text="{Binding ConditionGlyph}" FontFamily="Segoe Fluent Icons" FontSize="24" Foreground="#F59E0B" HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding CurrentTemperatureFormatted}" FontSize="28" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding Location}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center" />
                 </StackPanel>
+            </Border>
+        </DataTemplate>
 
-                <TextBlock Grid.Column="1" 
-                           Text="{x:Bind ViewModel.ConditionGlyph, Mode=OneWay}" 
-                           FontFamily="Segoe Fluent Icons" 
-                           FontSize="28" 
-                           Foreground="#F59E0B" 
-                           VerticalAlignment="Center" />
-            </Grid>
+        <!-- 2. COMPACT -->
+        <DataTemplate x:Key="WeatherCompactTemplate">
+            <Border Background="#D90E131F" BorderBrush="#3300F0FF" BorderThickness="1" CornerRadius="16" Padding="14" MinWidth="220">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Location}" FontSize="13" FontWeight="SemiBold" Foreground="White" />
+                        <TextBlock Text="{Binding ConditionText}" FontSize="11" Foreground="#94A3B8" />
+                        <TextBlock Text="{Binding HighLowFormatted}" FontSize="10" Foreground="#00F0FF" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding CurrentTemperatureFormatted}" FontSize="28" FontWeight="Bold" Foreground="White" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
 
-            <!-- Main Temperature & High/Low -->
-            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                <TextBlock Text="{x:Bind ViewModel.CurrentTemperatureFormatted, Mode=OneWay}" 
-                           FontSize="34" 
-                           FontWeight="Bold" 
-                           Foreground="White" />
-                <StackPanel VerticalAlignment="Center" Spacing="2">
-                    <TextBlock Text="{x:Bind ViewModel.HighLowFormatted, Mode=OneWay}" 
-                               FontSize="11" 
-                               Foreground="#CBD5E1" />
-                    <TextBlock Text="{x:Bind ViewModel.HumidityFormatted, Mode=OneWay}" 
-                               FontSize="11" 
-                               Foreground="#64748B" />
-                </StackPanel>
-            </StackPanel>
-
-            <!-- 4-Day Forecast Strip -->
-            <ItemsControl ItemsSource="{x:Bind ViewModel.Forecast, Mode=OneWay}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Stretch" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="local:ForecastItemViewModel">
-                        <StackPanel HorizontalAlignment="Center" Spacing="2" MinWidth="48">
-                            <TextBlock Text="{x:Bind DayName}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center" />
-                            <TextBlock Text="{x:Bind ConditionGlyph}" FontFamily="Segoe Fluent Icons" FontSize="14" Foreground="#38BDF8" HorizontalAlignment="Center" />
-                            <TextBlock Text="{x:Bind TemperatureRange}" FontSize="10" Foreground="White" HorizontalAlignment="Center" />
+        <!-- 3. FORECAST (Default 4-day strip) -->
+        <DataTemplate x:Key="WeatherForecastTemplate">
+            <Border Background="#20FFFFFF" BorderBrush="#33FFFFFF" BorderThickness="1" CornerRadius="16" Padding="16" MinWidth="260" MinHeight="140">
+                <StackPanel Spacing="12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="{Binding Location}" FontSize="16" FontWeight="SemiBold" Foreground="White" />
+                            <TextBlock Text="{Binding ConditionText}" FontSize="12" Foreground="#94A3B8" />
                         </StackPanel>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </StackPanel>
-    </Border>
+                        <TextBlock Grid.Column="1" Text="{Binding ConditionGlyph}" FontFamily="Segoe Fluent Icons" FontSize="28" Foreground="#F59E0B" VerticalAlignment="Center" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding CurrentTemperatureFormatted}" FontSize="34" FontWeight="Bold" Foreground="White" />
+                        <StackPanel VerticalAlignment="Center" Spacing="2">
+                            <TextBlock Text="{Binding HighLowFormatted}" FontSize="11" Foreground="#CBD5E1" />
+                            <TextBlock Text="{Binding HumidityFormatted}" FontSize="11" Foreground="#64748B" />
+                        </StackPanel>
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Forecast}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Stretch" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="local:ForecastItemViewModel">
+                                <StackPanel HorizontalAlignment="Center" Spacing="2" MinWidth="48">
+                                    <TextBlock Text="{x:Bind DayName}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center" />
+                                    <TextBlock Text="{x:Bind ConditionGlyph}" FontFamily="Segoe Fluent Icons" FontSize="14" Foreground="#38BDF8" HorizontalAlignment="Center" />
+                                    <TextBlock Text="{x:Bind TemperatureRange}" FontSize="10" Foreground="White" HorizontalAlignment="Center" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- 4. PANEL (Telemetry split) -->
+        <DataTemplate x:Key="WeatherPanelTemplate">
+            <Border Background="#E6161D2E" BorderBrush="#44FFFFFF" BorderThickness="1" CornerRadius="18" Padding="16" MinWidth="270">
+                <Grid RowSpacing="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12">
+                        <TextBlock Text="{Binding CurrentTemperatureFormatted}" FontSize="36" FontWeight="Light" Foreground="#00F0FF" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Location}" FontSize="15" FontWeight="Bold" Foreground="White" />
+                            <TextBlock Text="{Binding ConditionText}" FontSize="11" Foreground="#94A3B8" />
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="14">
+                        <TextBlock Text="{Binding HumidityFormatted}" FontSize="11" Foreground="#00FF9D" />
+                        <TextBlock Text="{Binding WindSpeedFormatted}" FontSize="11" Foreground="#A855F7" />
+                        <TextBlock Text="{Binding HighLowFormatted}" FontSize="11" Foreground="#CBD5E1" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- 5. ALMANAC -->
+        <DataTemplate x:Key="WeatherAlmanacTemplate">
+            <Border Background="#FF0C0E14" BorderBrush="#33F59E0B" BorderThickness="1" CornerRadius="14" Padding="16" MinWidth="250">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="SOLAR ALMANAC" FontSize="9.5" FontWeight="Bold" Foreground="#F59E0B" CharacterSpacing="150" />
+                    <TextBlock Text="{Binding CurrentTemperatureFormatted}" FontSize="32" FontFamily="Georgia" Foreground="White" />
+                    <TextBlock Text="{Binding Location}" FontSize="13" Foreground="#CBD5E1" />
+                    <TextBlock Text="{Binding WindSpeedFormatted}" FontSize="11" Foreground="#64748B" />
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- 6. HORIZON -->
+        <DataTemplate x:Key="WeatherHorizonTemplate">
+            <Border CornerRadius="18" Padding="16" MinWidth="270" BorderBrush="#33FFFFFF" BorderThickness="1">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#FF0F172A" Offset="0.0" />
+                        <GradientStop Color="#FF1E1B4B" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Grid>
+                    <StackPanel HorizontalAlignment="Left">
+                        <TextBlock Text="{Binding Location}" FontSize="14" FontWeight="SemiBold" Foreground="#E2E8F0" />
+                        <TextBlock Text="{Binding ConditionText}" FontSize="12" Foreground="#A855F7" />
+                        <TextBlock Text="{Binding HighLowFormatted}" FontSize="10.5" Foreground="#94A3B8" Margin="0,6,0,0" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding CurrentTemperatureFormatted}" FontSize="38" FontWeight="Bold" Foreground="White" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- 7. BOLD -->
+        <DataTemplate x:Key="WeatherBoldTemplate">
+            <Border Background="#FF080A0F" BorderBrush="#FF00F0FF" BorderThickness="1.5" CornerRadius="20" Padding="18" MinWidth="230">
+                <StackPanel HorizontalAlignment="Center" Spacing="2">
+                    <TextBlock Text="{Binding CurrentTemperatureFormatted}" FontSize="48" FontWeight="Black" Foreground="#00F0FF" HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding Location}" FontSize="13" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding ConditionText}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center" />
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- 8. STORY -->
+        <DataTemplate x:Key="WeatherStoryTemplate">
+            <Border Background="#D9161D2E" BorderBrush="#44A855F7" BorderThickness="1" CornerRadius="22" Padding="18" MinWidth="260">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="TODAY IN" FontSize="9" FontWeight="Bold" Foreground="#A855F7" CharacterSpacing="180" />
+                    <TextBlock Text="{Binding Location}" FontSize="18" FontWeight="Bold" Foreground="White" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{Binding CurrentTemperatureFormatted}" FontSize="28" FontWeight="SemiBold" Foreground="#F59E0B" />
+                        <TextBlock Text="{Binding ConditionText}" FontSize="14" Foreground="#CBD5E1" VerticalAlignment="Center" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- 9. EDITORIAL GLASS -->
+        <DataTemplate x:Key="WeatherEditorialGlassTemplate">
+            <Border Background="#28FFFFFF" BorderBrush="#66FFFFFF" BorderThickness="0.8" CornerRadius="24" Padding="18" MinWidth="260">
+                <Grid>
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="{Binding ConditionText}" FontSize="11" FontWeight="SemiBold" Foreground="#00FF9D" />
+                        <TextBlock Text="{Binding CurrentTemperatureFormatted}" FontSize="40" FontWeight="SemiBold" Foreground="White" />
+                        <TextBlock Text="{Binding Location}" FontSize="12" Foreground="#E2E8F0" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding ConditionGlyph}" FontFamily="Segoe Fluent Icons" FontSize="34" Foreground="#F59E0B" HorizontalAlignment="Right" VerticalAlignment="Top" />
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <local:WeatherStyleTemplateSelector x:Key="WeatherStyleSelector"
+            MinimalTemplate="{StaticResource WeatherMinimalTemplate}"
+            CompactTemplate="{StaticResource WeatherCompactTemplate}"
+            ForecastTemplate="{StaticResource WeatherForecastTemplate}"
+            PanelTemplate="{StaticResource WeatherPanelTemplate}"
+            AlmanacTemplate="{StaticResource WeatherAlmanacTemplate}"
+            HorizonTemplate="{StaticResource WeatherHorizonTemplate}"
+            BoldTemplate="{StaticResource WeatherBoldTemplate}"
+            StoryTemplate="{StaticResource WeatherStoryTemplate}"
+            EditorialGlassTemplate="{StaticResource WeatherEditorialGlassTemplate}" />
+    </UserControl.Resources>
+
+    <ContentPresenter Content="{x:Bind ViewModel, Mode=OneWay}"
+                      ContentTemplateSelector="{StaticResource WeatherStyleSelector}" />
 </UserControl>

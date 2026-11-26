@@ -204,6 +204,29 @@ public sealed partial class LauncherWindow : Window
         }
     }
 
+    private Microsoft.UI.Xaml.Controls.ItemsWrapGrid? _folderWrapGrid;
+
+    private void FolderWrapGrid_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is Microsoft.UI.Xaml.Controls.ItemsWrapGrid grid)
+        {
+            _folderWrapGrid = grid;
+            grid.MaximumRowsOrColumns = ViewModel.ActiveFolderColumns;
+        }
+    }
+
+    private void FolderDensityButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.Tag is string preset)
+        {
+            ViewModel.SetActiveFolderGridDensity(preset);
+            if (_folderWrapGrid != null)
+            {
+                _folderWrapGrid.MaximumRowsOrColumns = ViewModel.ActiveFolderColumns;
+            }
+        }
+    }
+
     private void CategoryButton_Click(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement fe && fe.Tag is string category)

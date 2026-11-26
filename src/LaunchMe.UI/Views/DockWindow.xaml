@@ -77,6 +77,33 @@
 
                 <Rectangle Width="1" Height="24" Fill="#1FFFFFFF" />
 
+                <!-- Touch Bar Quick-Action Tool Bar Strip -->
+                <ItemsControl ItemsSource="{x:Bind ViewModel.ToolBarActions, Mode=OneWay}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="5" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:DockToolBarAction">
+                            <Button Tag="{x:Bind}"
+                                    Click="ToolBarButton_Click"
+                                    Padding="8,4"
+                                    CornerRadius="10"
+                                    Background="#1800F0FF"
+                                    BorderBrush="#4400F0FF"
+                                    BorderThickness="0.5">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <FontIcon Glyph="{x:Bind Glyph}" FontSize="11" Foreground="#FF00F0FF" />
+                                    <TextBlock Text="{x:Bind Label}" FontSize="10" FontWeight="SemiBold" Foreground="#FFE2E8F0" />
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Rectangle Width="1" Height="24" Fill="#1FFFFFFF" />
+
                 <!-- Circular-Style Color-Coded Telemetry Pills (CPU / RAM / NET) -->
                 <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                     <Border CornerRadius="12"

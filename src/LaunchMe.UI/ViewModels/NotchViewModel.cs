@@ -18,6 +18,21 @@ public enum NotchDrawerTab
     Settings
 }
 
+public sealed class NotchDrawerWidget : INotifyPropertyChanged
+{
+    private string _size = "Compact";
+    public required string Id { get; init; }
+    public required string Title { get; init; }
+
+    public string Size
+    {
+        get => _size;
+        set { if (_size != value) { _size = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Size))); } }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+}
+
 public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
 {
     private readonly INotchWindowService? _notchWindowService;
@@ -44,6 +59,8 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
     private int _timerRemainingSeconds = 25 * 60;
     private bool _isHiddenByFullscreenGame;
     private bool _isFileDragOver;
+    private string _bluetoothToastText = string.Empty;
+    private int _bluetoothToastTicksRemaining;
     private NotchDrawerTab _activeTab = NotchDrawerTab.Pocket;
     private ClipboardCategory? _selectedClipboardCategory;
     private bool _disposed;
@@ -198,6 +215,23 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
 
     public string FocusModeBadgeText => _focusModeActive ? "FOCUS" : "OFF";
 
+    public string BluetoothToastText
+    {
+        get => _bluetoothToastText;
+        private set
+        {
+            if (_bluetoothToastText != value)
+            {
+                _bluetoothToastText = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(BluetoothToastVisibility));
+            }
+        }
+    }
+
+    public Visibility BluetoothToastVisibility =>
+        !string.IsNullOrEmpty(_bluetoothToastText) ? Visibility.Visible : Visibility.Collapsed;
+
     public string TimerDisplay
     {
         get => _timerDisplay;
@@ -275,6 +309,12 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<PocketItem> PocketItems { get; } = [];
     public ObservableCollection<ClipboardEntry> RecentClipboardCards { get; } = [];
     public ObservableCollection<ClipboardEntry> FilteredClipboardCards { get; } = [];
+    public ObservableCollection<NotchDrawerWidget> DrawerWidgets { get; } =
+    [
+        new NotchDrawerWidget { Id = "music", Title = "Now Playing", Size = "Compact" },
+        new NotchDrawerWidget { Id = "timer", Title = "Focus Timer", Size = "Compact" },
+        new NotchDrawerWidget { Id = "weather", Title = "Weather", Size = "Compact" }
+    ];
 
     public BlobboCharacterViewModel Blobbo { get; }
     public ApprovalNotificationViewModel Approvals { get; }
@@ -381,6 +421,37 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
     public void ToggleFocusMode()
     {
         FocusModeActive = !FocusModeActive;
+    }
+
+    public void ShowBluetoothToast(string deviceName, int? batteryPercent = null)
+    {
+        if (string.IsNullOrWhiteSpace(deviceName)) return;
+        BluetoothToastText = batteryPercent.HasValue
+            ? $"{deviceName} • {Math.Clamp(batteryPercent.Value, 0, 100)}%"
+            : $"{deviceName} Connected";
+        _bluetoothToastTicksRemaining = 4;
+    }
+
+    public void DismissBluetoothToast()
+    {
+        _bluetoothToastTicksRemaining = 0;
+        BluetoothToastText = string.Empty;
+    }
+
+    public void MoveDrawerWidget(int fromIndex, int toIndex)
+    {
+        if (fromIndex < 0 || fromIndex >= DrawerWidgets.Count || toIndex < 0 || toIndex >= DrawerWidgets.Count || fromIndex == toIndex)
+            return;
+        DrawerWidgets.Move(fromIndex, toIndex);
+    }
+
+    public void ToggleDrawerWidgetSize(string id)
+    {
+        var w = DrawerWidgets.FirstOrDefault(x => x.Id == id);
+        if (w != null)
+        {
+            w.Size = w.Size == "Compact" ? "Large" : "Compact";
+        }
     }
 
     public void StartTimer(int minutes = 25)
@@ -580,6 +651,16 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
                     if (_timerRemainingSeconds == 0)
                     {
                         IsTimerRunning = false;
+                    }
+                }
+
+                // Auto-dismiss Bluetooth toast
+                if (_bluetoothToastTicksRemaining > 0)
+                {
+                    _bluetoothToastTicksRemaining--;
+                    if (_bluetoothToastTicksRemaining == 0)
+                    {
+                        BluetoothToastText = string.Empty;
                     }
                 }
 

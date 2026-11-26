@@ -575,8 +575,39 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
         };
 
         ApplyTheme(settings);
+        OnPropertyChanged(nameof(CustomHexTint));
         _ = PersistThemeToActiveSpaceAsync(settings);
     }
+
+    public string CustomHexTint
+    {
+        get => _currentTintHex;
+        set
+        {
+            if (_currentTintHex != value)
+            {
+                _currentTintHex = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public int ActiveFolderColumns => _activeFolder?.Density.Columns ?? 6;
+
+    public void SetActiveFolderGridDensity(string preset)
+    {
+        if (_activeFolder == null) return;
+        _activeFolder.Density = preset switch
+        {
+            "3x5" => FolderGridDensity.Grid3x5,
+            "5x8" => FolderGridDensity.Grid5x8,
+            _ => FolderGridDensity.Grid4x6
+        };
+        OnPropertyChanged(nameof(ActiveFolderColumns));
+    }
+
+    public ICommand ApplyCustomHexTintCommand => new RelayCommand(() => ApplyQuickThemeTint(_currentTintHex));
+    public ICommand RefreshAppsCommand => new RelayCommand(LoadClassicView);
 
     public void ApplyWallpaper(WallpaperSettings settings)
     {
@@ -929,6 +960,53 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
         currentPage.Items.Add(new LauncherItemViewModel(folder.Id, folder.Name, "\uE8B7", LauncherItemType.Folder, folder));
         SelectedBatchItems.Clear();
         _ = PersistLayoutToActiveSpaceAsync();
+    }
+
+    /// <summary>Moves an item to an arbitrary slot index on the active page (Free Layout Edit Mode).</summary>
+    public bool MoveItemToSlot(string itemId, int targetIndex)
+    {
+        if (Pages.Count == 0 || CurrentPageIndex < 0 || CurrentPageIndex >= Pages.Count) return false;
+        var page = Pages[CurrentPageIndex];
+        var item = page.Items.FirstOrDefault(i => i.Id == itemId);
+        if (item == null) return false;
+
+        int oldIndex = page.Items.IndexOf(item);
+        int clamped = Math.Clamp(targetIndex, 0, Math.Max(0, page.Items.Count - 1));
+        if (oldIndex == clamped) return true;
+
+        page.Items.Move(oldIndex, clamped);
+        _ = PersistLayoutToActiveSpaceAsync();
+        return true;
+    }
+
+    /// <summary>
+    /// Clean Uninstall: hides/removes the app from the Launcher and moves leftover
+    /// AppData trace folders into a reversible local trash directory.
+    /// </summary>
+    public bool CleanUninstallApp(string appId, string? traceDirectoryOverride = null)
+    {
+        if (string.IsNullOrWhiteSpace(appId)) return false;
+
+        _appIndexer.HideApp(appId, true);
+        foreach (var page in Pages)
+        {
+            var match = page.Items.FirstOrDefault(i => string.Equals(i.Id, appId, StringComparison.OrdinalIgnoreCase));
+            if (match != null)
+            {
+                page.Items.Remove(match);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(traceDirectoryOverride) && Directory.Exists(traceDirectoryOverride))
+        {
+            string trashRoot = Path.Combine(Path.GetTempPath(), "LaunchMeCleanUninstallTrash");
+            Directory.CreateDirectory(trashRoot);
+            string dest = Path.Combine(trashRoot, $"{Path.GetFileName(traceDirectoryOverride)}_{DateTime.UtcNow:yyyyMMddHHmmss}");
+            Directory.Move(traceDirectoryOverride, dest);
+        }
+
+        _ = PersistLayoutToActiveSpaceAsync();
+        return true;
     }
 
     private AppItem? ResolveIndexedApp(string appId)

@@ -8,6 +8,8 @@ using LaunchMe.Platform.Win32.Metrics;
 
 namespace LaunchMe.UI.ViewModels;
 
+public sealed record DockToolBarAction(string Id, string Label, string Glyph, string ActionKey);
+
 public sealed class DockViewModel : INotifyPropertyChanged, IDisposable
 {
     private readonly IDockShellService? _dockShellService;
@@ -102,6 +104,15 @@ public sealed class DockViewModel : INotifyPropertyChanged, IDisposable
     }
 
     public ObservableCollection<DockItem> DockItems { get; } = [];
+    public ObservableCollection<DockToolBarAction> ToolBarActions { get; } =
+    [
+        new("tb-focus", "Focus", "\uE708", "focus"),
+        new("tb-shot", "Snap", "\uE722", "screenshot"),
+        new("tb-term", "Term", "\uE756", "terminal"),
+        new("tb-lock", "Lock", "\uE72E", "lock")
+    ];
+
+    public event EventHandler<DockToolBarAction>? ToolBarActionTriggered;
 
     public ICommand ToggleFloatingCommand { get; }
     public ICommand NextSpaceCommand { get; }
@@ -109,6 +120,7 @@ public sealed class DockViewModel : INotifyPropertyChanged, IDisposable
     public ICommand ToggleAmbientSoundCommand { get; }
     public ICommand CycleAmbientPresetCommand { get; }
     public ICommand LaunchDockItemCommand { get; }
+    public ICommand ExecuteToolBarActionCommand { get; }
 
     public DockViewModel(
         IDockShellService? dockShellService = null,
@@ -129,6 +141,7 @@ public sealed class DockViewModel : INotifyPropertyChanged, IDisposable
         ToggleAmbientSoundCommand = new RelayCommand(ToggleAmbientSound);
         CycleAmbientPresetCommand = new RelayCommand(CycleAmbientPreset);
         LaunchDockItemCommand = new RelayCommand<DockItem>(LaunchDockItem);
+        ExecuteToolBarActionCommand = new RelayCommand<DockToolBarAction>(ExecuteToolBarAction);
 
         if (_dockSpaceService != null)
         {
@@ -202,6 +215,12 @@ public sealed class DockViewModel : INotifyPropertyChanged, IDisposable
     {
         if (item == null || string.IsNullOrWhiteSpace(item.TargetPath)) return;
         _appLauncherService?.LaunchTarget(item.TargetPath);
+    }
+
+    public void ExecuteToolBarAction(DockToolBarAction? action)
+    {
+        if (action == null) return;
+        ToolBarActionTriggered?.Invoke(this, action);
     }
 
     private void RefreshDockSpace()

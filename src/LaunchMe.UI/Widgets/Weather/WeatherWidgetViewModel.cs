@@ -7,6 +7,19 @@ using LaunchMe.UI.Widgets.Models;
 
 namespace LaunchMe.UI.Widgets.Weather;
 
+public enum WeatherStyle
+{
+    Minimal,
+    Compact,
+    Forecast,
+    Panel,
+    Almanac,
+    Horizon,
+    Bold,
+    Story,
+    EditorialGlass
+}
+
 public sealed class ForecastItemViewModel
 {
     public string DayName { get; }
@@ -35,6 +48,7 @@ public sealed class WeatherWidgetViewModel : IWidgetViewModel
     private string _highLowFormatted = "H:26° L:16°";
     private string _humidityFormatted = "52%";
     private string _windSpeedFormatted = "12 km/h";
+    private WeatherStyle _style = WeatherStyle.Forecast;
     private bool _isActive = true;
     private bool _isTimerRunning;
     private bool _disposed;
@@ -122,7 +136,14 @@ public sealed class WeatherWidgetViewModel : IWidgetViewModel
 
     public ObservableCollection<ForecastItemViewModel> Forecast { get; } = new();
 
+    public WeatherStyle Style
+    {
+        get => _style;
+        set { if (_style != value) { _style = value; OnPropertyChanged(); } }
+    }
+
     public ICommand RefreshCommand { get; }
+    public ICommand CycleStyleCommand { get; }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -130,6 +151,11 @@ public sealed class WeatherWidgetViewModel : IWidgetViewModel
     {
         _provider = provider ?? new DefaultWeatherProvider();
         RefreshCommand = new RelayCommand(() => _ = RefreshAsync());
+        CycleStyleCommand = new RelayCommand(() =>
+        {
+            var values = Enum.GetValues<WeatherStyle>();
+            Style = values[((int)Style + 1) % values.Length];
+        });
 
         _ = RefreshAsync();
 

@@ -84,6 +84,14 @@ public sealed partial class DockWindow : Window
         }
     }
 
+    private void ToolBarButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Microsoft.UI.Xaml.Controls.Button btn && btn.Tag is DockToolBarAction action)
+        {
+            ViewModel.ExecuteToolBarAction(action);
+        }
+    }
+
     private void ApplyToolWindowStyle()
     {
         const int GWL_EXSTYLE = -20;

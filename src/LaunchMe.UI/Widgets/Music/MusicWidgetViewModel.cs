@@ -7,6 +7,16 @@ using LaunchMe.UI.Widgets.Models;
 
 namespace LaunchMe.UI.Widgets.Music;
 
+public enum MusicWidgetStyle
+{
+    Minimal,
+    FullCover,
+    Vinyl,
+    DynamicAccent,
+    DynamicSplit,
+    CompactIdle
+}
+
 public sealed class MusicWidgetViewModel : IWidgetViewModel
 {
     private readonly IMediaSessionService _mediaService;
@@ -20,6 +30,7 @@ public sealed class MusicWidgetViewModel : IWidgetViewModel
     private bool _isPlaying;
     private TimeSpan _position = TimeSpan.Zero;
     private TimeSpan _duration = TimeSpan.Zero;
+    private MusicWidgetStyle _style = MusicWidgetStyle.Minimal;
     private bool _isActive = true;
     private bool _isTimerRunning;
     private bool _disposed;
@@ -121,6 +132,13 @@ public sealed class MusicWidgetViewModel : IWidgetViewModel
     public ICommand PlayPauseCommand { get; }
     public ICommand NextCommand { get; }
     public ICommand PreviousCommand { get; }
+    public ICommand CycleStyleCommand { get; }
+
+    public MusicWidgetStyle Style
+    {
+        get => _style;
+        set { if (_style != value) { _style = value; OnPropertyChanged(); } }
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -131,6 +149,11 @@ public sealed class MusicWidgetViewModel : IWidgetViewModel
         PlayPauseCommand = new RelayCommand(() => _ = _mediaService.PlayPauseAsync());
         NextCommand = new RelayCommand(() => _ = _mediaService.NextAsync());
         PreviousCommand = new RelayCommand(() => _ = _mediaService.PreviousAsync());
+        CycleStyleCommand = new RelayCommand(() =>
+        {
+            var values = Enum.GetValues<MusicWidgetStyle>();
+            Style = values[((int)Style + 1) % values.Length];
+        });
 
         _mediaService.TrackChanged += OnTrackChanged;
         _progressTimer = new Timer(OnProgressTick, null, Timeout.Infinite, Timeout.Infinite);
