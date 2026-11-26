@@ -41,6 +41,8 @@ public partial class App : Application
     private WidgetCatalogViewModel? _widgetCatalog;
     private LauncherViewModel? _launcherViewModel;
     private LauncherWindow? _launcherWindow;
+    private NotchWindow? _notchWindow;
+    private DockWindow? _dockWindow;
     private NotchViewModel? _notchViewModel;
     private DockViewModel? _dockViewModel;
     private MusicPlayerViewModel? _musicPlayerViewModel;
@@ -84,7 +86,8 @@ public partial class App : Application
 
         // Build DI composition root
         _spaceStore = new SqliteSpaceStore();
-        var iconCache = new IconCacheService();
+        var shellIconService = new Win32ShellIconService();
+        var iconCache = new IconCacheService(shellIconExtractor: shellIconService);
         _appIndexer = new AppIndexer(iconCache);
         IClipboardWriter clipboardWriter = new Win32ClipboardWriter();
         _clipboardMonitor = new WinRTClipboardMonitor();
@@ -221,6 +224,12 @@ public partial class App : Application
         // Load active Space and run initial app scan asynchronously
         _ = InitializeSpaceAndAppsAsync();
 
+        _notchWindow = new NotchWindow(_notchViewModel);
+        _notchWindow.Activate();
+
+        _dockWindow = new DockWindow(_dockViewModel);
+        _dockWindow.Activate();
+
         _launcherWindow.ShowLauncher();
 
         if (string.Equals(Environment.GetEnvironmentVariable("LAUNCHME_SHOWCASE_MODE"), "1", StringComparison.Ordinal))
@@ -278,12 +287,17 @@ public partial class App : Application
     {
         try
         {
-            await Task.Delay(900);
-            if (_launcherWindow?.Content is UIElement root)
+            await Task.Delay(1400);
+            var targets = new List<(UIElement Surface, string Name)>();
+            if (_launcherWindow?.Content is UIElement launcherRoot) targets.Add((launcherRoot, "LauncherWindow"));
+            if (_notchWindow?.Content is UIElement notchRoot) targets.Add((notchRoot, "NotchWindow"));
+            if (_dockWindow?.Content is UIElement dockRoot) targets.Add((dockRoot, "DockWindow"));
+
+            if (targets.Count > 0)
             {
                 using var capture = new ShowcaseCaptureService();
-                uint dpi = (uint)(_launcherWindow.Content.XamlRoot?.RasterizationScale * 100 ?? 100);
-                await capture.CaptureAllAsync([(root, "LauncherWindow")], dpi.ToString());
+                uint dpi = (uint)(_launcherWindow?.Content?.XamlRoot?.RasterizationScale * 100 ?? 100);
+                await capture.CaptureAllAsync(targets, dpi.ToString());
             }
         }
         catch

@@ -12,7 +12,7 @@
     xmlns:widgets="using:LaunchMe.UI.Widgets.Catalog"
     mc:Ignorable="d">
 
-    <Grid x:Name="RootGrid" Background="#FF080A0F" KeyDown="RootGrid_KeyDown" UseLayoutRounding="False">
+    <Grid x:Name="RootGrid" Background="Transparent" KeyDown="RootGrid_KeyDown" UseLayoutRounding="False">
         <Grid.ContextFlyout>
             <MenuFlyout>
                 <MenuFlyoutItem Text="Toggle Edit Mode" Command="{x:Bind ViewModel.ToggleEditModeCommand}" />
@@ -164,11 +164,15 @@
                 <FlipView x:Name="LauncherFlipView"
                           Grid.Row="1"
                           Grid.Column="0"
+                          Background="Transparent"
+                          BorderThickness="0"
                           ItemsSource="{x:Bind ViewModel.Pages, Mode=OneWay}"
                           SelectedIndex="{x:Bind ViewModel.CurrentPageIndex, Mode=TwoWay}">
                     <FlipView.ItemTemplate>
                         <DataTemplate x:DataType="vm:LauncherPageViewModel">
                             <GridView ItemsSource="{x:Bind Items, Mode=OneWay}"
+                                      Background="Transparent"
+                                      BorderThickness="0"
                                       SelectionMode="None"
                                       IsItemClickEnabled="True"
                                       ItemClick="LauncherGridView_ItemClick"
@@ -176,7 +180,7 @@
                                       VerticalAlignment="Center">
                                 <GridView.ItemTemplate>
                                     <DataTemplate x:DataType="vm:LauncherItemViewModel">
-                                        <Grid Width="98" Height="112" Margin="12"
+                                        <Grid Width="92" Height="98" Margin="8"
                                               Background="Transparent"
                                               CanDrag="{x:Bind IsEditModeActive, Mode=OneWay}"
                                               DragStarting="Item_DragStarting"

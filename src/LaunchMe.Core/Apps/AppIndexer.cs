@@ -160,20 +160,34 @@ public sealed class AppIndexer : IAppIndexer
             foreach (var package in packages)
             {
                 ct.ThrowIfCancellationRequested();
-                if (package.IsFramework || package.IsResourcePackage) continue;
+                if (package.IsFramework || package.IsResourcePackage || package.IsOptional ||
+                    (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041) && package.IsStub)) continue;
 
                 var id = package.Id;
                 if (string.IsNullOrWhiteSpace(id?.FamilyName)) continue;
 
-                var appId = $"uwp:{id.FamilyName.ToLowerInvariant()}";
                 var displayName = package.DisplayName;
                 if (string.IsNullOrWhiteSpace(displayName)) displayName = id.Name;
+                if (string.IsNullOrWhiteSpace(displayName) || Guid.TryParse(displayName.Trim('{', '}'), out _)) continue;
+
+                var appId = $"uwp:{id.FamilyName.ToLowerInvariant()}";
+                string installPath = package.InstalledLocation?.Path ?? string.Empty;
+                string? logoCandidate = null;
+                try { logoCandidate = package.Logo?.LocalPath; } catch { }
+
+                string? iconTarget = !string.IsNullOrWhiteSpace(logoCandidate) && File.Exists(logoCandidate)
+                    ? logoCandidate
+                    : installPath;
+                var iconPath = _iconCache.GetOrExtractIcon(appId, iconTarget);
+                var base64 = _iconCache.ConvertIconToBase64(iconPath);
 
                 var item = new AppItem
                 {
                     Id = appId,
                     Name = displayName,
-                    ExecutablePath = package.InstalledLocation?.Path ?? string.Empty,
+                    ExecutablePath = installPath,
+                    IconCachePath = iconPath,
+                    IconBase64 = base64,
                     AppType = AppType.MsixPackage,
                     Categories = [ClassifyCategory(displayName, id.Name)]
                 };
