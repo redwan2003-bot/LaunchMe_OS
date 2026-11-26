@@ -89,7 +89,57 @@ public sealed class LauncherItemViewModel : INotifyPropertyChanged
         IconImageSource = iconSource;
         Type = type;
         FolderData = folderData;
-        _dominantGlowHex = ComputeDominantGlowHex(displayName, type);
+        _dominantGlowHex = SampleDominantGlowHex(iconSource, displayName, type);
+    }
+
+    /// <summary>
+    /// Samples a translucent dominant-color backlight (#28RRGGBB) directly from a cached icon file's
+    /// pixel bytes when present on disk, falling back to a deterministic jewel tone.
+    /// </summary>
+    public static string SampleDominantGlowHex(string? iconPath, string name, LauncherItemType type)
+    {
+        if (type == LauncherItemType.Folder) return "#2CA855F7";
+
+        if (!string.IsNullOrWhiteSpace(iconPath) && File.Exists(iconPath))
+        {
+            try
+            {
+                byte[] bytes = File.ReadAllBytes(iconPath);
+                if (bytes.Length >= 64)
+                {
+                    long rSum = 0, gSum = 0, bSum = 0;
+                    int count = 0;
+                    // Sample interior payload bytes (skipping 32-byte header)
+                    int step = Math.Max(4, (bytes.Length - 32) / 32);
+                    for (int i = 32; i + 2 < bytes.Length; i += step)
+                    {
+                        byte r = bytes[i];
+                        byte g = bytes[i + 1];
+                        byte b = bytes[i + 2];
+                        if (r + g + b > 60) // skip near-black/transparent padding
+                        {
+                            rSum += r;
+                            gSum += g;
+                            bSum += b;
+                            count++;
+                        }
+                    }
+
+                    if (count > 0)
+                    {
+                        byte avgR = (byte)Math.Clamp(rSum / count, 48, 255);
+                        byte avgG = (byte)Math.Clamp(gSum / count, 48, 255);
+                        byte avgB = (byte)Math.Clamp(bSum / count, 48, 255);
+                        return $"#28{avgR:X2}{avgG:X2}{avgB:X2}";
+                    }
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        return ComputeDominantGlowHex(name, type);
     }
 
     public static string ComputeDominantGlowHex(string name, LauncherItemType type)

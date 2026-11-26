@@ -303,13 +303,45 @@ public sealed class MusicPlayerViewModel : INotifyPropertyChanged, IDisposable
     public string AuraPrimaryHex
     {
         get => _auraPrimaryHex;
-        private set { if (_auraPrimaryHex != value) { _auraPrimaryHex = value; OnPropertyChanged(); } }
+        private set
+        {
+            if (_auraPrimaryHex != value)
+            {
+                _auraPrimaryHex = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(AuraPrimaryColor));
+            }
+        }
     }
 
     public string AuraSecondaryHex
     {
         get => _auraSecondaryHex;
-        private set { if (_auraSecondaryHex != value) { _auraSecondaryHex = value; OnPropertyChanged(); } }
+        private set
+        {
+            if (_auraSecondaryHex != value)
+            {
+                _auraSecondaryHex = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(AuraSecondaryColor));
+            }
+        }
+    }
+
+    public Windows.UI.Color AuraPrimaryColor => ParseArgbHex(_auraPrimaryHex);
+    public Windows.UI.Color AuraSecondaryColor => ParseArgbHex(_auraSecondaryHex);
+
+    public static Windows.UI.Color ParseArgbHex(string hex)
+    {
+        if (!string.IsNullOrWhiteSpace(hex) && hex.StartsWith('#') && hex.Length == 9 &&
+            byte.TryParse(hex.AsSpan(1, 2), System.Globalization.NumberStyles.HexNumber, null, out byte a) &&
+            byte.TryParse(hex.AsSpan(3, 2), System.Globalization.NumberStyles.HexNumber, null, out byte r) &&
+            byte.TryParse(hex.AsSpan(5, 2), System.Globalization.NumberStyles.HexNumber, null, out byte g) &&
+            byte.TryParse(hex.AsSpan(7, 2), System.Globalization.NumberStyles.HexNumber, null, out byte b))
+        {
+            return Windows.UI.Color.FromArgb(a, r, g, b);
+        }
+        return Windows.UI.Color.FromArgb(255, 0, 240, 255);
     }
 
     public ICommand PlayPauseCommand { get; }

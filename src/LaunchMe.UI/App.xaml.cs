@@ -192,6 +192,32 @@ public partial class App : Application
         _ = InitializeSpaceAndAppsAsync();
 
         _launcherWindow.ShowLauncher();
+
+        if (string.Equals(Environment.GetEnvironmentVariable("LAUNCHME_SHOWCASE_MODE"), "1", StringComparison.Ordinal))
+        {
+            _ = RunShowcaseCaptureAndExitAsync();
+        }
+    }
+
+    private async Task RunShowcaseCaptureAndExitAsync()
+    {
+        try
+        {
+            await Task.Delay(900);
+            if (_launcherWindow?.Content is UIElement root)
+            {
+                using var capture = new ShowcaseCaptureService();
+                uint dpi = (uint)(_launcherWindow.Content.XamlRoot?.RasterizationScale * 100 ?? 100);
+                await capture.CaptureAllAsync([(root, "LauncherWindow")], dpi.ToString());
+            }
+        }
+        catch
+        {
+        }
+        finally
+        {
+            Exit();
+        }
     }
 
     private async Task InitializeSpaceAndAppsAsync()

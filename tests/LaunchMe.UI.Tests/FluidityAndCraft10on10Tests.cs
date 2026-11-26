@@ -74,4 +74,52 @@ public sealed class FluidityAndCraft10on10Tests
         app.DominantGlowHex.Should().StartWith("#28").And.HaveLength(9);
         folder.DominantGlowHex.Should().Be("#2CA855F7");
     }
+
+    [Fact]
+    public void MusicPlayer_AuraColorsParseToWinUIColorStructAndNotify()
+    {
+        using var vm = new MusicPlayerViewModel();
+        var props = new List<string>();
+        vm.PropertyChanged += (_, e) => { if (e.PropertyName != null) props.Add(e.PropertyName); };
+
+        string fakeArt = Convert.ToBase64String([240, 80, 120, 200, 90, 130, 210, 70, 110, 220, 60, 140, 250, 85, 115, 205]);
+        vm.UpdateFromTrack(new MediaTrackInfo { Title = "Neon", Artist = "Pulse", ThumbnailBase64 = fakeArt, IsPlaying = true });
+
+        vm.AuraPrimaryColor.A.Should().Be(255);
+        vm.AuraSecondaryColor.A.Should().Be(255);
+        props.Should().Contain(nameof(MusicPlayerViewModel.AuraPrimaryColor));
+        props.Should().Contain(nameof(MusicPlayerViewModel.AuraSecondaryColor));
+    }
+
+    [Fact]
+    public void LauncherItem_SamplesPixelRgbFromIconFileOnDisk()
+    {
+        string tempIcon = Path.Combine(Path.GetTempPath(), $"launchme-icon-{Guid.NewGuid():N}.bin");
+        try
+        {
+            byte[] payload = new byte[128];
+            for (int i = 32; i + 2 < payload.Length; i += 3)
+            {
+                payload[i] = 40;
+                payload[i + 1] = 200;
+                payload[i + 2] = 120;
+            }
+            File.WriteAllBytes(tempIcon, payload);
+
+            var item = new LauncherItemViewModel("app-disk", "DiskApp", tempIcon, LauncherItemType.App);
+            item.DominantGlowHex.Should().StartWith("#28").And.HaveLength(9);
+            item.DominantGlowHex.Should().NotBe("#28000000");
+        }
+        finally
+        {
+            if (File.Exists(tempIcon)) File.Delete(tempIcon);
+        }
+    }
+
+    [Fact]
+    public void ShowcaseCaptureService_DetectsCliFlagAccurately()
+    {
+        LaunchMe.UI.Services.ShowcaseCaptureService.IsShowcaseMode(["--capture-showcase"]).Should().BeTrue();
+        LaunchMe.UI.Services.ShowcaseCaptureService.IsShowcaseMode(["--smoke-test"]).Should().BeFalse();
+    }
 }
