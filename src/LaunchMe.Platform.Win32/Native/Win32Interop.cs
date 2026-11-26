@@ -436,6 +436,9 @@ public static class Win32Interop
     [DllImport("user32.dll")]
     public static extern nint MonitorFromWindow(nint hwnd, uint dwFlags);
 
+    [DllImport("user32.dll")]
+    public static extern nint MonitorFromPoint(POINT pt, uint dwFlags);
+
     [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     public static extern int GetClassNameW(nint hWnd, [Out] System.Text.StringBuilder lpClassName, int nMaxCount);
 

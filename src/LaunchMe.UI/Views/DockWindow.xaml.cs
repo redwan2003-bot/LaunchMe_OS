@@ -6,6 +6,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using LaunchMe.Platform.Win32.Shell;
 using LaunchMe.UI.ViewModels;
 
 namespace LaunchMe.UI.Views;
@@ -44,6 +45,7 @@ public sealed partial class DockWindow : Window
         _appWindow.SetPresenter(_presenter);
 
         ApplyToolWindowStyle();
+        Win32WindowEdgeHelper.ApplyBorderlessPillDwmChrome(_hwnd);
         PositionBottomCenter();
 
         Closed += (_, _) => ViewModel.Dispose();
@@ -135,12 +137,11 @@ public sealed partial class DockWindow : Window
 
     private void PositionBottomCenter()
     {
-        int screenWidth = GetSystemMetrics(0);
-        int screenHeight = GetSystemMetrics(1);
-        int width = Math.Min(1280, screenWidth - 40);
+        var mon = Win32WindowEdgeHelper.GetActiveMonitorBounds();
+        int width = Math.Min(1280, mon.Width - 40);
         int height = ViewModel.DockHeight + 16;
-        int x = (screenWidth - width) / 2;
-        int y = screenHeight - height;
+        int x = mon.Left + ((mon.Width - width) / 2);
+        int y = mon.Bottom - height;
 
         _appWindow.MoveAndResize(new RectInt32(x, y, width, height));
     }
@@ -150,7 +151,4 @@ public sealed partial class DockWindow : Window
 
     [DllImport("user32.dll", EntryPoint = "SetWindowLongW")]
     private static extern int SetWindowLong(nint hWnd, int nIndex, int dwNewLong);
-
-    [DllImport("user32.dll")]
-    private static extern int GetSystemMetrics(int nIndex);
 }

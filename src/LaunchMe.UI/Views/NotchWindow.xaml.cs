@@ -9,6 +9,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using LaunchMe.Contracts.Clipboard;
+using LaunchMe.Platform.Win32.Shell;
 using LaunchMe.UI.ViewModels;
 
 namespace LaunchMe.UI.Views;
@@ -54,6 +55,7 @@ public sealed partial class NotchWindow : Window
         _appWindow.SetPresenter(_presenter);
 
         ApplyToolWindowStyle();
+        Win32WindowEdgeHelper.ApplyBorderlessPillDwmChrome(_hwnd);
         PositionTopCenter();
 
         // Screen Capture Exclusion
@@ -307,11 +309,11 @@ public sealed partial class NotchWindow : Window
 
     private void PositionTopCenter()
     {
-        int screenWidth = GetSystemMetrics(0);
+        var mon = Win32WindowEdgeHelper.GetActiveMonitorBounds();
         int width = (int)ViewModel.WidthPx;
         int height = (int)ViewModel.HeightPx;
-        int x = (screenWidth - width) / 2;
-        int y = 0;
+        int x = mon.Left + ((mon.Width - width) / 2);
+        int y = mon.Top;
 
         _appWindow.MoveAndResize(new RectInt32(x, y, width, height));
     }
@@ -321,7 +323,4 @@ public sealed partial class NotchWindow : Window
 
     [DllImport("user32.dll", EntryPoint = "SetWindowLongW")]
     private static extern int SetWindowLong(nint hWnd, int nIndex, int dwNewLong);
-
-    [DllImport("user32.dll")]
-    private static extern int GetSystemMetrics(int nIndex);
 }

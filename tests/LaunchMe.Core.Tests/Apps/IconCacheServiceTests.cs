@@ -186,6 +186,28 @@ public sealed class IconCacheServiceTests : IDisposable
         service.TryFindMsixHighResAsset(exePath).Should().Be(scale200);
     }
 
+    [Fact]
+    public void GetOrExtractIcon_256px_AppliesG2SquircleMaskAndSpecularRim()
+    {
+        var exePath = Path.Combine(_tempRoot, "GoldStandardApp.exe");
+        File.WriteAllBytes(exePath, [0x4D, 0x5A]);
+
+        var mockExtractor = new Mock<IShellIconExtractor>();
+        mockExtractor
+            .Setup(x => x.ExtractHighResPng(exePath, 256, true))
+            .Returns(CreateSolidPngBytes(512, 512, Color.Navy));
+
+        var service = new IconCacheService(_cacheDir, mockExtractor.Object);
+        var cachedIcon = service.GetOrExtractIcon("gold-256", exePath, 256);
+
+        File.Exists(cachedIcon).Should().BeTrue();
+        using var result = new Bitmap(cachedIcon);
+        result.Width.Should().Be(256);
+        result.Height.Should().Be(256);
+        result.GetPixel(1, 1).A.Should().Be(0);
+        result.GetPixel(128, 128).A.Should().Be(255);
+    }
+
     private static byte[] CreateSolidPngBytes(int width, int height, Color color)
     {
         using var bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);

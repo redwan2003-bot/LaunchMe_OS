@@ -258,6 +258,15 @@ public sealed class IconCacheService
                 using var squirclePath = CreateG2SquirclePath(rect, exponent: 4.5, segments: 128);
                 g.SetClip(squirclePath);
                 g.DrawImage(rawBitmap, rect);
+                g.ResetClip();
+
+                using var rimBrush = new LinearGradientBrush(
+                    rect,
+                    Color.FromArgb(95, 255, 255, 255),
+                    Color.FromArgb(15, 255, 255, 255),
+                    LinearGradientMode.ForwardDiagonal);
+                using var rimPen = new Pen(rimBrush, 1.5f);
+                g.DrawPath(rimPen, squirclePath);
             }
             else
             {
