@@ -138,6 +138,20 @@ public sealed class ClockWidgetViewModel : IWidgetViewModel
     }
 
     public bool IsTimerRunning => _isTimerRunning;
+    public bool EnableSmoothSweep { get; set; } = true;
+
+    public void TickSmoothSweep(DateTime? now = null)
+    {
+        if (_disposed || !_isActive || !_isTimerRunning || !EnableSmoothSweep) return;
+        DateTime time = now ?? GetCurrentTime();
+        double seconds = time.Second + (time.Millisecond / 1000.0);
+        double minutes = time.Minute + (seconds / 60.0);
+        double hours = (time.Hour % 12) + (minutes / 60.0);
+
+        SecondHandAngle = seconds * 6.0;
+        MinuteHandAngle = minutes * 6.0;
+        HourHandAngle = hours * 30.0;
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

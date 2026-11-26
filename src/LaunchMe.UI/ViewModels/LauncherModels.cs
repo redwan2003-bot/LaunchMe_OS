@@ -49,11 +49,18 @@ public sealed class LauncherItemViewModel : INotifyPropertyChanged
     private string _displayName;
     private bool _isTitleVisible = true;
     private bool _isEditModeActive;
+    private string _dominantGlowHex;
 
     public string Id { get; }
     public string IconImageSource { get; }
     public LauncherItemType Type { get; }
     public LauncherFolderViewModel? FolderData { get; }
+
+    public string DominantGlowHex
+    {
+        get => _dominantGlowHex;
+        set { if (_dominantGlowHex != value) { _dominantGlowHex = value; OnPropertyChanged(); } }
+    }
 
     public string DisplayName
     {
@@ -82,6 +89,22 @@ public sealed class LauncherItemViewModel : INotifyPropertyChanged
         IconImageSource = iconSource;
         Type = type;
         FolderData = folderData;
+        _dominantGlowHex = ComputeDominantGlowHex(displayName, type);
+    }
+
+    public static string ComputeDominantGlowHex(string name, LauncherItemType type)
+    {
+        if (type == LauncherItemType.Folder) return "#2CA855F7";
+        int hash = Math.Abs(StringComparer.OrdinalIgnoreCase.GetHashCode(name ?? string.Empty));
+        return (hash % 6) switch
+        {
+            0 => "#2800F0FF", // Electric Cyan
+            1 => "#28A855F7", // Ultra Orchid
+            2 => "#2800FF9D", // Phosphor Emerald
+            3 => "#28F59E0B", // Amber Topaz
+            4 => "#2838BDF8", // Sky Sapphire
+            _ => "#28F43F5E"  // Ruby Rose
+        };
     }
 
     private void OnPropertyChanged([CallerMemberName] string? name = null) =>

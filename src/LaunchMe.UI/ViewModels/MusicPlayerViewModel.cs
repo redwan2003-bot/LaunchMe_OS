@@ -86,6 +86,8 @@ public sealed class MusicPlayerViewModel : INotifyPropertyChanged, IDisposable
     private double _beatRingScale = 1.0;
     private bool _isVerticalLayout = true;
     private bool _syncWallpaperToArt;
+    private string _auraPrimaryHex = "#FF00F0FF";
+    private string _auraSecondaryHex = "#FFA855F7";
     private double _phase;
     private bool _disposed;
 
@@ -298,6 +300,18 @@ public sealed class MusicPlayerViewModel : INotifyPropertyChanged, IDisposable
 
     public string WallpaperSyncLabel => _syncWallpaperToArt ? "Art Sync: ON" : "Art Sync: OFF";
 
+    public string AuraPrimaryHex
+    {
+        get => _auraPrimaryHex;
+        private set { if (_auraPrimaryHex != value) { _auraPrimaryHex = value; OnPropertyChanged(); } }
+    }
+
+    public string AuraSecondaryHex
+    {
+        get => _auraSecondaryHex;
+        private set { if (_auraSecondaryHex != value) { _auraSecondaryHex = value; OnPropertyChanged(); } }
+    }
+
     public ICommand PlayPauseCommand { get; }
     public ICommand NextCommand { get; }
     public ICommand PreviousCommand { get; }
@@ -403,10 +417,48 @@ public sealed class MusicPlayerViewModel : INotifyPropertyChanged, IDisposable
             ? Math.Clamp(track.Position.TotalSeconds / track.Duration.TotalSeconds, 0.0, 1.0)
             : 0.0;
 
+        UpdateAlbumAuraPalette(track);
+
         if (_syncWallpaperToArt)
         {
             MusicArtWallpaperSyncRequested?.Invoke(this, track);
         }
+    }
+
+    public void UpdateAlbumAuraPalette(MediaTrackInfo track)
+    {
+        if (!string.IsNullOrWhiteSpace(track.ThumbnailBase64))
+        {
+            try
+            {
+                byte[] bytes = Convert.FromBase64String(track.ThumbnailBase64);
+                if (bytes.Length >= 12)
+                {
+                    int stride = Math.Max(3, bytes.Length / 16);
+                    byte r = (byte)Math.Clamp(bytes[0] | 0x40, 64, 255);
+                    byte g = (byte)Math.Clamp(bytes[stride % bytes.Length] | 0x40, 64, 255);
+                    byte b = (byte)Math.Clamp(bytes[(stride * 2) % bytes.Length] | 0x60, 96, 255);
+                    AuraPrimaryHex = $"#FF{r:X2}{g:X2}{b:X2}";
+                    AuraSecondaryHex = $"#FF{b:X2}{r:X2}{g:X2}";
+                    return;
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        // Deterministic jewel-tone aura per track title when no artwork bytes are supplied
+        int hash = StringComparer.Ordinal.GetHashCode($"{track.Title}:{track.Artist}");
+        (string p, string s) = (Math.Abs(hash) % 4) switch
+        {
+            0 => ("#FF00F0FF", "#FFA855F7"),
+            1 => ("#FFF43F5E", "#FFF59E0B"),
+            2 => ("#FF00FF9D", "#FF38BDF8"),
+            _ => ("#FFA855F7", "#FFEC4899")
+        };
+        AuraPrimaryHex = p;
+        AuraSecondaryHex = s;
     }
 
     public void OnHidden() => IsHidden = true;

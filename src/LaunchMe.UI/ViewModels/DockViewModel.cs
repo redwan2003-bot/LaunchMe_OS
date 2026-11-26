@@ -223,6 +223,31 @@ public sealed class DockViewModel : INotifyPropertyChanged, IDisposable
         ToolBarActionTriggered?.Invoke(this, action);
     }
 
+    /// <summary>
+    /// Computes continuous Gaussian neighbor-wave magnification scales (macOS Dock style)
+    /// across all items: 1.42x at cursor center, tapering smoothly across adjacent neighbors.
+    /// </summary>
+    public static double[] ComputeGaussianWaveScales(
+        int itemCount,
+        double pointerX,
+        double itemSpacing,
+        double maxScale = 1.42,
+        double sigma = 68.0)
+    {
+        if (itemCount <= 0) return [];
+        var scales = new double[itemCount];
+        double boost = Math.Max(0.0, maxScale - 1.0);
+        double denom = 2.0 * sigma * sigma;
+
+        for (int i = 0; i < itemCount; i++)
+        {
+            double centerX = (i * itemSpacing) + (itemSpacing * 0.5);
+            double dist = pointerX - centerX;
+            scales[i] = 1.0 + boost * Math.Exp(-(dist * dist) / denom);
+        }
+        return scales;
+    }
+
     private void RefreshDockSpace()
     {
         if (_dockSpaceService == null) return;

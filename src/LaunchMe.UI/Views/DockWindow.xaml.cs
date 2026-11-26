@@ -84,6 +84,39 @@ public sealed partial class DockWindow : Window
         }
     }
 
+    private void DockItems_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (sender is not Microsoft.UI.Xaml.Controls.ItemsControl itemsControl) return;
+        int count = itemsControl.Items.Count;
+        if (count == 0) return;
+
+        double pointerX = e.GetCurrentPoint(itemsControl).Position.X;
+        double spacing = 44.0;
+        double[] scales = DockViewModel.ComputeGaussianWaveScales(count, pointerX, spacing);
+
+        for (int i = 0; i < count; i++)
+        {
+            if (itemsControl.ContainerFromIndex(i) is UIElement container)
+            {
+                float s = (float)scales[i];
+                SnootSpringController.StartScaleSpring(container, new Vector3(1f), new Vector3(s, s, 1f), 0.72f, 140);
+            }
+        }
+    }
+
+    private void DockItems_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        if (sender is not Microsoft.UI.Xaml.Controls.ItemsControl itemsControl) return;
+        int count = itemsControl.Items.Count;
+        for (int i = 0; i < count; i++)
+        {
+            if (itemsControl.ContainerFromIndex(i) is UIElement container)
+            {
+                SnootSpringController.StartScaleSpring(container, new Vector3(1.18f, 1.18f, 1f), Vector3.One, 0.85f, 180);
+            }
+        }
+    }
+
     private void ToolBarButton_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Microsoft.UI.Xaml.Controls.Button btn && btn.Tag is DockToolBarAction action)

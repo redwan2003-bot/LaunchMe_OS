@@ -192,6 +192,7 @@
                                                         BorderThickness="0.5"
                                                         UseLayoutRounding="False">
                                                     <Border CornerRadius="17"
+                                                            Background="{x:Bind DominantGlowHex, Mode=OneWay}"
                                                             BorderBrush="{StaticResource SpecularInnerRimBrush}"
                                                             BorderThickness="0.5"
                                                             UseLayoutRounding="False">
@@ -365,7 +366,8 @@
               Background="#99080A0F"
               Visibility="{x:Bind ViewModel.FolderModalVisibility, Mode=OneWay}"
               PointerPressed="FolderScrim_PointerPressed">
-            <Border Width="540"
+            <Border x:Name="FolderModalCard"
+                    Width="540"
                     MaxHeight="460"
                     Background="#E6161D2E"
                     BorderBrush="{StaticResource SpecularGlassChamferBrush}"

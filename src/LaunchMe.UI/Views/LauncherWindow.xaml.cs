@@ -184,6 +184,22 @@ public sealed partial class LauncherWindow : Window
     {
         if (e.ClickedItem is LauncherItemViewModel item)
         {
+            if (item.Type == LauncherItemType.Folder && sender is GridView gv && gv.ContainerFromItem(item) is UIElement container)
+            {
+                try
+                {
+                    var anim = Microsoft.UI.Xaml.Media.Animation.ConnectedAnimationService
+                        .GetForCurrentView()
+                        .PrepareToAnimate("FolderMorph", container);
+                    ViewModel.ExecuteItem(item);
+                    anim?.TryStart(FolderModalCard);
+                    return;
+                }
+                catch
+                {
+                }
+            }
+
             ViewModel.ExecuteItem(item);
         }
     }

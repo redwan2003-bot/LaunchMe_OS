@@ -19,6 +19,7 @@ public sealed class LiquidGlassCompositor : IDisposable
     public const float DefaultBlurAmount = 42.0f;
     public const float DefaultSaturation = 1.80f;
     public const float DefaultGrainOpacity = 0.025f;
+    public const float DefaultChromaticFringePx = 1.5f;
 
     public static readonly Color ObsidianTintColor = Color.FromArgb(255, 8, 10, 15); // #080A0F
 
@@ -30,6 +31,8 @@ public sealed class LiquidGlassCompositor : IDisposable
     public float BlurAmount { get; set; } = DefaultBlurAmount;
     public float Saturation { get; set; } = DefaultSaturation;
     public float GrainOpacity { get; set; } = DefaultGrainOpacity;
+    public float ChromaticFringePx { get; set; } = DefaultChromaticFringePx;
+    public Color SampledRefractionColor { get; private set; } = ObsidianTintColor;
 
     /// <summary>
     /// True if a live CompositionEffectBrush was created and attached.
@@ -37,13 +40,15 @@ public sealed class LiquidGlassCompositor : IDisposable
     public bool IsActive { get; private set; }
 
     /// <summary>
-    /// Computes the 5x4 color matrix blending backdrop luminance into Pure OLED Obsidian (#080A0F).
+    /// Computes the 5x4 color matrix blending backdrop luminance into Pure OLED Obsidian (#080A0F)
+    /// or an optional wallpaper-sampled refraction tint.
     /// </summary>
-    public static Matrix5x4 BuildObsidianColorMatrix()
+    public static Matrix5x4 BuildObsidianColorMatrix(Color? sampledTint = null)
     {
-        float rOffset = (ObsidianTintColor.R / 255f) * 0.65f;
-        float gOffset = (ObsidianTintColor.G / 255f) * 0.65f;
-        float bOffset = (ObsidianTintColor.B / 255f) * 0.62f;
+        Color tint = sampledTint ?? ObsidianTintColor;
+        float rOffset = (tint.R / 255f) * 0.65f;
+        float gOffset = (tint.G / 255f) * 0.65f;
+        float bOffset = (tint.B / 255f) * 0.62f;
 
         return new Matrix5x4
         {
@@ -56,6 +61,20 @@ public sealed class LiquidGlassCompositor : IDisposable
             M53 = bOffset,
             M54 = 0f
         };
+    }
+
+    /// <summary>
+    /// Blends a sampled wallpaper RGB color into a subtle crystal-refraction obsidian tint
+    /// so Liquid Glass carries live desktop hue without washing out white text contrast.
+    /// </summary>
+    public Color ComputeWallpaperRefractionTint(Color wallpaperSample, float refractionStrength = 0.22f)
+    {
+        float t = Math.Clamp(refractionStrength, 0f, 0.45f);
+        byte r = (byte)Math.Clamp(ObsidianTintColor.R * (1f - t) + wallpaperSample.R * t, 0, 255);
+        byte g = (byte)Math.Clamp(ObsidianTintColor.G * (1f - t) + wallpaperSample.G * t, 0, 255);
+        byte b = (byte)Math.Clamp(ObsidianTintColor.B * (1f - t) + wallpaperSample.B * t, 0, 255);
+        SampledRefractionColor = Color.FromArgb(255, r, g, b);
+        return SampledRefractionColor;
     }
 
     /// <summary>

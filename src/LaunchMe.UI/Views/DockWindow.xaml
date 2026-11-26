@@ -50,8 +50,11 @@
 
                 <Rectangle Width="1" Height="24" Fill="#1FFFFFFF" />
 
-                <!-- Dock Items Icons with Magnetic Hover Spring -->
-                <ItemsControl ItemsSource="{x:Bind ViewModel.DockItems, Mode=OneWay}">
+                <!-- Dock Items Icons with Neighbor-Wave Gaussian Spring -->
+                <ItemsControl x:Name="DockItemsControl"
+                              ItemsSource="{x:Bind ViewModel.DockItems, Mode=OneWay}"
+                              PointerMoved="DockItems_PointerMoved"
+                              PointerExited="DockItems_PointerExited">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <StackPanel Orientation="Horizontal" Spacing="8" />
