@@ -168,7 +168,9 @@ public sealed class AppIndexer : IAppIndexer
 
                 var displayName = package.DisplayName;
                 if (string.IsNullOrWhiteSpace(displayName)) displayName = id.Name;
-                if (string.IsNullOrWhiteSpace(displayName) || Guid.TryParse(displayName.Trim('{', '}'), out _)) continue;
+                if (string.IsNullOrWhiteSpace(displayName) ||
+                    Guid.TryParse(displayName.Trim('{', '}'), out _) ||
+                    IsInternalSystemHelper(displayName, id.Name)) continue;
 
                 var appId = $"uwp:{id.FamilyName.ToLowerInvariant()}";
                 string installPath = package.InstalledLocation?.Path ?? string.Empty;
@@ -202,6 +204,22 @@ public sealed class AppIndexer : IAppIndexer
         }
 
         return Task.CompletedTask;
+    }
+
+    private static bool IsInternalSystemHelper(string displayName, string packageName)
+    {
+        string combined = $"{displayName} {packageName}";
+        string[] excludedTokens =
+        [
+            "Add Folder Suggestions", "App Resolver", "AsyncTextService",
+            "Captive Portal", "CapturePicker", "Credential Dialog",
+            "Desktop App Web Viewer", "BioEnrollment", "CallingShellApp",
+            "ContentDeliveryManager", "LockApp", "NcsiUwpApp",
+            "ParentalControls", "PeopleExperienceHost", "PinningConfirmation",
+            "PrintDialog", "ShellExperienceHost", "StartMenuExperienceHost",
+            "XboxGameCallableUI", "AssignedAccessLockApp", "EyeControl"
+        ];
+        return excludedTokens.Any(t => combined.Contains(t, StringComparison.OrdinalIgnoreCase));
     }
 
     private static string ClassifyCategory(string name, string targetPath)

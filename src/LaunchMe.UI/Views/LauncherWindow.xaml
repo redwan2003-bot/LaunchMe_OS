@@ -33,7 +33,7 @@
                                            VisualState="{x:Bind ViewModel.ThemeVisualState, Mode=OneWay}"
                                            PointerPressed="DismissBackdrop_PointerPressed" />
 
-        <Grid Margin="48,32,48,40" UseLayoutRounding="False">
+        <Grid Margin="40,20,40,22" UseLayoutRounding="False">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
@@ -123,7 +123,7 @@
             </StackPanel>
 
             <!-- Main Content Area + Right-Side Bento Widget Drawer -->
-            <Grid Grid.Row="1" Margin="0,18,0,16" UseLayoutRounding="False">
+            <Grid Grid.Row="1" Margin="0,12,0,10" UseLayoutRounding="False">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -180,7 +180,7 @@
                                       VerticalAlignment="Center">
                                 <GridView.ItemTemplate>
                                     <DataTemplate x:DataType="vm:LauncherItemViewModel">
-                                        <Grid Width="92" Height="98" Margin="8"
+                                        <Grid Width="90" Height="88" Margin="6,3"
                                               Background="Transparent"
                                               CanDrag="{x:Bind IsEditModeActive, Mode=OneWay}"
                                               DragStarting="Item_DragStarting"

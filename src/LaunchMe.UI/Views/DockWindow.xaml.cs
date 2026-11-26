@@ -137,7 +137,7 @@ public sealed partial class DockWindow : Window
     {
         int screenWidth = GetSystemMetrics(0);
         int screenHeight = GetSystemMetrics(1);
-        int width = Math.Min(960, screenWidth - 100);
+        int width = Math.Min(1280, screenWidth - 40);
         int height = ViewModel.DockHeight + 16;
         int x = (screenWidth - width) / 2;
         int y = screenHeight - height;
