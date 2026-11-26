@@ -26,7 +26,8 @@ public sealed class IconCacheService
     {
         var normalizedSize = Math.Max(16, targetSize);
         var sanitizedAppId = string.Join("_", appId.Split(Path.GetInvalidFileNameChars()));
-        var cacheFilePath = Path.Combine(_cacheFolder, $"{sanitizedAppId}_{normalizedSize}.png");
+        string suffix = normalizedSize >= 256 ? $"{normalizedSize}_g2" : $"{normalizedSize}";
+        var cacheFilePath = Path.Combine(_cacheFolder, $"{sanitizedAppId}_{suffix}.png");
 
         if (File.Exists(cacheFilePath))
         {

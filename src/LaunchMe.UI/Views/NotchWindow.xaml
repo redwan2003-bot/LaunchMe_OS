@@ -356,6 +356,9 @@
                                                             <Border Background="#2400F0FF" CornerRadius="5" Padding="5,1">
                                                                 <TextBlock Text="{x:Bind Category}" FontSize="9" FontWeight="Bold" Foreground="#FF00F0FF" />
                                                             </Border>
+                                                            <Border Background="#1AA855F7" CornerRadius="5" Padding="5,1">
+                                                                <TextBlock Text="DRAG" FontSize="8.5" FontWeight="Bold" Foreground="#FFE9D5FF" />
+                                                            </Border>
                                                             <TextBlock Text="{x:Bind SourceProcessName}" FontSize="9" Foreground="#FF64748B" VerticalAlignment="Center" />
                                                         </StackPanel>
                                                         <TextBlock Text="{x:Bind TextContent}"

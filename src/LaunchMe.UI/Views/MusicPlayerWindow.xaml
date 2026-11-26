@@ -133,10 +133,14 @@
                                 <Ellipse Width="170" Height="170" Fill="#2200F0FF" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 <TextBlock Text="{x:Bind ViewModel.TrackMonogram, Mode=OneWay}"
                                            FontSize="72"
-                                           FontWeight="Black"
+                                           FontWeight="Bold"
                                            Foreground="#FFE2E8F0"
                                            HorizontalAlignment="Center"
                                            VerticalAlignment="Center" />
+                                <Border CornerRadius="35">
+                                    <Image Source="{x:Bind ViewModel.AlbumArtBitmapSource, Mode=OneWay}"
+                                           Stretch="UniformToFill" />
+                                </Border>
                             </Grid>
                         </Border>
                     </Grid>

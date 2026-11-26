@@ -19,14 +19,26 @@
 
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <StackPanel Spacing="16" Padding="12">
-            <!-- Clock -->
-            <clock:ClockWidgetView ViewModel="{x:Bind ViewModel.Clock, Mode=OneWay}" />
+            <!-- Clock + 12-Skin Switcher -->
+            <Grid>
+                <clock:ClockWidgetView ViewModel="{x:Bind ViewModel.Clock, Mode=OneWay}" />
+                <Button Content="↻ Skin" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" FontSize="10" Padding="8,3" CornerRadius="10"
+                        Background="#2800F0FF" Foreground="#FF00F0FF" Command="{x:Bind ViewModel.Clock.CycleStyleCommand}" />
+            </Grid>
 
-            <!-- Weather -->
-            <weather:WeatherWidgetView ViewModel="{x:Bind ViewModel.Weather, Mode=OneWay}" />
+            <!-- Weather + 9-Style Switcher -->
+            <Grid>
+                <weather:WeatherWidgetView ViewModel="{x:Bind ViewModel.Weather, Mode=OneWay}" />
+                <Button Content="↻ Style" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" FontSize="10" Padding="8,3" CornerRadius="10"
+                        Background="#28A855F7" Foreground="#FFE9D5FF" Command="{x:Bind ViewModel.Weather.CycleStyleCommand}" />
+            </Grid>
 
-            <!-- Music -->
-            <music:MusicWidgetView ViewModel="{x:Bind ViewModel.Music, Mode=OneWay}" />
+            <!-- Music + 6-Style Switcher -->
+            <Grid>
+                <music:MusicWidgetView ViewModel="{x:Bind ViewModel.Music, Mode=OneWay}" />
+                <Button Content="↻ Style" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" FontSize="10" Padding="8,3" CornerRadius="10"
+                        Background="#2800FF9D" Foreground="#FF00FF9D" Command="{x:Bind ViewModel.Music.CycleStyleCommand}" />
+            </Grid>
 
             <!-- System Stats -->
             <stats:SystemStatsWidgetView ViewModel="{x:Bind ViewModel.SystemStats, Mode=OneWay}" />

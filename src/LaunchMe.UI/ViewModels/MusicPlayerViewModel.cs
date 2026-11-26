@@ -88,6 +88,8 @@ public sealed class MusicPlayerViewModel : INotifyPropertyChanged, IDisposable
     private bool _syncWallpaperToArt;
     private string _auraPrimaryHex = "#FF00F0FF";
     private string _auraSecondaryHex = "#FFA855F7";
+    private Microsoft.UI.Xaml.Media.ImageSource? _albumArtBitmapSource;
+    private string? _lastAlbumArtBase64;
     private double _phase;
     private bool _disposed;
 
@@ -331,6 +333,39 @@ public sealed class MusicPlayerViewModel : INotifyPropertyChanged, IDisposable
     public Windows.UI.Color AuraPrimaryColor => ParseArgbHex(_auraPrimaryHex);
     public Windows.UI.Color AuraSecondaryColor => ParseArgbHex(_auraSecondaryHex);
 
+    public Microsoft.UI.Xaml.Media.ImageSource? AlbumArtBitmapSource
+    {
+        get
+        {
+            string? b64 = _currentTrack?.ThumbnailBase64;
+            if (b64 == _lastAlbumArtBase64) return _albumArtBitmapSource;
+            _lastAlbumArtBase64 = b64;
+            _albumArtBitmapSource = null;
+
+            if (!string.IsNullOrWhiteSpace(b64))
+            {
+                try
+                {
+                    int comma = b64.IndexOf(',');
+                    string raw = comma >= 0 ? b64[(comma + 1)..] : b64;
+                    byte[] bytes = Convert.FromBase64String(raw);
+                    if (bytes.Length > 0)
+                    {
+                        string dir = Path.Combine(Path.GetTempPath(), "LaunchMeAlbumArt");
+                        Directory.CreateDirectory(dir);
+                        string path = Path.Combine(dir, $"cover_{Math.Abs(raw.GetHashCode())}.png");
+                        if (!File.Exists(path)) File.WriteAllBytes(path, bytes);
+                        _albumArtBitmapSource = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(path));
+                    }
+                }
+                catch
+                {
+                }
+            }
+            return _albumArtBitmapSource;
+        }
+    }
+
     public static Windows.UI.Color ParseArgbHex(string hex)
     {
         if (!string.IsNullOrWhiteSpace(hex) && hex.StartsWith('#') && hex.Length == 9 &&
@@ -450,6 +485,8 @@ public sealed class MusicPlayerViewModel : INotifyPropertyChanged, IDisposable
             : 0.0;
 
         UpdateAlbumAuraPalette(track);
+        _lastAlbumArtBase64 = null;
+        OnPropertyChanged(nameof(AlbumArtBitmapSource));
 
         if (_syncWallpaperToArt)
         {

@@ -139,6 +139,11 @@ public sealed class ClockWidgetViewModel : IWidgetViewModel
 
     public bool IsTimerRunning => _isTimerRunning;
     public bool EnableSmoothSweep { get; set; } = true;
+    public System.Windows.Input.ICommand CycleStyleCommand => new LaunchMe.UI.ViewModels.RelayCommand(() =>
+    {
+        var values = Enum.GetValues<ClockStyle>();
+        Style = values[((int)Style + 1) % values.Length];
+    });
 
     public void TickSmoothSweep(DateTime? now = null)
     {
