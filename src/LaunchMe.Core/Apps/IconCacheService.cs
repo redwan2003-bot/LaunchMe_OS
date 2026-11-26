@@ -57,12 +57,13 @@ public sealed class IconCacheService
             }
         }
 
-        // 2. Try high-res Windows Shell extractor (IShellItemImageFactory 256px)
+        // 2. Try high-res Windows Shell extractor (256px for default 128px; up to 1024px for >= 256px)
         if (_shellIconExtractor is not null && fileExists)
         {
             try
             {
-                var highResPng = _shellIconExtractor.ExtractHighResPng(executablePath, 256);
+                int shellRequestPx = normalizedSize <= 128 ? 256 : Math.Clamp(normalizedSize * 2, 512, 1024);
+                var highResPng = _shellIconExtractor.ExtractHighResPng(executablePath, shellRequestPx);
                 if (highResPng is { Length: > 0 })
                 {
                     using var stream = new MemoryStream(highResPng);
@@ -246,10 +247,65 @@ public sealed class IconCacheService
             g.SmoothingMode = SmoothingMode.HighQuality;
             g.PixelOffsetMode = PixelOffsetMode.HighQuality;
             g.Clear(Color.Transparent);
-            g.DrawImage(rawBitmap, new Rectangle(0, 0, targetSize, targetSize));
+
+            // Apply macOS .icns-style uniform G2 squircle mask for >= 256px Gold-Standard icons
+            // so square UWP/MSIX tiles never render with sharp 90-degree corners.
+            if (targetSize >= 256)
+            {
+                var margin = Math.Max(1f, targetSize * 0.03f);
+                var rect = new RectangleF(margin, margin, targetSize - (margin * 2f), targetSize - (margin * 2f));
+                using var squirclePath = CreateG2SquirclePath(rect, exponent: 4.5, segments: 128);
+                g.SetClip(squirclePath);
+                g.DrawImage(rawBitmap, rect);
+            }
+            else
+            {
+                g.DrawImage(rawBitmap, new Rectangle(0, 0, targetSize, targetSize));
+            }
         }
 
         resizedBitmap.Save(cacheFilePath, ImageFormat.Png);
+    }
+
+    /// <summary>
+    /// Windows equivalent of macOS QLThumbnail: extracts a cached high-resolution Explorer
+    /// preview thumbnail (PNG) for documents, images, videos, and folders.
+    /// </summary>
+    public string? GetOrExtractFileThumbnail(string filePath, int targetSize = 256)
+    {
+        if (string.IsNullOrWhiteSpace(filePath) || _shellIconExtractor is null)
+        {
+            return null;
+        }
+
+        if (!File.Exists(filePath) && !Directory.Exists(filePath))
+        {
+            return null;
+        }
+
+        string thumbsDir = Path.Combine(_cacheFolder, "thumbs");
+        Directory.CreateDirectory(thumbsDir);
+        string key = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(filePath)))[..16];
+        string thumbPath = Path.Combine(thumbsDir, $"{key}_{targetSize}.png");
+        if (File.Exists(thumbPath))
+        {
+            return thumbPath;
+        }
+
+        try
+        {
+            var png = _shellIconExtractor.ExtractHighResPng(filePath, targetSize, thumbnailIfAvailable: true);
+            if (png is { Length: > 0 })
+            {
+                File.WriteAllBytes(thumbPath, png);
+                return thumbPath;
+            }
+        }
+        catch
+        {
+        }
+
+        return null;
     }
 
     private static string? ResolveAssetFromManifest(string manifestPath, string packageRoot)

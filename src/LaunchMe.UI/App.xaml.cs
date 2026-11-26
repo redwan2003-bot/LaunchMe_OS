@@ -119,7 +119,8 @@ public partial class App : Application
             workflowRunner,
             _spaceScheduler,
             themeAssociation,
-            diagnosticsService);
+            diagnosticsService,
+            iconCache);
 
         _launcherViewModel.QuitAppRequested += OnQuitAppRequested;
         _spaceScheduler.ScheduledSpaceActivated += OnScheduledSpaceActivated;

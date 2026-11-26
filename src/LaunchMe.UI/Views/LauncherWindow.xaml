@@ -103,13 +103,16 @@
                               IsItemClickEnabled="True">
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="vm:UnifiedSearchResultViewModel">
-                                <Grid Padding="10,7">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="32" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="{x:Bind CategoryGlyph}" FontFamily="Segoe Fluent Icons" VerticalAlignment="Center" Foreground="#FF00F0FF"/>
+                                    <Grid Padding="10,7">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="36" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Grid.Column="0" Width="28" Height="28" VerticalAlignment="Center">
+                                            <TextBlock Text="{x:Bind CategoryGlyph}" FontFamily="Segoe Fluent Icons" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#FF00F0FF"/>
+                                            <Image Source="{x:Bind ThumbnailBitmapSource, Mode=OneWay}" Width="26" Height="26" Stretch="UniformToFill" />
+                                        </Grid>
                                     <StackPanel Grid.Column="1" Spacing="2">
                                         <TextBlock Text="{x:Bind Title}" Foreground="#FFF8FAFC" FontWeight="SemiBold" />
                                         <TextBlock Text="{x:Bind Subtitle}" Foreground="#FF94A3B8" FontSize="12" />

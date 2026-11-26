@@ -230,6 +230,52 @@ public sealed partial class NotchWindow : Window
         }
     }
 
+    private async void ClipboardCard_DragStarting(UIElement sender, DragStartingEventArgs args)
+    {
+        if (sender is not FrameworkElement fe || fe.DataContext is not ClipboardEntry entry) return;
+
+        var deferral = args.GetDeferral();
+        try
+        {
+            args.Data.RequestedOperation = DataPackageOperation.Copy;
+
+            var storageItems = new List<IStorageItem>();
+            if (entry.FilePaths.Count > 0)
+            {
+                foreach (var path in entry.FilePaths.Where(File.Exists))
+                {
+                    storageItems.Add(await StorageFile.GetFileFromPathAsync(path));
+                }
+            }
+            else
+            {
+                string? imgFile = LaunchMe.UI.Services.ClipboardDragPayloadHelper.MaterializeImageDragFile(entry);
+                if (!string.IsNullOrWhiteSpace(imgFile) && File.Exists(imgFile))
+                {
+                    var file = await StorageFile.GetFileFromPathAsync(imgFile);
+                    storageItems.Add(file);
+                    args.Data.SetBitmap(Windows.Storage.Streams.RandomAccessStreamReference.CreateFromFile(file));
+                }
+            }
+
+            if (storageItems.Count > 0)
+            {
+                args.Data.SetStorageItems(storageItems);
+            }
+            else if (!string.IsNullOrWhiteSpace(entry.TextContent))
+            {
+                args.Data.SetText(entry.TextContent);
+            }
+        }
+        catch
+        {
+        }
+        finally
+        {
+            deferral.Complete();
+        }
+    }
+
     private void DrawerWidgetSize_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button btn && btn.Tag is string id)

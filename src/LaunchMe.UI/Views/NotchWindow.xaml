@@ -343,7 +343,9 @@
                                                     BorderThickness="0.5"
                                                     CornerRadius="10"
                                                     Padding="8,6"
-                                                    Margin="0,2">
+                                                    Margin="0,2"
+                                                    CanDrag="True"
+                                                    DragStarting="ClipboardCard_DragStarting">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="*" />

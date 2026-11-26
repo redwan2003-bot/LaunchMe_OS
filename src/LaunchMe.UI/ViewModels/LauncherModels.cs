@@ -254,19 +254,44 @@ public sealed class LauncherFolderViewModel : INotifyPropertyChanged
 
 public sealed class UnifiedSearchResultViewModel
 {
+    private Microsoft.UI.Xaml.Media.ImageSource? _thumbnailBitmapSource;
+    private bool _thumbnailResolved;
+
     public string Title { get; }
     public string Subtitle { get; }
     public string CategoryName { get; }
     public string CategoryGlyph { get; }
+    public string? ThumbnailPath { get; }
     public Action? Action { get; }
 
-    public UnifiedSearchResultViewModel(string title, string subtitle, string categoryName, string categoryGlyph, Action? action)
+    public Microsoft.UI.Xaml.Media.ImageSource? ThumbnailBitmapSource
+    {
+        get
+        {
+            if (_thumbnailResolved) return _thumbnailBitmapSource;
+            _thumbnailResolved = true;
+            if (!string.IsNullOrWhiteSpace(ThumbnailPath) && File.Exists(ThumbnailPath))
+            {
+                try
+                {
+                    _thumbnailBitmapSource = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(Path.GetFullPath(ThumbnailPath)));
+                }
+                catch
+                {
+                }
+            }
+            return _thumbnailBitmapSource;
+        }
+    }
+
+    public UnifiedSearchResultViewModel(string title, string subtitle, string categoryName, string categoryGlyph, Action? action, string? thumbnailPath = null)
     {
         Title = title;
         Subtitle = subtitle;
         CategoryName = categoryName;
         CategoryGlyph = categoryGlyph;
         Action = action;
+        ThumbnailPath = thumbnailPath;
     }
 }
 

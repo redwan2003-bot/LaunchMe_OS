@@ -146,4 +146,51 @@ public sealed class FluidityAndCraft10on10Tests
         bt.Dispose();
         bt.IsRunning.Should().BeFalse();
     }
+
+    [Fact]
+    public void GoldStandard_ClipboardImageDragFile_And_FileThumbnailCache_Work()
+    {
+        // 1. Finder-level Clipboard Image Drag-Out materialization
+        string dragDir = Path.Combine(Path.GetTempPath(), $"launchme-drag-test-{Guid.NewGuid():N}");
+        try
+        {
+            var entry = new LaunchMe.Contracts.Clipboard.ClipboardEntry
+            {
+                Id = "img-drag-1",
+                Category = LaunchMe.Contracts.Clipboard.ClipboardCategory.Images,
+                DataPayloadBase64 = "data:image/png;base64," + Convert.ToBase64String([137, 80, 78, 71, 13, 10, 26, 10, 1, 2, 3, 4])
+            };
+
+            string? materialized = LaunchMe.UI.Services.ClipboardDragPayloadHelper.MaterializeImageDragFile(entry, dragDir);
+            materialized.Should().NotBeNullOrWhiteSpace();
+            File.Exists(materialized!).Should().BeTrue();
+            File.ReadAllBytes(materialized!).Should().HaveCount(12);
+        }
+        finally
+        {
+            if (Directory.Exists(dragDir)) Directory.Delete(dragDir, recursive: true);
+        }
+
+        // 2. QLThumbnail-style file thumbnail caching
+        string cacheDir = Path.Combine(Path.GetTempPath(), $"launchme-thumb-test-{Guid.NewGuid():N}");
+        string sampleFile = Path.Combine(cacheDir, "doc.pdf");
+        try
+        {
+            Directory.CreateDirectory(cacheDir);
+            File.WriteAllText(sampleFile, "pdf-mock");
+
+            var mockExtractor = new Moq.Mock<LaunchMe.Contracts.Indexing.IShellIconExtractor>();
+            mockExtractor.Setup(x => x.ExtractHighResPng(sampleFile, 256, true))
+                .Returns([137, 80, 78, 71, 13, 10, 26, 10]);
+
+            var iconCache = new LaunchMe.Core.Apps.IconCacheService(cacheDir, mockExtractor.Object);
+            string? thumb = iconCache.GetOrExtractFileThumbnail(sampleFile, 256);
+            thumb.Should().NotBeNullOrWhiteSpace();
+            File.Exists(thumb!).Should().BeTrue();
+        }
+        finally
+        {
+            if (Directory.Exists(cacheDir)) Directory.Delete(cacheDir, recursive: true);
+        }
+    }
 }

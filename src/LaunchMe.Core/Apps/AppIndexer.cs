@@ -97,7 +97,7 @@ public sealed class AppIndexer : IAppIndexer
 
                 var fileName = Path.GetFileNameWithoutExtension(file);
                 var appId = $"lnk:{file.ToLowerInvariant()}";
-                var iconPath = _iconCache.GetOrExtractIcon(appId, target);
+                var iconPath = _iconCache.GetOrExtractIcon(appId, target, 256);
                 var base64 = _iconCache.ConvertIconToBase64(iconPath);
 
                 var item = new AppItem
@@ -180,7 +180,7 @@ public sealed class AppIndexer : IAppIndexer
                 string? iconTarget = !string.IsNullOrWhiteSpace(logoCandidate) && File.Exists(logoCandidate)
                     ? logoCandidate
                     : installPath;
-                var iconPath = _iconCache.GetOrExtractIcon(appId, iconTarget);
+                var iconPath = _iconCache.GetOrExtractIcon(appId, iconTarget, 256);
                 var base64 = _iconCache.ConvertIconToBase64(iconPath);
 
                 var item = new AppItem

@@ -33,6 +33,7 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
     private readonly ISpaceSchedulerService? _spaceScheduler;
     private readonly IThemeAssociationService? _themeAssociation;
     private readonly PlatformDiagnosticsService? _diagnosticsService;
+    private readonly IconCacheService? _iconCache;
     private readonly LiquidGlassTintService _tintService = new();
 
     private string _searchQuery = string.Empty;
@@ -340,7 +341,8 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
         IWorkflowRunner? workflowRunner = null,
         ISpaceSchedulerService? spaceScheduler = null,
         IThemeAssociationService? themeAssociation = null,
-        PlatformDiagnosticsService? diagnosticsService = null)
+        PlatformDiagnosticsService? diagnosticsService = null,
+        IconCacheService? iconCache = null)
     {
         _appIndexer = appIndexer ?? throw new ArgumentNullException(nameof(appIndexer));
         _fileSearchService = fileSearchService ?? throw new ArgumentNullException(nameof(fileSearchService));
@@ -355,6 +357,7 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
         _spaceScheduler = spaceScheduler;
         _themeAssociation = themeAssociation;
         _diagnosticsService = diagnosticsService;
+        _iconCache = iconCache;
 
         ToggleEditModeCommand = new RelayCommand(() => IsEditMode = !IsEditMode);
         ToggleWidgetDrawerCommand = new RelayCommand(() => IsWidgetDrawerOpen = !IsWidgetDrawerOpen);
@@ -802,6 +805,7 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
             foreach (var file in files.Take(5))
             {
                 var capturedFile = file;
+                string? thumbPath = _iconCache?.GetOrExtractFileThumbnail(capturedFile.Path, 256);
                 SearchResults.Add(new UnifiedSearchResultViewModel(
                     capturedFile.FileName,
                     capturedFile.Path,
@@ -811,7 +815,8 @@ public sealed class LauncherViewModel : INotifyPropertyChanged, IDisposable
                     {
                         _fileSearchService.OpenFile(capturedFile.Path);
                         DismissRequested?.Invoke(this, EventArgs.Empty);
-                    }));
+                    },
+                    thumbPath));
             }
 
             // 4. Clipboard History
