@@ -72,7 +72,7 @@ public sealed class NotchViewModelTests : IDisposable
 
         _vm.ToggleExpand();
         Assert.True(_vm.IsExpanded);
-        Assert.Equal(620, _vm.WidthPx);
+        Assert.Equal(640, _vm.WidthPx);
         Assert.Equal(180, _vm.HeightPx);
 
         _vm.ToggleExpand();

@@ -48,7 +48,7 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
     private bool _isExpanded;
     private double _compactWidthPx = 420;
     private double _compactHeightPx = 36;
-    private double _expandedWidthPx = 620;
+    private double _expandedWidthPx = 640;
     private double _expandedHeightPx = 180;
     private double _widthPx = 420;
     private double _heightPx = 36;
@@ -324,7 +324,7 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
     public Brush SettingsTabSelectedBrush =>
         _activeTab == NotchDrawerTab.Settings ? new SolidColorBrush(Color.FromArgb(0x38, 0xFF, 0xFF, 0xFF)) : new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
 
-    private string _antigravityStatusText = "Connected · Running Tasks (Agent Ready)";
+    private string _antigravityStatusText = "Connected · Running Tasks";
     public string AntigravityStatusText
     {
         get => _antigravityStatusText;
@@ -486,7 +486,7 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
     {
         _compactWidthPx = 420;
         _compactHeightPx = 36;
-        _expandedWidthPx = 620;
+        _expandedWidthPx = 640;
         _expandedHeightPx = 180;
         OnPropertyChanged(nameof(CompactWidthPx));
         OnPropertyChanged(nameof(CompactHeightPx));

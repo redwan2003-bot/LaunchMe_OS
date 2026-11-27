@@ -247,52 +247,65 @@
                             </Grid>
                         </Border>
 
-                        <!-- 0) OVERVIEW TAB (Antigravity Running Tasks + 4 AI Apps) -->
+                        <!-- 0) OVERVIEW TAB (Exact parity with macOS Reference overview.png) -->
                         <Grid Visibility="{x:Bind ViewModel.OverviewTabVisibility, Mode=OneWay}">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="1.2*" />
+                                <ColumnDefinition Width="1.05*" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
 
-                            <!-- Left Card: Antigravity IDE Integration & Live Running Task -->
-                            <Border Grid.Column="0" Margin="0,0,5,0" Background="#121622" BorderBrush="{StaticResource SpecularGlassChamferBrush}" BorderThickness="0.5" CornerRadius="16" Padding="10,8">
+                            <!-- Left Bento Card: Antigravity IDE Integration & Live Running Task -->
+                            <Border Grid.Column="0" Margin="0,0,5,0" Background="#141720" BorderBrush="#252A36" BorderThickness="1" CornerRadius="18" Padding="12,10">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
+
                                     <!-- Blobbo Cute Squircle Face -->
-                                    <Border Grid.Column="0" Width="52" Height="42" CornerRadius="20" Background="#FFF8FAFC" VerticalAlignment="Center">
+                                    <Border Grid.Column="0" Width="56" Height="42" CornerRadius="20" Background="#FFF8FAFC" VerticalAlignment="Center" Margin="0,0,12,0">
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16" Margin="0,2,0,0">
-                                            <Ellipse Width="6" Height="8" Fill="#FF080A0F" />
-                                            <Ellipse Width="6" Height="8" Fill="#FF080A0F" />
+                                            <Ellipse Width="5.5" Height="7.5" Fill="#FF0A0D14" />
+                                            <Ellipse Width="5.5" Height="7.5" Fill="#FF0A0D14" />
                                         </StackPanel>
                                     </Border>
-                                    <!-- Task Info -->
-                                    <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" Spacing="2">
-                                        <StackPanel Orientation="Horizontal" Spacing="5">
-                                            <Ellipse Width="6" Height="6" Fill="#FF00FF9D" VerticalAlignment="Center" />
-                                            <TextBlock Text="Antigravity Integration" FontSize="11.5" FontWeight="Bold" Foreground="#FFF8FAFC" />
+
+                                    <!-- Task Info & Actions -->
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <Ellipse Width="6" Height="6" Fill="#FFF8FAFC" VerticalAlignment="Center" />
+                                            <TextBlock FontSize="12.5" VerticalAlignment="Center">
+                                                <Run Text="Antigravity" FontWeight="Bold" Foreground="#FFF8FAFC" />
+                                                <Run Text=" Integration" FontWeight="Normal" Foreground="#94A3B8" />
+                                            </TextBlock>
                                         </StackPanel>
-                                        <TextBlock Text="{x:Bind ViewModel.AntigravityStatusText, Mode=OneWay}" FontSize="10" Foreground="#FF00FF9D" TextTrimming="CharacterEllipsis" />
-                                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2,0,0">
+                                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,0">
+                                            <Ellipse Width="5" Height="5" Fill="#FF10B981" VerticalAlignment="Center" />
+                                            <TextBlock Text="{x:Bind ViewModel.AntigravityStatusText, Mode=OneWay}" FontSize="11" Foreground="#94A3B8" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,6,0,0">
                                             <Button Content="Open Antigravity" Command="{x:Bind ViewModel.OpenAntigravityCommand}"
-                                                    FontSize="9.5" FontWeight="SemiBold" Background="#2200F0FF" BorderBrush="#FF00F0FF" BorderThickness="0.5" Foreground="#FF00F0FF" CornerRadius="8" Padding="7,2" />
+                                                    Background="Transparent" BorderThickness="0" Padding="0"
+                                                    FontSize="12" FontWeight="SemiBold" Foreground="#FFF8FAFC" />
                                             <Button Content="Refresh" Command="{x:Bind ViewModel.RefreshAntigravityCommand}"
-                                                    FontSize="9.5" Background="Transparent" Foreground="#FF94A3B8" Padding="4,2" />
+                                                    Background="Transparent" BorderThickness="0" Padding="0"
+                                                    FontSize="12" Foreground="#64748B" />
                                         </StackPanel>
                                     </StackPanel>
-                                    <!-- Arrow button -->
-                                    <Button Grid.Column="2" Command="{x:Bind ViewModel.OpenAntigravityCommand}" Background="#1E293B" CornerRadius="12" Width="24" Height="24" Padding="0" VerticalAlignment="Top">
-                                        <FontIcon Glyph="&#xE8A7;" FontSize="11" Foreground="#FF00F0FF" />
+
+                                    <!-- Top-Right ↗ Arrow Button -->
+                                    <Button Grid.Column="2" Command="{x:Bind ViewModel.OpenAntigravityCommand}"
+                                            Width="22" Height="22" Padding="0" CornerRadius="11"
+                                            Background="#222733" BorderThickness="0" VerticalAlignment="Top">
+                                        <FontIcon Glyph="&#xE8A7;" FontSize="10" Foreground="#CBD5E1" />
                                     </Button>
                                 </Grid>
                             </Border>
 
-                            <!-- Right Card: 4 AI Desktop App Pills in 2x2 Grid -->
-                            <Border Grid.Column="1" Margin="5,0,0,0" Background="#121622" BorderBrush="{StaticResource SpecularGlassChamferBrush}" BorderThickness="0.5" CornerRadius="16" Padding="6">
-                                <Grid RowSpacing="6" ColumnSpacing="6">
+                            <!-- Right Bento Card: 4 AI Desktop App Pills (Exact match to overview.png) -->
+                            <Border Grid.Column="1" Margin="5,0,0,0" Background="#141720" BorderBrush="#252A36" BorderThickness="1" CornerRadius="18" Padding="12,10">
+                                <Grid RowSpacing="8" ColumnSpacing="10">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="*" />
                                         <RowDefinition Height="*" />
@@ -302,60 +315,96 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
 
-                                    <!-- Antigravity -->
+                                    <!-- 1. Antigravity (Mint Green Squircle Character Face) -->
                                     <Button Grid.Row="0" Grid.Column="0" Command="{x:Bind ViewModel.LaunchAiAppCommand}" CommandParameter="Antigravity"
-                                            Background="#1400FF9D" BorderBrush="#FF00FF9D" BorderThickness="0.5" CornerRadius="12" Padding="6,4" HorizontalAlignment="Stretch">
-                                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                                            <Border Width="16" Height="12" CornerRadius="6" Background="#FF00FF9D">
-                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
-                                                    <Ellipse Width="2.5" Height="3.5" Fill="#FF080A0F" />
-                                                    <Ellipse Width="2.5" Height="3.5" Fill="#FF080A0F" />
-                                                </StackPanel>
-                                            </Border>
-                                            <TextBlock Text="Antigravity" FontSize="10.5" FontWeight="SemiBold" Foreground="#FF00FF9D" VerticalAlignment="Center" />
-                                        </StackPanel>
+                                            Background="Transparent" BorderBrush="Transparent" BorderThickness="0" Padding="0" Margin="0"
+                                            CornerRadius="19"
+                                            HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+                                        <Border Height="38" CornerRadius="19" Background="#0E1219" BorderBrush="#1A3B2B" BorderThickness="1">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border Grid.Column="0" Width="34" Height="26" CornerRadius="13" Background="#10B981" Margin="5,0,0,0" VerticalAlignment="Center">
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6" Margin="0,1,0,0">
+                                                        <Ellipse Width="4" Height="5.5" Fill="#FF0A0D14" />
+                                                        <Ellipse Width="4" Height="5.5" Fill="#FF0A0D14" />
+                                                    </StackPanel>
+                                                </Border>
+                                                <TextBlock Grid.Column="1" Text="Antigravity" FontSize="11.5" FontWeight="Normal" Foreground="#CBD5E1"
+                                                           VerticalAlignment="Center" Margin="8,0,6,0" TextTrimming="CharacterEllipsis" />
+                                            </Grid>
+                                        </Border>
                                     </Button>
 
-                                    <!-- Claude Desktop -->
+                                    <!-- 2. Claude (Warm Orange Squircle Character Face) -->
                                     <Button Grid.Row="0" Grid.Column="1" Command="{x:Bind ViewModel.LaunchAiAppCommand}" CommandParameter="Claude Desktop"
-                                            Background="#14F59E0B" BorderBrush="#FFF59E0B" BorderThickness="0.5" CornerRadius="12" Padding="6,4" HorizontalAlignment="Stretch">
-                                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                                            <Border Width="16" Height="12" CornerRadius="6" Background="#FFF59E0B">
-                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
-                                                    <Ellipse Width="2.5" Height="3.5" Fill="#FF080A0F" />
-                                                    <Ellipse Width="2.5" Height="3.5" Fill="#FF080A0F" />
-                                                </StackPanel>
-                                            </Border>
-                                            <TextBlock Text="Claude" FontSize="10.5" FontWeight="SemiBold" Foreground="#FFF59E0B" VerticalAlignment="Center" />
-                                        </StackPanel>
+                                            Background="Transparent" BorderBrush="Transparent" BorderThickness="0" Padding="0" Margin="0"
+                                            CornerRadius="19"
+                                            HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+                                        <Border Height="38" CornerRadius="19" Background="#0E1219" BorderBrush="#3B2818" BorderThickness="1">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border Grid.Column="0" Width="34" Height="26" CornerRadius="13" Background="#F97316" Margin="5,0,0,0" VerticalAlignment="Center">
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6" Margin="0,1,0,0">
+                                                        <Ellipse Width="4" Height="5.5" Fill="#FF0A0D14" />
+                                                        <Ellipse Width="4" Height="5.5" Fill="#FF0A0D14" />
+                                                    </StackPanel>
+                                                </Border>
+                                                <TextBlock Grid.Column="1" Text="Claude" FontSize="11.5" FontWeight="Normal" Foreground="#CBD5E1"
+                                                           VerticalAlignment="Center" Margin="8,0,6,0" TextTrimming="CharacterEllipsis" />
+                                            </Grid>
+                                        </Border>
                                     </Button>
 
-                                    <!-- ChatGPT Desktop -->
+                                    <!-- 3. ChatGPT (Purple / Violet Squircle Character Face) -->
                                     <Button Grid.Row="1" Grid.Column="0" Command="{x:Bind ViewModel.LaunchAiAppCommand}" CommandParameter="ChatGPT Desktop"
-                                            Background="#1400F0FF" BorderBrush="#FF00F0FF" BorderThickness="0.5" CornerRadius="12" Padding="6,4" HorizontalAlignment="Stretch">
-                                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                                            <Border Width="16" Height="12" CornerRadius="6" Background="#FF00F0FF">
-                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
-                                                    <Ellipse Width="2.5" Height="3.5" Fill="#FF080A0F" />
-                                                    <Ellipse Width="2.5" Height="3.5" Fill="#FF080A0F" />
-                                                </StackPanel>
-                                            </Border>
-                                            <TextBlock Text="ChatGPT" FontSize="10.5" FontWeight="SemiBold" Foreground="#FF00F0FF" VerticalAlignment="Center" />
-                                        </StackPanel>
+                                            Background="Transparent" BorderBrush="Transparent" BorderThickness="0" Padding="0" Margin="0"
+                                            CornerRadius="19"
+                                            HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+                                        <Border Height="38" CornerRadius="19" Background="#0E1219" BorderBrush="#281E3D" BorderThickness="1">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border Grid.Column="0" Width="34" Height="26" CornerRadius="13" Background="#8B5CF6" Margin="5,0,0,0" VerticalAlignment="Center">
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6" Margin="0,1,0,0">
+                                                        <Ellipse Width="4" Height="5.5" Fill="#FF0A0D14" />
+                                                        <Ellipse Width="4" Height="5.5" Fill="#FF0A0D14" />
+                                                    </StackPanel>
+                                                </Border>
+                                                <TextBlock Grid.Column="1" Text="ChatGPT" FontSize="11.5" FontWeight="Normal" Foreground="#CBD5E1"
+                                                           VerticalAlignment="Center" Margin="8,0,6,0" TextTrimming="CharacterEllipsis" />
+                                            </Grid>
+                                        </Border>
                                     </Button>
 
-                                    <!-- Gemini Desktop -->
+                                    <!-- 4. Gemini (Coral / Ruby Squircle Character Face) -->
                                     <Button Grid.Row="1" Grid.Column="1" Command="{x:Bind ViewModel.LaunchAiAppCommand}" CommandParameter="Gemini Desktop"
-                                            Background="#14A855F7" BorderBrush="#FFA855F7" BorderThickness="0.5" CornerRadius="12" Padding="6,4" HorizontalAlignment="Stretch">
-                                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                                            <Border Width="16" Height="12" CornerRadius="6" Background="#FFA855F7">
-                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
-                                                    <Ellipse Width="2.5" Height="3.5" Fill="#FF080A0F" />
-                                                    <Ellipse Width="2.5" Height="3.5" Fill="#FF080A0F" />
-                                                </StackPanel>
-                                            </Border>
-                                            <TextBlock Text="Gemini" FontSize="10.5" FontWeight="SemiBold" Foreground="#FFA855F7" VerticalAlignment="Center" />
-                                        </StackPanel>
+                                            Background="Transparent" BorderBrush="Transparent" BorderThickness="0" Padding="0" Margin="0"
+                                            CornerRadius="19"
+                                            HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+                                        <Border Height="38" CornerRadius="19" Background="#0E1219" BorderBrush="#3D1B24" BorderThickness="1">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border Grid.Column="0" Width="34" Height="26" CornerRadius="13" Background="#F43F5E" Margin="5,0,0,0" VerticalAlignment="Center">
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6" Margin="0,1,0,0">
+                                                        <Ellipse Width="4" Height="5.5" Fill="#FF0A0D14" />
+                                                        <Ellipse Width="4" Height="5.5" Fill="#FF0A0D14" />
+                                                    </StackPanel>
+                                                </Border>
+                                                <TextBlock Grid.Column="1" Text="Gemini" FontSize="11.5" FontWeight="Normal" Foreground="#CBD5E1"
+                                                           VerticalAlignment="Center" Margin="8,0,6,0" TextTrimming="CharacterEllipsis" />
+                                            </Grid>
+                                        </Border>
                                     </Button>
                                 </Grid>
                             </Border>

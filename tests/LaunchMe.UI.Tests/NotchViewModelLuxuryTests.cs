@@ -42,7 +42,7 @@ public sealed class NotchViewModelLuxuryTests : IDisposable
         _vm.HeightPx.Should().Be(480);
 
         _vm.ResetDimensions();
-        _vm.WidthPx.Should().Be(620);
+        _vm.WidthPx.Should().Be(640);
         _vm.HeightPx.Should().Be(180);
 
         _vm.IsExpanded = false;
