@@ -42,11 +42,11 @@ public sealed class NotchViewModelLuxuryTests : IDisposable
         _vm.HeightPx.Should().Be(480);
 
         _vm.ResetDimensions();
-        _vm.WidthPx.Should().Be(560);
-        _vm.HeightPx.Should().Be(360);
+        _vm.WidthPx.Should().Be(620);
+        _vm.HeightPx.Should().Be(180);
 
         _vm.IsExpanded = false;
-        _vm.WidthPx.Should().Be(380);
+        _vm.WidthPx.Should().Be(420);
         _vm.HeightPx.Should().Be(36);
     }
 

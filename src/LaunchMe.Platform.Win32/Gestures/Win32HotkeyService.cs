@@ -78,9 +78,14 @@ public sealed class Win32HotkeyService : IDisposable
         if (msg == Win32Interop.WM_HOTKEY)
         {
             int id = (int)wParam;
-            if (_registrations.TryGetValue(id, out var _))
+            if (_registrations.TryGetValue(id, out var reg))
             {
-                HotkeyTriggered?.Invoke(this, new TriggerEventArgs(TriggerType.Hotkey));
+                HotkeyTriggered?.Invoke(this, new TriggerEventArgs(TriggerType.Hotkey)
+                {
+                    HotkeyId = id,
+                    VirtualKey = reg.VirtualKey,
+                    Modifiers = reg.Modifiers
+                });
             }
             return nint.Zero;
         }

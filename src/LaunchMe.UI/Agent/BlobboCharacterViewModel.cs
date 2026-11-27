@@ -47,12 +47,12 @@ public class BlobboCharacterViewModel : INotifyPropertyChanged
     {
         BlobboMood.Idle => "Blobbo is watching quietly",
         BlobboMood.Listening => "Blobbo is listening to you",
-        BlobboMood.Thinking => "Pookie is busy working",
+        BlobboMood.Thinking => "Blobbo is busy working",
         BlobboMood.Poked => "Hey! That tickles!",
         BlobboMood.Dizzy => "Woah, too many pokes!",
         BlobboMood.Sleeping => "Shh... Blobbo is napping",
         BlobboMood.Dancing => "Task completed! Yay!",
-        BlobboMood.Alert => "Pookie needs your permission!",
+        BlobboMood.Alert => "Blobbo needs your permission!",
         _ => "Blobbo is here"
     };
 

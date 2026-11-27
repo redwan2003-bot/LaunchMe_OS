@@ -8,6 +8,23 @@
     mc:Ignorable="d">
 
     <Grid x:Name="RootGrid" Background="Transparent" UseLayoutRounding="False">
+        <!-- Floating Workspace Switcher Toast Badge (like workspaces.png) -->
+        <Border x:Name="WorkspaceSwitcherToast"
+                Visibility="{x:Bind ViewModel.WorkspaceToastVisibility, Mode=OneWay}"
+                Background="#E6121622"
+                BorderBrush="{StaticResource SpecularCyanHaloBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="14"
+                Padding="16,8"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Margin="0,0,0,85">
+            <StackPanel HorizontalAlignment="Center" Spacing="2">
+                <TextBlock Text="WORKSPACE" FontSize="9" FontWeight="Bold" Foreground="#8800F0FF" HorizontalAlignment="Center" />
+                <TextBlock Text="{x:Bind ViewModel.ActiveDockSpaceName, Mode=OneWay}" FontSize="13" FontWeight="Bold" Foreground="#FFF8FAFC" HorizontalAlignment="Center" />
+            </StackPanel>
+        </Border>
+
         <!-- Floating Capsule Dock -->
         <Border x:Name="DockCapsule"
                 CornerRadius="26"

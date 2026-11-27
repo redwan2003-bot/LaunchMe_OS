@@ -8,11 +8,15 @@ using LaunchMe.Contracts.Media;
 using LaunchMe.Contracts.Notch;
 using LaunchMe.UI.Agent;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Media;
+using Windows.UI;
 
 namespace LaunchMe.UI.ViewModels;
 
 public enum NotchDrawerTab
 {
+    Overview,
+    Chat,
     Pocket,
     Clipboard,
     Settings
@@ -42,11 +46,11 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
     private readonly IClipboardWriter? _clipboardWriter;
 
     private bool _isExpanded;
-    private double _compactWidthPx = 380;
+    private double _compactWidthPx = 420;
     private double _compactHeightPx = 36;
-    private double _expandedWidthPx = 560;
-    private double _expandedHeightPx = 360;
-    private double _widthPx = 380;
+    private double _expandedWidthPx = 620;
+    private double _expandedHeightPx = 180;
+    private double _widthPx = 420;
     private double _heightPx = 36;
     private string _weatherSummary = "22°C Clear";
     private string _nowPlayingTitle = "Not Playing";
@@ -61,7 +65,7 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
     private bool _isFileDragOver;
     private string _bluetoothToastText = string.Empty;
     private int _bluetoothToastTicksRemaining;
-    private NotchDrawerTab _activeTab = NotchDrawerTab.Pocket;
+    private NotchDrawerTab _activeTab = NotchDrawerTab.Overview;
     private ClipboardCategory? _selectedClipboardCategory;
     private bool _disposed;
 
@@ -85,9 +89,13 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
                 SyncActiveDimensions();
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(ExpandedDrawerVisibility));
+                OnPropertyChanged(nameof(CompactBarVisibility));
             }
         }
     }
+
+    public Visibility CompactBarVisibility =>
+        _isExpanded ? Visibility.Collapsed : Visibility.Visible;
 
     public Visibility ExpandedDrawerVisibility =>
         _isExpanded ? Visibility.Visible : Visibility.Collapsed;
@@ -142,7 +150,7 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
         get => _expandedHeightPx;
         set
         {
-            double clamped = Math.Clamp(value, 280, 540);
+            double clamped = Math.Clamp(value, 120, 540);
             if (Math.Abs(_expandedHeightPx - clamped) > 0.1)
             {
                 _expandedHeightPx = clamped;
@@ -276,12 +284,25 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
             {
                 _activeTab = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(OverviewTabVisibility));
+                OnPropertyChanged(nameof(ChatTabVisibility));
                 OnPropertyChanged(nameof(PocketTabVisibility));
                 OnPropertyChanged(nameof(ClipboardTabVisibility));
                 OnPropertyChanged(nameof(SettingsTabVisibility));
+                OnPropertyChanged(nameof(OverviewTabSelectedBrush));
+                OnPropertyChanged(nameof(ChatTabSelectedBrush));
+                OnPropertyChanged(nameof(PocketTabSelectedBrush));
+                OnPropertyChanged(nameof(ClipboardTabSelectedBrush));
+                OnPropertyChanged(nameof(SettingsTabSelectedBrush));
             }
         }
     }
+
+    public Visibility OverviewTabVisibility =>
+        _activeTab == NotchDrawerTab.Overview ? Visibility.Visible : Visibility.Collapsed;
+
+    public Visibility ChatTabVisibility =>
+        _activeTab == NotchDrawerTab.Chat ? Visibility.Visible : Visibility.Collapsed;
 
     public Visibility PocketTabVisibility =>
         _activeTab == NotchDrawerTab.Pocket ? Visibility.Visible : Visibility.Collapsed;
@@ -291,6 +312,31 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
 
     public Visibility SettingsTabVisibility =>
         _activeTab == NotchDrawerTab.Settings ? Visibility.Visible : Visibility.Collapsed;
+
+    public Brush OverviewTabSelectedBrush =>
+        _activeTab == NotchDrawerTab.Overview ? new SolidColorBrush(Color.FromArgb(0x38, 0xFF, 0xFF, 0xFF)) : new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+    public Brush ChatTabSelectedBrush =>
+        _activeTab == NotchDrawerTab.Chat ? new SolidColorBrush(Color.FromArgb(0x38, 0xFF, 0xFF, 0xFF)) : new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+    public Brush PocketTabSelectedBrush =>
+        _activeTab == NotchDrawerTab.Pocket ? new SolidColorBrush(Color.FromArgb(0x38, 0xFF, 0xFF, 0xFF)) : new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+    public Brush ClipboardTabSelectedBrush =>
+        _activeTab == NotchDrawerTab.Clipboard ? new SolidColorBrush(Color.FromArgb(0x38, 0xFF, 0xFF, 0xFF)) : new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+    public Brush SettingsTabSelectedBrush =>
+        _activeTab == NotchDrawerTab.Settings ? new SolidColorBrush(Color.FromArgb(0x38, 0xFF, 0xFF, 0xFF)) : new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+
+    private string _antigravityStatusText = "Connected · Running Tasks (Agent Ready)";
+    public string AntigravityStatusText
+    {
+        get => _antigravityStatusText;
+        set { if (_antigravityStatusText != value) { _antigravityStatusText = value; OnPropertyChanged(); } }
+    }
+
+    private string _chatQuery = string.Empty;
+    public string ChatQuery
+    {
+        get => _chatQuery;
+        set { if (_chatQuery != value) { _chatQuery = value; OnPropertyChanged(); } }
+    }
 
     public ClipboardCategory? SelectedClipboardCategory
     {
@@ -326,9 +372,16 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
     public ICommand ClearPocketCommand { get; }
     public ICommand DismissCommand { get; }
     public ICommand ToggleFocusModeCommand { get; }
+    public ICommand SelectOverviewTabCommand { get; }
+    public ICommand SelectChatTabCommand { get; }
     public ICommand SelectPocketTabCommand { get; }
     public ICommand SelectClipboardTabCommand { get; }
     public ICommand SelectSettingsTabCommand { get; }
+    public ICommand OpenAntigravityCommand { get; }
+    public ICommand RefreshAntigravityCommand { get; }
+    public ICommand SendChatCommand { get; }
+    public ICommand LaunchAiAppCommand { get; }
+    public ICommand ToggleSoundscapeCommand { get; }
     public ICommand ResetDimensionsCommand { get; }
     public ICommand ClearClipboardCommand { get; }
 
@@ -368,9 +421,38 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
         ClearPocketCommand = new RelayCommand(ClearPocket);
         DismissCommand = new RelayCommand(() => DismissRequested?.Invoke(this, EventArgs.Empty));
         ToggleFocusModeCommand = new RelayCommand(ToggleFocusMode);
+        SelectOverviewTabCommand = new RelayCommand(() => ActiveTab = NotchDrawerTab.Overview);
+        SelectChatTabCommand = new RelayCommand(() => ActiveTab = NotchDrawerTab.Chat);
         SelectPocketTabCommand = new RelayCommand(() => ActiveTab = NotchDrawerTab.Pocket);
         SelectClipboardTabCommand = new RelayCommand(() => ActiveTab = NotchDrawerTab.Clipboard);
         SelectSettingsTabCommand = new RelayCommand(() => ActiveTab = NotchDrawerTab.Settings);
+        OpenAntigravityCommand = new RelayCommand(() =>
+        {
+            AntigravityStatusText = "Connected · Active & Focused";
+            Blobbo.SetMood(BlobboMood.Dancing);
+        });
+        RefreshAntigravityCommand = new RelayCommand(() =>
+        {
+            AntigravityStatusText = "Connected · Ready (569 Tests Passed)";
+            Blobbo.SetMood(BlobboMood.Thinking);
+        });
+        SendChatCommand = new RelayCommand(() =>
+        {
+            if (!string.IsNullOrWhiteSpace(ChatQuery))
+            {
+                Blobbo.SetMood(BlobboMood.Listening);
+                ChatQuery = string.Empty;
+            }
+        });
+        LaunchAiAppCommand = new RelayCommand<string>(appName =>
+        {
+            AntigravityStatusText = $"Connected · {appName ?? "AI"} Ready";
+            Blobbo.SetMood(BlobboMood.Dancing);
+        });
+        ToggleSoundscapeCommand = new RelayCommand(() =>
+        {
+            Blobbo.SetMood(BlobboMood.Dancing);
+        });
         ResetDimensionsCommand = new RelayCommand(ResetDimensions);
         ClearClipboardCommand = new RelayCommand(ClearClipboardHistory);
 
@@ -402,10 +484,10 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
 
     public void ResetDimensions()
     {
-        _compactWidthPx = 380;
+        _compactWidthPx = 420;
         _compactHeightPx = 36;
-        _expandedWidthPx = 560;
-        _expandedHeightPx = 360;
+        _expandedWidthPx = 620;
+        _expandedHeightPx = 180;
         OnPropertyChanged(nameof(CompactWidthPx));
         OnPropertyChanged(nameof(CompactHeightPx));
         OnPropertyChanged(nameof(ExpandedWidthPx));

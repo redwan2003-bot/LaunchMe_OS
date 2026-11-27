@@ -195,10 +195,15 @@ public partial class App : Application
             _focusBorderService);
         _windowTracker.Start();
 
-        // Global Hotkey (Alt+Space: modifiers = 1, vk = 0x20) + Hot Corners + Precision Touchpad Pinch
+        // Global Hotkey (Alt+Space: modifiers = 1, vk = 0x20) + Workspace Switcher Hotkeys + Hot Corners + Precision Touchpad Pinch
         _triggerService = new GestureAndTriggerService();
         _triggerService.EnableTouchpadPinch(3, true);
-        _triggerService.RegisterGlobalHotkey(1, 0x20);
+        _triggerService.RegisterGlobalHotkey(1, 0x20); // Alt+Space -> Launcher
+        for (int k = 0x31; k <= 0x39; k++)
+        {
+            _triggerService.RegisterGlobalHotkey(1, k); // Alt+1..9 -> Spaces
+            _triggerService.RegisterGlobalHotkey(8, k); // Win+1..9 -> Spaces
+        }
         _triggerService.SetHotCorners(new HotCornerConfig
         {
             TopLeft = HotCornerAction.ToggleLauncher,
@@ -288,7 +293,14 @@ public partial class App : Application
     {
         try
         {
-            await Task.Delay(1400);
+            if (_notchViewModel is not null)
+            {
+                _notchViewModel.ActiveTab = NotchDrawerTab.Overview;
+                _notchViewModel.IsExpanded = true;
+            }
+            _dockViewModel?.SwitchToSpaceIndex(1);
+
+            await Task.Delay(1800);
             var targets = new List<(UIElement Surface, string Name)>();
             if (_launcherWindow?.Content is UIElement launcherRoot) targets.Add((launcherRoot, "LauncherWindow"));
             if (_notchWindow?.Content is UIElement notchRoot) targets.Add((notchRoot, "NotchWindow"));
@@ -362,6 +374,19 @@ public partial class App : Application
     {
         _dispatcherQueue?.TryEnqueue(() =>
         {
+            // Workspace Switcher Hotkey Trigger (Win+1..9 or Alt+1..9)
+            if (e.TriggerType == TriggerType.Hotkey && e.VirtualKey.HasValue && e.VirtualKey.Value >= 0x31 && e.VirtualKey.Value <= 0x39)
+            {
+                int spaceIndex = (int)(e.VirtualKey.Value - 0x31);
+                if (_launcherViewModel != null && spaceIndex < _launcherViewModel.Spaces.Count)
+                {
+                    var targetSpace = _launcherViewModel.Spaces[spaceIndex];
+                    _launcherViewModel.ApplySpace(targetSpace);
+                }
+                _dockViewModel?.SwitchToSpaceIndex(spaceIndex);
+                return;
+            }
+
             if (_launcherWindow == null) return;
             if (e.TriggerType == TriggerType.TouchpadSpread)
             {

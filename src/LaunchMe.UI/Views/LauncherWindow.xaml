@@ -43,13 +43,13 @@
             <!-- Top Center: Specular Glass Search Capsule with #00F0FF Glow -->
             <StackPanel Grid.Row="0" HorizontalAlignment="Center" Width="690" Spacing="10">
                 <Border CornerRadius="20"
-                        Background="#D90E131F"
+                        Background="#240E131F"
                         BorderBrush="{StaticResource SpecularCyanHaloBorderBrush}"
                         BorderThickness="1"
                         UseLayoutRounding="False"
                         Padding="2">
                     <Border CornerRadius="18"
-                            Background="#E6161D2E"
+                            Background="#2E161D2E"
                             BorderBrush="{StaticResource SpecularGlassChamferBrush}"
                             BorderThickness="0.5"
                             UseLayoutRounding="False"
@@ -194,17 +194,17 @@
                                                 <Border Width="64"
                                                         Height="64"
                                                         CornerRadius="18"
-                                                        Background="#D90E131F"
+                                                        Background="#18FFFFFF"
                                                         BorderBrush="{StaticResource SpecularGlassChamferBrush}"
                                                         BorderThickness="0.5"
                                                         UseLayoutRounding="False">
                                                     <Border CornerRadius="17"
-                                                            Background="{x:Bind DominantGlowHex, Mode=OneWay}"
+                                                            Background="#12FFFFFF"
                                                             BorderBrush="{StaticResource SpecularInnerRimBrush}"
                                                             BorderThickness="0.5"
                                                             UseLayoutRounding="False">
                                                         <Grid>
-                                                            <FontIcon Glyph="&#xE71D;" FontSize="24" Foreground="#88F8FAFC" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                            <FontIcon Glyph="&#xE71D;" FontSize="24" Foreground="#44FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                             <Image Source="{x:Bind IconBitmapSource, Mode=OneWay}" Width="44" Height="44" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                         </Grid>
                                                     </Border>
@@ -301,7 +301,7 @@
                         Grid.Column="1"
                         Width="360"
                         Margin="16,0,0,0"
-                        Background="#D90E131F"
+                        Background="#200E131F"
                         BorderBrush="{StaticResource SpecularGlassChamferBrush}"
                         BorderThickness="0.5"
                         UseLayoutRounding="False"
@@ -332,7 +332,7 @@
                 <!-- Edit Mode Button -->
                 <Button Content="{x:Bind ViewModel.EditModeButtonText, Mode=OneWay}"
                         Command="{x:Bind ViewModel.ToggleEditModeCommand}"
-                        Background="#D90E131F"
+                        Background="#240E131F"
                         BorderBrush="{StaticResource SpecularGlassChamferBrush}"
                         BorderThickness="0.5"
                         Foreground="#FFF8FAFC"
@@ -342,7 +342,7 @@
                 <!-- Widgets Drawer Toggle Button -->
                 <Button Content="Widgets"
                         Command="{x:Bind ViewModel.ToggleWidgetDrawerCommand}"
-                        Background="#D90E131F"
+                        Background="#240E131F"
                         BorderBrush="{StaticResource SpecularGlassChamferBrush}"
                         BorderThickness="0.5"
                         Foreground="#FFF8FAFC"
@@ -352,7 +352,7 @@
                 <!-- Settings & Diagnostics Toggle Button -->
                 <Button Content="Settings"
                         Command="{x:Bind ViewModel.ToggleSettingsCommand}"
-                        Background="#D90E131F"
+                        Background="#240E131F"
                         BorderBrush="{StaticResource SpecularGlassChamferBrush}"
                         BorderThickness="0.5"
                         Foreground="#FFF8FAFC"
@@ -436,7 +436,7 @@
                                         <Border Width="56"
                                                 Height="56"
                                                 CornerRadius="16"
-                                                Background="#D90E131F"
+                                                Background="#18FFFFFF"
                                                 BorderBrush="{StaticResource SpecularGlassChamferBrush}"
                                                 BorderThickness="0.5"
                                                 UseLayoutRounding="False">

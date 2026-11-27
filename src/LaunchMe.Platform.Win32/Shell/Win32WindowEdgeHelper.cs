@@ -30,7 +30,7 @@ public static class Win32WindowEdgeHelper
 {
     /// <summary>
     /// Applies Windows 11 DWMWCP_ROUND corners and DWMWA_COLOR_NONE border suppression
-    /// so floating glass pills (Notch, Dock) have clean, unrimmed macOS-grade edges.
+    /// so floating glass pills (Notch, Dock) have clean, unrimmed luxury rounded edges.
     /// </summary>
     public static bool ApplyBorderlessPillDwmChrome(nint hwnd)
     {

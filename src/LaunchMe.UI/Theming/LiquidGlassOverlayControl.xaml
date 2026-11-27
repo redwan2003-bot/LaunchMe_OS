@@ -14,10 +14,10 @@
               VerticalAlignment="Stretch"
               UseLayoutRounding="False" />
 
-        <!-- Acrylic Glass Base Layer (Translucent Obsidian Scrim over DesktopAcrylicBackdrop) -->
+        <!-- Acrylic Glass Base Layer (Translucent Crystal Scrim over DesktopAcrylicBackdrop) -->
         <Border x:Name="GlassBackdropBorder"
                 Background="{x:Bind VisualState.BackdropBrush, Mode=OneWay}"
-                Opacity="0.42"
+                Opacity="0.04"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
                 UseLayoutRounding="False" />
@@ -25,7 +25,7 @@
         <!-- Subtle Tint Overlay -->
         <Border x:Name="TintOverlayBorder"
                 Background="{x:Bind VisualState.TintBrush, Mode=OneWay}"
-                Opacity="0.16"
+                Opacity="0.02"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
                 UseLayoutRounding="False" />

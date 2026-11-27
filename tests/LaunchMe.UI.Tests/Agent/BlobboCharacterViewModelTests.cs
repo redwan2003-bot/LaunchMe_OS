@@ -29,7 +29,7 @@ public class BlobboCharacterViewModelTests
 
         vm.Mood.Should().Be(BlobboMood.Thinking);
         vm.MoodEmoji.Should().Be("( ¬ _ ¬ )");
-        vm.MoodDescription.Should().Contain("Pookie is busy working");
+        vm.MoodDescription.Should().Contain("Blobbo is busy working");
     }
 
     [Fact]

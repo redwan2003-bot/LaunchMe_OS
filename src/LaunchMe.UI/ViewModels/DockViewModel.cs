@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using Microsoft.UI.Xaml;
 using LaunchMe.Contracts.Dock;
 using LaunchMe.Contracts.Indexing;
 using LaunchMe.Platform.Win32.Metrics;
@@ -75,6 +76,35 @@ public sealed class DockViewModel : INotifyPropertyChanged, IDisposable
     {
         get => _netUsage;
         set { if (_netUsage != value) { _netUsage = value; OnPropertyChanged(); } }
+    }
+
+    private bool _workspaceToastVisible;
+    public Visibility WorkspaceToastVisibility => _workspaceToastVisible ? Visibility.Visible : Visibility.Collapsed;
+
+    public void SwitchToSpaceIndex(int index)
+    {
+        if (_dockSpaceService != null)
+        {
+            var displaySpaces = _dockSpaceService.GetDockSpaces();
+            if (displaySpaces.Count > 0)
+            {
+                int safeIndex = Math.Clamp(index, 0, displaySpaces.Count - 1);
+                _dockSpaceService.SetActiveDockSpace(CurrentDisplayId, displaySpaces[safeIndex].Id);
+                ActiveDockSpaceName = displaySpaces[safeIndex].Name;
+            }
+        }
+        else
+        {
+            ActiveDockSpaceName = $"Space {index + 1}";
+        }
+
+        _workspaceToastVisible = true;
+        OnPropertyChanged(nameof(WorkspaceToastVisibility));
+        _ = Task.Delay(1800).ContinueWith(_ =>
+        {
+            _workspaceToastVisible = false;
+            OnPropertyChanged(nameof(WorkspaceToastVisibility));
+        }, TaskScheduler.Default);
     }
 
     public bool IsAmbientPlaying
@@ -224,7 +254,7 @@ public sealed class DockViewModel : INotifyPropertyChanged, IDisposable
     }
 
     /// <summary>
-    /// Computes continuous Gaussian neighbor-wave magnification scales (macOS Dock style)
+    /// Computes continuous Gaussian neighbor-wave magnification scales (LaunchMe Floating Capsule Dock)
     /// across all items: 1.42x at cursor center, tapering smoothly across adjacent neighbors.
     /// </summary>
     public static double[] ComputeGaussianWaveScales(

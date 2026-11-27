@@ -249,7 +249,7 @@ public sealed class IconCacheService
             g.PixelOffsetMode = PixelOffsetMode.HighQuality;
             g.Clear(Color.Transparent);
 
-            // Apply macOS .icns-style uniform G2 squircle mask for >= 256px Gold-Standard icons
+            // Apply uniform G2 squircle mask for >= 256px Gold-Standard icons
             // so square UWP/MSIX tiles never render with sharp 90-degree corners.
             if (targetSize >= 256)
             {
@@ -278,7 +278,7 @@ public sealed class IconCacheService
     }
 
     /// <summary>
-    /// Windows equivalent of macOS QLThumbnail: extracts a cached high-resolution Explorer
+    /// High-performance QuickLook thumbnail service: extracts a cached high-resolution Explorer
     /// preview thumbnail (PNG) for documents, images, videos, and folders.
     /// </summary>
     public string? GetOrExtractFileThumbnail(string filePath, int targetSize = 256)

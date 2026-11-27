@@ -23,6 +23,9 @@ public sealed class TriggerEventArgs : EventArgs
     public TriggerType TriggerType { get; }
     public HotCornerLocation? Corner { get; }
     public bool Handled { get; set; }
+    public int? HotkeyId { get; init; }
+    public uint? VirtualKey { get; init; }
+    public uint? Modifiers { get; init; }
 
     public TriggerEventArgs(TriggerType triggerType, HotCornerLocation? corner = null)
     {
