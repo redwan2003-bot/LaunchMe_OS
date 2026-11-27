@@ -1,0 +1,37 @@
+# Created using wingetcreate 1.6.0.0
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.6.0.schema.json
+
+PackageIdentifier: RedwanAhmmed.LaunchMeOS
+PackageVersion: 1.0.0
+PackageLocale: en-US
+Publisher: Redwan Ahmmed
+PublisherUrl: https://github.com/redwan2003-bot
+PublisherSupportUrl: https://github.com/redwan2003-bot/LaunchMe_OS/issues
+PackageName: LaunchMe OS
+PackageUrl: https://github.com/redwan2003-bot/LaunchMe_OS
+License: MIT
+LicenseUrl: https://github.com/redwan2003-bot/LaunchMe_OS/blob/main/LICENSE
+Copyright: Copyright (c) 2026 Redwan Ahmmed
+ShortDescription: Native Windows 11 full-screen launcher, dynamic notch HUD, multi-display dock, and Golden-Ratio window tiling shell.
+Description: |
+  LaunchMe OS is an ultra-fluid native Windows 11 desktop workspace shell engineered in C# 13 and .NET 9 with WinUI 3 and Win2D.
+  Features include:
+  - Crystal Clear Full-Screen Launcher with up-to-1024px G2 super-ellipse squircle icons and Explorer file previews.
+  - Snoot Dynamic Notch HUD with live AI agent cockpit (Pookie), file drop shelf, and emotional pet (Blobbo).
+  - Multi-Display Dock with Win32 AppBar integration, Touch Bar action strip, and 9-band procedural AudioDSP soundscapes.
+  - Full-Screen Music Player with GSMTC live reactive dual-color album ambient backlighting.
+  - Squish Golden-Ratio BSP Window Tiling engine with atomic DeferWindowPos placement.
+  - Strictly local-first, zero cloud telemetry, and 0% idle GPU footprint via the Pause-on-Hide law.
+Moniker: launchme
+Tags:
+- workspace
+- launcher
+- tiling-window-manager
+- dynamic-island
+- dock
+- bsp-wm
+- winui3
+- productivity
+ReleaseNotesUrl: https://github.com/redwan2003-bot/LaunchMe_OS/releases/tag/v1.0.0
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0
