@@ -299,6 +299,69 @@ public sealed partial class NotchWindow : Window
         }
     }
 
+    private void BlobboFace_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
+    {
+        ViewModel.Blobbo.PokeCommand.Execute(null);
+    }
+
+    private void AiAppPill_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Content is Border border)
+        {
+            if (btn.CommandParameter is string appName)
+            {
+                switch (appName)
+                {
+                    case "Antigravity":
+                        border.BorderBrush = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0xFF, 0x10, 0xB9, 0x81));
+                        border.Background = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0x28, 0x10, 0xB9, 0x81));
+                        break;
+                    case "Claude Desktop":
+                        border.BorderBrush = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0xFF, 0xF9, 0x73, 0x16));
+                        border.Background = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0x28, 0xF9, 0x73, 0x16));
+                        break;
+                    case "ChatGPT Desktop":
+                        border.BorderBrush = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0xFF, 0x8B, 0x5C, 0xF6));
+                        border.Background = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0x28, 0x8B, 0x5C, 0xF6));
+                        break;
+                    case "Gemini Desktop":
+                        border.BorderBrush = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0xFF, 0xF4, 0x3F, 0x5E));
+                        border.Background = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0x28, 0xF4, 0x3F, 0x5E));
+                        break;
+                }
+            }
+        }
+    }
+
+    private void AiAppPill_PointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Content is Border border)
+        {
+            if (btn.CommandParameter is string appName)
+            {
+                switch (appName)
+                {
+                    case "Antigravity":
+                        border.BorderBrush = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0xFF, 0x1A, 0x3B, 0x2B));
+                        border.Background = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0xFF, 0x0E, 0x12, 0x19));
+                        break;
+                    case "Claude Desktop":
+                        border.BorderBrush = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0xFF, 0x3B, 0x28, 0x18));
+                        border.Background = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0xFF, 0x0E, 0x12, 0x19));
+                        break;
+                    case "ChatGPT Desktop":
+                        border.BorderBrush = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0xFF, 0x28, 0x1E, 0x3D));
+                        border.Background = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0xFF, 0x0E, 0x12, 0x19));
+                        break;
+                    case "Gemini Desktop":
+                        border.BorderBrush = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0xFF, 0x3D, 0x1B, 0x24));
+                        border.Background = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0xFF, 0x0E, 0x12, 0x19));
+                        break;
+                }
+            }
+        }
+    }
+
     private void ApplyToolWindowStyle()
     {
         const int GWL_EXSTYLE = -20;

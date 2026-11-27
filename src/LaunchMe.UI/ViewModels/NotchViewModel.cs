@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using LaunchMe.Contracts.Agent;
@@ -86,6 +87,7 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
             if (_isExpanded != value)
             {
                 _isExpanded = value;
+                if (value) RefreshLiveStatus();
                 SyncActiveDimensions();
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(ExpandedDrawerVisibility));
@@ -428,12 +430,13 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
         SelectSettingsTabCommand = new RelayCommand(() => ActiveTab = NotchDrawerTab.Settings);
         OpenAntigravityCommand = new RelayCommand(() =>
         {
-            AntigravityStatusText = "Connected · Active & Focused";
+            ActivateOrLaunchApp("Antigravity");
+            RefreshLiveStatus();
             Blobbo.SetMood(BlobboMood.Dancing);
         });
         RefreshAntigravityCommand = new RelayCommand(() =>
         {
-            AntigravityStatusText = "Connected · Ready (569 Tests Passed)";
+            RefreshLiveStatus();
             Blobbo.SetMood(BlobboMood.Thinking);
         });
         SendChatCommand = new RelayCommand(() =>
@@ -446,8 +449,12 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
         });
         LaunchAiAppCommand = new RelayCommand<string>(appName =>
         {
-            AntigravityStatusText = $"Connected · {appName ?? "AI"} Ready";
-            Blobbo.SetMood(BlobboMood.Dancing);
+            if (!string.IsNullOrWhiteSpace(appName))
+            {
+                ActivateOrLaunchApp(appName);
+                AntigravityStatusText = $"Connected · {appName} Active";
+                Blobbo.SetMood(BlobboMood.Dancing);
+            }
         });
         ToggleSoundscapeCommand = new RelayCommand(() =>
         {
@@ -747,11 +754,135 @@ public sealed class NotchViewModel : INotifyPropertyChanged, IDisposable
                 }
 
                 CheckFullscreenGame();
+
+                _livePollTicks++;
+                if (_isExpanded && _livePollTicks % 4 == 0)
+                {
+                    RefreshLiveStatus();
+                }
             }
         }
         catch (OperationCanceledException)
         {
         }
+    }
+
+    private int _livePollTicks;
+
+    public void RefreshLiveStatus()
+    {
+        try
+        {
+            var procs = System.Diagnostics.Process.GetProcessesByName("Antigravity");
+            if (procs.Length > 0)
+            {
+                AntigravityStatusText = procs.Length == 1
+                    ? "Connected · 1 Task Running"
+                    : $"Connected · {procs.Length} Tasks Running";
+            }
+            else
+            {
+                AntigravityStatusText = "Idle · Agent Ready";
+            }
+        }
+        catch
+        {
+            AntigravityStatusText = "Connected · Running Tasks";
+        }
+    }
+
+    public static bool ActivateOrLaunchApp(string appName)
+    {
+        try
+        {
+            string clean = appName?.Trim() ?? string.Empty;
+            if (clean.Contains("Antigravity", StringComparison.OrdinalIgnoreCase))
+            {
+                var procs = System.Diagnostics.Process.GetProcessesByName("Antigravity");
+                foreach (var p in procs)
+                {
+                    if (p.MainWindowHandle != nint.Zero)
+                    {
+                        LaunchMe.Platform.Win32.Native.Win32Interop.ShowWindow(p.MainWindowHandle, 9);
+                        LaunchMe.Platform.Win32.Native.Win32Interop.SetForegroundWindow(p.MainWindowHandle);
+                        return true;
+                    }
+                }
+                string localExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "antigravity", "Antigravity.exe");
+                if (File.Exists(localExe))
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = localExe, UseShellExecute = true });
+                    return true;
+                }
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = "antigravity.exe", UseShellExecute = true });
+                return true;
+            }
+            else if (clean.Contains("ChatGPT", StringComparison.OrdinalIgnoreCase))
+            {
+                var procs = System.Diagnostics.Process.GetProcessesByName("ChatGPT");
+                foreach (var p in procs)
+                {
+                    if (p.MainWindowHandle != nint.Zero)
+                    {
+                        LaunchMe.Platform.Win32.Native.Win32Interop.ShowWindow(p.MainWindowHandle, 9);
+                        LaunchMe.Platform.Win32.Native.Win32Interop.SetForegroundWindow(p.MainWindowHandle);
+                        return true;
+                    }
+                }
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = "chatgpt://", UseShellExecute = true });
+                    return true;
+                }
+                catch
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = "https://chatgpt.com", UseShellExecute = true });
+                    return true;
+                }
+            }
+            else if (clean.Contains("Claude", StringComparison.OrdinalIgnoreCase))
+            {
+                var procs = System.Diagnostics.Process.GetProcessesByName("Claude");
+                foreach (var p in procs)
+                {
+                    if (p.MainWindowHandle != nint.Zero)
+                    {
+                        LaunchMe.Platform.Win32.Native.Win32Interop.ShowWindow(p.MainWindowHandle, 9);
+                        LaunchMe.Platform.Win32.Native.Win32Interop.SetForegroundWindow(p.MainWindowHandle);
+                        return true;
+                    }
+                }
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = "claude://", UseShellExecute = true });
+                    return true;
+                }
+                catch
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = "https://claude.ai", UseShellExecute = true });
+                    return true;
+                }
+            }
+            else if (clean.Contains("Gemini", StringComparison.OrdinalIgnoreCase))
+            {
+                var procs = System.Diagnostics.Process.GetProcessesByName("Gemini");
+                foreach (var p in procs)
+                {
+                    if (p.MainWindowHandle != nint.Zero)
+                    {
+                        LaunchMe.Platform.Win32.Native.Win32Interop.ShowWindow(p.MainWindowHandle, 9);
+                        LaunchMe.Platform.Win32.Native.Win32Interop.SetForegroundWindow(p.MainWindowHandle);
+                        return true;
+                    }
+                }
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = "https://gemini.google.com", UseShellExecute = true });
+                return true;
+            }
+        }
+        catch
+        {
+        }
+        return false;
     }
 
     public void Dispose()

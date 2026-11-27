@@ -264,7 +264,8 @@
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Blobbo Cute Squircle Face -->
-                                    <Border Grid.Column="0" Width="56" Height="42" CornerRadius="20" Background="#FFF8FAFC" VerticalAlignment="Center" Margin="0,0,12,0">
+                                    <Border Grid.Column="0" Width="56" Height="42" CornerRadius="20" Background="#FFF8FAFC" VerticalAlignment="Center" Margin="0,0,12,0"
+                                            Tapped="BlobboFace_Tapped" ToolTipService.ToolTip="Poke Blobbo">
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16" Margin="0,2,0,0">
                                             <Ellipse Width="5.5" Height="7.5" Fill="#FF0A0D14" />
                                             <Ellipse Width="5.5" Height="7.5" Fill="#FF0A0D14" />
@@ -287,17 +288,20 @@
                                         <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,6,0,0">
                                             <Button Content="Open Antigravity" Command="{x:Bind ViewModel.OpenAntigravityCommand}"
                                                     Background="Transparent" BorderThickness="0" Padding="0"
-                                                    FontSize="12" FontWeight="SemiBold" Foreground="#FFF8FAFC" />
+                                                    FontSize="12" FontWeight="SemiBold" Foreground="#FFF8FAFC"
+                                                    ToolTipService.ToolTip="Open &amp; Focus Antigravity IDE" />
                                             <Button Content="Refresh" Command="{x:Bind ViewModel.RefreshAntigravityCommand}"
                                                     Background="Transparent" BorderThickness="0" Padding="0"
-                                                    FontSize="12" Foreground="#64748B" />
+                                                    FontSize="12" Foreground="#64748B"
+                                                    ToolTipService.ToolTip="Refresh live task &amp; process state" />
                                         </StackPanel>
                                     </StackPanel>
 
                                     <!-- Top-Right ↗ Arrow Button -->
                                     <Button Grid.Column="2" Command="{x:Bind ViewModel.OpenAntigravityCommand}"
                                             Width="22" Height="22" Padding="0" CornerRadius="11"
-                                            Background="#222733" BorderThickness="0" VerticalAlignment="Top">
+                                            Background="#222733" BorderThickness="0" VerticalAlignment="Top"
+                                            ToolTipService.ToolTip="Focus Antigravity IDE">
                                         <FontIcon Glyph="&#xE8A7;" FontSize="10" Foreground="#CBD5E1" />
                                     </Button>
                                 </Grid>
@@ -317,6 +321,8 @@
 
                                     <!-- 1. Antigravity (Mint Green Squircle Character Face) -->
                                     <Button Grid.Row="0" Grid.Column="0" Command="{x:Bind ViewModel.LaunchAiAppCommand}" CommandParameter="Antigravity"
+                                            PointerEntered="AiAppPill_PointerEntered" PointerExited="AiAppPill_PointerExited"
+                                            ToolTipService.ToolTip="Launch &amp; Focus Antigravity"
                                             Background="Transparent" BorderBrush="Transparent" BorderThickness="0" Padding="0" Margin="0"
                                             CornerRadius="19"
                                             HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
@@ -340,6 +346,8 @@
 
                                     <!-- 2. Claude (Warm Orange Squircle Character Face) -->
                                     <Button Grid.Row="0" Grid.Column="1" Command="{x:Bind ViewModel.LaunchAiAppCommand}" CommandParameter="Claude Desktop"
+                                            PointerEntered="AiAppPill_PointerEntered" PointerExited="AiAppPill_PointerExited"
+                                            ToolTipService.ToolTip="Launch &amp; Focus Claude Desktop"
                                             Background="Transparent" BorderBrush="Transparent" BorderThickness="0" Padding="0" Margin="0"
                                             CornerRadius="19"
                                             HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
@@ -363,6 +371,8 @@
 
                                     <!-- 3. ChatGPT (Purple / Violet Squircle Character Face) -->
                                     <Button Grid.Row="1" Grid.Column="0" Command="{x:Bind ViewModel.LaunchAiAppCommand}" CommandParameter="ChatGPT Desktop"
+                                            PointerEntered="AiAppPill_PointerEntered" PointerExited="AiAppPill_PointerExited"
+                                            ToolTipService.ToolTip="Launch &amp; Focus ChatGPT Desktop"
                                             Background="Transparent" BorderBrush="Transparent" BorderThickness="0" Padding="0" Margin="0"
                                             CornerRadius="19"
                                             HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
@@ -386,6 +396,8 @@
 
                                     <!-- 4. Gemini (Coral / Ruby Squircle Character Face) -->
                                     <Button Grid.Row="1" Grid.Column="1" Command="{x:Bind ViewModel.LaunchAiAppCommand}" CommandParameter="Gemini Desktop"
+                                            PointerEntered="AiAppPill_PointerEntered" PointerExited="AiAppPill_PointerExited"
+                                            ToolTipService.ToolTip="Launch &amp; Focus Gemini Desktop"
                                             Background="Transparent" BorderBrush="Transparent" BorderThickness="0" Padding="0" Margin="0"
                                             CornerRadius="19"
                                             HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
